@@ -1,0 +1,57 @@
+name: Windows model experiment
+
+# Explicit development experiment. A normal application run never downloads.
+# Only this workflow's own changes trigger the large download automatically.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/windows-model-check.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model-on-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install development runtime
+        run: python -m pip install -e . onnxruntime==1.31.0
+      - name: Fetch the pinned public model for this experiment
+        shell: python {0}
+        run: |
+          from pathlib import Path
+          import hashlib
+          import urllib.request
+
+          revision = 'ee0de5e6c9f217163bfa0932cb2ab9bf98870cd2'
+          filename = 'deployable_foundation_stereo_s_dynamic.onnx'
+          url = f'https://huggingface.co/nvidia/c-foundationstereo-s/resolve/{revision}/onnx/{filename}'
+          target = Path('models') / filename
+          temporary = target.with_suffix('.partial')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          with urllib.request.urlopen(url, timeout=90) as source, temporary.open('wb') as output:
+              while data := source.read(4 * 1024 * 1024):
+                  output.write(data)
+          with temporary.open('rb') as stream:
+              digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+          expected = 'a001a7bc0512a0bc3b3218194e924784e58b20656c6f1ea2c151024e555cfd64'
+          if digest != expected:
+              raise RuntimeError(f'Unexpected model SHA-256: {digest}')
+          temporary.replace(target)
+          print(f'Verified {filename}: {target.stat().st_size} bytes, SHA-256 {digest}')
+      - name: Run actual bidirectional inference and midpoint rendering
+        run: python tools/check_model.py --model models/deployable_foundation_stereo_s_dynamic.onnx --provider cpu --threads 4 --report output/windows-model-smoke.json
+      - name: Keep the measurement report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-model-report
+          path: output/windows-model-smoke.json
+          if-no-files-found: warn
+          retention-days: 14

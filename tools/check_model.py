@@ -36,6 +36,8 @@ def main():
         model = FoundationStereo(args.model, args.provider, lambda text: print(text, flush=True),
                                  intra_op_threads=args.threads)
         dl, dr = model.predict_pair(left, right)
+        if not np.isfinite(dl).all() or not np.isfinite(dr).all():
+            raise RuntimeError("Nicht endliche Disparitäten im bekannten synthetischen Modellversuch.")
         renderer = ViewRenderer(StereoScene(left, right, dl, dr))
         view = renderer.render(0.5)
         region = (slice(16, -16), slice(24, -24))
