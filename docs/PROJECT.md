@@ -40,10 +40,10 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 
 ## Geometrie und Qualitätsziel
 
-Gewählter Modellansatz: Lite Any Stereo V2, zunächst LAS2-M. Der aktuelle native
-Linux/CPU-Forschungsversuch und RVS-Vergleich stehen in `RVS_COMPARISON.md`.
-Der vorhandene CLI-Adapter für C-FoundationStereo-S ist ein früherer Entwicklungsstand;
-die vollständige LAS2-Anbindung und portable Auslieferung sind noch offen.
+Gewählter Modellansatz: Lite Any Stereo V2, zunächst LAS2-M. Die erste Testversion
+verwendet LAS2-M als ONNX und RVS auf der CPU. Der frühere native Forschungsversuch
+und RVS-Vergleich stehen in `RVS_COMPARISON.md`. Der CLI-Adapter für
+C-FoundationStereo-S bleibt ausschließlich als historischer Entwicklungsvergleich.
 Nach positivem Sichtvergleich ist RVS die bevorzugte Richtung für die Rendererarbeit.
 Die gemessene CPU-Laufzeit soll gezielt verbessert werden, bei gleicher Renderqualität.
 

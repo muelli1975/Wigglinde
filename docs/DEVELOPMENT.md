@@ -1,16 +1,63 @@
 # Entwicklungsstand und Qualitätsprüfung
 
-Stand: 16. Oktober 2026. Es gibt noch keinen freigegebenen Konverter oder Installer.
+Stand: 16. Oktober 2026. Erste portable Windows-Testversion **0.1 Test 1**;
+keine freigegebene 1.0 und kein Installer.
 Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).
 
-**Aktueller Forschungsstand:** LAS2-M und ein begrenzter CPU-Vergleich mit MPEG-I RVS
-sind in [RVS_COMPARISON.md](RVS_COMPARISON.md) dokumentiert. Die folgenden Modell-
-und CLI-Angaben beschreiben den älteren C-FoundationStereo-S-Prototyp. Die zuvor
-nur lokal vorhandene LAS2-ONNX-Anbindung ging beim Zurücksetzen der temporären
-Arbeitsumgebung verloren; der RVS-Versuch verwendet die neu berechnete native
-LAS2-M-Geometrie. Kein automatischer Modell- oder Rendererwechsel im Produkt.
+## Aktuelle Testversion
 
-## Implementiert
+- Deutsche CustomTkinter-GUI nach dem gemeinsamen Standard; Datei-/Ordnerauswahl,
+  relative Ausgabe-Unterordner, getrennte Dialogpfade, Fortschritt und Abbruch.
+- LAS2-M als dynamisches ONNX, CPU explizit; dieselbe Sitzung für den ganzen Stapel.
+  Entwicklerexport mit Autoren-Substitutionen, gepinnter Quelle und Checkpoint-Hash.
+  Nativer Vergleich an zwei Größen: maximale ONNX-Abweichung unter 0,001 px.
+- Full-/Half-SBS, L/R-Tausch, ICC-Konvertierung vor Trennung/Skalierung nach sRGB.
+  Gewählte Ausgabegröße ist auch Berechnungsgröße; Lanczos, kein Beschnitt,
+  keine Justage oder stille Verringerung. Kleinere Quellen werden nicht hochskaliert.
+- Beidseitige signierte Disparitäten. Temporärer Suchversatz
+  `min(128,max(1,round(64*Breite/960)))`, anschließend vollständig abgezogen.
+  Fester LAS2-M-Suchbereich 192 px bleibt eine dokumentierte Grenze.
+- Unveränderte RVS-CPU-Klassen, Precision 2, Multispectral 1/4 und RVS-Füllung.
+  Float32-Bilder werden direkt aus dem Prozess gestreamt; keine großen Rohbildfolgen.
+  Endansichten werden mit RVS gerendert wie im positiv beurteilten Vergleich.
+- MP4 720/1080/2160, GIF 640/800/1024 lange Seite, PNG-Folgen 1080/2160;
+  Bildraten und Zyklen nach PROJECT.md. Nur unterschiedliche Ansichten berechnen.
+- Keine volle Export-Dekodierung oder Geometrieprüfung im normalen Ablauf.
+  ORT-Telemetrie ist **vor Initialisierung** über `ORT_DISABLE_TELEMETRY=1` deaktiviert,
+  zusätzlich API-Abschaltung; PyInstaller-Runtime-Hook setzt den Opt-out frühzeitig.
+  Kein Modell-/Komponentendownload durch die Anwendung.
+- Windows-Paket mit ONNX-Modell, nativem RVS-Backend, OpenCV, lokalem VC-Runtime,
+  Python/Tk, FFmpeg, Lizenztexten, deutscher Anleitung und eigenem Quellstand.
+  Build im Zweig `testversion-0.1`; bisher kein Wechsel des Default-Branches.
+
+## Tatsächlich geprüft
+
+18 schnelle Prüfungen für Geometrie, ICC/SBS-Eingabe, Pixelerhalt, Ordnerausschlüsse,
+Windows-taugliches RVS-JSON, Exportzeiten/Abmessungen und Erhalt bestehender Ergebnisse.
+Die erste komplette Windows-Paketprüfung bestand in
+[diesem Build](https://github.com/muelli1975/Wigglinde/actions/runs/38935119491).
+Sie startet die tatsächliche EXE, berechnet LAS2/RVS, exportiert MP4/GIF/PNG, prüft
+Umlautpfade und Sitzungswiederverwendung und startet die mitgelieferte GUI.
+Die volle MP4-Dekodierung gehört ausschließlich zu diesem Entwicklungstest.
+
+Zusätzlich lokal: Gesamttest mit allen drei Formaten und GUI; Layout bei 100/125/150 %;
+wirklicher Abbruch während ONNX-Inferenz nach rund 2,34 s einschließlich Modellladen,
+vorherige fertige Datei unverändert. Straßenfoto aus Originaldatei auf bewusst
+gewählte 1080×720 px pro Halbbild: MP4, 30 fps, 75 tatsächlich dekodierte Frames,
+fünf 0,5-s-Zyklen; gesamte Pipeline einschließlich Modellladen rund 31,42 s.
+Einzelmessung, keine allgemeine Geschwindigkeitszusage.
+
+## Weiterhin offen
+
+Windows 10/11 auf Christophs Desktop, weitere echte Fotostapel, größere Fotodurchläufe
+bis 2160 und deren Speichergrenzen. Der Build-Test läuft auf Windows Server 2025.
+GPU/OpenGL, umfangreiche Verdeckungstests und Lentikulardruck sind noch nicht Teil
+dieses Testpakets. Keine automatische Modell-, Geräte- oder Präzisionsumschaltung.
+
+Die Abschnitte darunter sind **historische Prototypversuche**, keine Beschreibung
+der aktuellen GUI. Der RVS-Auswahlversuch steht in [RVS_COMPARISON.md](RVS_COMPARISON.md).
+
+## Historischer Geometrie-Prototyp
 
 - Vollständiger gemeinsamer Gestaltungsstandard als unveränderte Referenzkopie.
   Noch keine GUI; keine Änderungen an bestehenden Stereo-Tools.
