@@ -1,0 +1,29 @@
+# Repository guidance
+
+Read `DESIGN_STANDARD_STEREOTOOLS.txt` before GUI, labels, interaction, output-path,
+or asset changes. The file is an unchanged reference from SplatTricia; its explicit
+rules for other projects do not become Wigglinde features. Read `docs/PROJECT.md`
+for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
+
+- The user is Christoph. Product language is German, with English support planned.
+- Build a restrained converter, with the established Stereo-Tools colors and
+  SplatTricia interaction conventions. Do not invent controls or alter stereo
+  mathematics or defaults without discussing meaningful changes.
+- Quality and resolution must not be lowered automatically. Do not silently
+  switch devices, replace an estimator, crop source images, or make model downloads.
+- The application must run locally and offline after setup. Keep required models
+  under `models`; report missing local files clearly. No accounts or telemetry.
+- Preserve originals. Record transforms and inference settings in diagnostic output.
+- Use established stereo correspondence, visibility, and view-synthesis methods.
+  Keep research diagnostics separate from product input validation. Do not add
+  speculative checks that reject otherwise usable photographs.
+- Code, model weights and runtime dependencies can have different licenses.
+  Retain the exact notices applicable to each distributed component. Never copy
+  the research-only FoundationStereo source into the application.
+- Current milestone: executable geometry/model prototype and honest quality
+  evidence. A passing synthetic test does not establish real-photo quality,
+  Windows portability, or parity with SplatTricia. Do not call this a 1.0 release.
+- Changes stay in this repository. Do not edit other Stereo-Tools repositories
+  as a side effect. A change to the shared standard requires explicit coordination.
+- Test geometry and output behavior with meaningful examples. Do not create
+  slow, arbitrary acceptance gates or claim unrun tests have passed.

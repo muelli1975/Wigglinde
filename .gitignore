@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local model weights and development results
+*.onnx
+*.pth
+*.npz
+models/*
+!models/README.md
+logs/
+output/
+_temp/
