@@ -13,6 +13,13 @@ from PIL import Image, ImageOps
 
 def load_sbs(path, layout="full-sbs", swap=False):
     with Image.open(path) as source:
+        bits = getattr(source, "tag_v2", {}).get(258, (8,))
+        bits = (bits,) if isinstance(bits, int) else bits
+        high_bit_depth = any(value > 8 for value in bits)
+        high_bit_depth |= any("16" in str(tile.args) for tile in source.tile)
+        if source.mode not in ("RGB", "L", "P", "1") or high_bit_depth or "transparency" in source.info:
+            raise ValueError("Dieser Diagnoseprototyp unterstützt nur deckende 8-Bit-RGB-/Graustufenbilder; "
+                             "keine automatische Reduktion von Farbtiefe oder Transparenz.")
         oriented = ImageOps.exif_transpose(source)
         image = oriented.convert("RGB")
         width, height = image.size

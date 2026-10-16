@@ -100,6 +100,10 @@ class GeometryTests(unittest.TestCase):
             swapped, _ = load_sbs(path, swap=True)
             np.testing.assert_array_equal(swapped, right)
             self.assertEqual(path.read_bytes(), original)
+            high_depth = Path(temp) / "sixteen_bit.png"
+            Image.fromarray(np.full((8, 24), 65535, np.uint16)).save(high_depth)
+            with self.assertRaisesRegex(ValueError, "8-Bit"):
+                load_sbs(high_depth)
 
     def test_lenticular_views_are_uniform(self):
         np.testing.assert_allclose(lenticular_positions(5), [0, 0.25, 0.5, 0.75, 1])

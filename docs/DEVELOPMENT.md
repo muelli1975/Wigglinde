@@ -21,11 +21,14 @@ Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).
 
 ## Bewusst noch offen
 
-- Der echte Modelllauf muss praktisch belegt werden; siehe Modellprüfung unten.
+- Das Modell läuft im kleinen Linux-/CPU-Versuch; siehe Modellprüfung unten.
+  Das belegt noch keine Ergebnisse an Stereo-Fotos.
 - Bildqualität auf realen Fotos, Speichernutzung und Laufzeiten bei Fotoauflösung.
 - Windows-/CUDA-Betrieb, portable Paketierung und vollständige Fremdlizenzbeigaben.
-- Automatische Ausrichtung, Behandlung von ICC-Profilen und Quellen mit mehr als
-  8 Bit pro Farbkanal. Der Diagnosepfad arbeitet derzeit mit 8-Bit-RGB als sRGB.
+- Automatische Ausrichtung und Behandlung von ICC-Profilen. Der Diagnosepfad
+  interpretiert RGB derzeit als sRGB; Farbmanagement ist vor Fotovergleichen zu
+  ergänzen. Quellen mit höherer Farbtiefe, CMYK oder Transparenz werden mit einer
+  konkreten Prototyp-Grenze gemeldet und nicht still auf 8-Bit-RGB reduziert.
 - Ein konsistentes mehrschichtiges Hintergrundmodell und saubere Füllung von Lücken.
   Der jetzige Renderer ist eine prüfbare geometrische Ausgangsbasis. Er benutzt
   geschätzte Disparitäten auch in inkonsistenten Bereichen mit reduziertem Gewicht;
@@ -52,8 +55,10 @@ MP4/GIF/PNG-Ausgabe und Abbruch ohne Verlust eines vorherigen Ergebnisses.
 MP4 wird tatsächlich kodiert und dekodiert: fünf Zyklen, korrekte Bildanzahl,
 Padding ungerader Abmessungen. Keine Laufzeit-Modellprüfung in diesen schnellen Tests.
 
-GitHub Actions prüft denselben Kern auf Windows und Linux. Ein erfolgreicher
-Windows-Kerncheck ist kein Nachweis für Windows-Modellinferenz oder portable Builds.
+GitHub Actions hat denselben Kern auf Windows und Linux erfolgreich geprüft
+([erster Lauf](https://github.com/muelli1975/Wigglinde/actions/runs/38898283423)).
+Ein erfolgreicher Windows-Kerncheck ist kein Nachweis für Windows-Modellinferenz
+oder portable Builds.
 
 ## Lokaler Modellversuch
 
@@ -85,10 +90,33 @@ beschneidet keine Quellpixel. Sein geeigneter Wert ist noch praktisch zu untersu
 ### Tatsächlicher Modellteststand
 
 Die offizielle ONNX-Datei wurde heruntergeladen und per SHA-256 bestätigt.
-Graph und Schnittstelle wurden direkt gelesen. Der erste CPU-Test zeigt eine
-ungewöhnlich lange ONNX-Sitzungsinitialisierung. Bis ein echter Inferenzlauf
-vollständig abgeschlossen und ausgewertet ist, gilt der Adapter als unbestätigt.
-Weder Modellqualität noch GPU-/Windows-Funktion werden aus den Kerntests abgeleitet.
+Graph und Schnittstelle wurden direkt gelesen. Ein erster ungepaddeter Versuch
+mit 256 px Breite ergab eine leere Slice/Reshape-Operation. Die graphseitig
+nachgewiesene Mindestbreite von 416 px wird nun durch Padding berücksichtigt.
+
+Die Standardeinstellung zur Tensor-Speicherwiederverwendung führte bei diesem
+großen Graphen zu sehr langer Initialisierung. Ohne Wiederverwendung und
+Memory-Pattern laden und rechnen die tatsächlichen Modelle. Diese Änderung
+betrifft Speicherplanung, nicht Modellpräzision oder Bildauflösung. Der höhere
+Speicherbedarf muss noch an Fotoauflösungen gemessen werden.
+
+Vollständiger Adapter-/Renderer-Versuch mit ONNX Runtime 1.31.0, Linux, Python 3.12,
+explizit 4 CPU-Threads, 416 × 128 px pro Halbbild, bekannter Verschiebung von 8 px:
+
+| Messung | Ergebnis |
+| --- | --- |
+| Modell laden | 40,6 s |
+| Disparität links / rechts | 24,1 / 42,0 s |
+| Median absoluter Disparitätsfehler links / rechts, Innenbereich | 0,00451 / 0,00382 px |
+| Konsistenzanteil links / rechts, ganzes Bild | 97,87 / 98,08 % |
+| Mittlere Ansicht: MAE im geprüften Innenbereich | 0,0 auf 8-Bit-RGB |
+| Mittlere Ansicht: Abdeckung im geprüften Innenbereich | 100 % |
+
+Dies ist nur eine künstliche, texturierte Ebene und kein Beleg für Verdeckungen
+in echten Fotos. Laufzeiten sind einzelne Entwicklungs-Messungen, keine
+Geschwindigkeitszusage; der Prototyp hat keine voreingestellte Threadbegrenzung.
+Ein separater Modelllauf bei 736 × 320 px ergab im Innenbereich einen Median
+von 8,01448 px bei vorgegebenen 8 px. Windows-/CUDA-Modellinferenz bleibt offen.
 
 ## Vergleich mit SplatTricia
 
