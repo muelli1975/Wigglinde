@@ -228,3 +228,8 @@ models/*
 logs/
 output/
 _temp/
+backend/
+settings.json
+*.zip
+
+!tools/rvs/runtime/app.manifest

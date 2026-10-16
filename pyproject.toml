@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wigglinde"
-version = "0.0.1"
+version = "0.1.0.dev1"
 description = "Stereo SBS view-synthesis quality prototype"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = ["numpy>=2.0,<3", "Pillow>=11,<13", "imageio-ffmpeg>=0.6,<1"]
+dependencies = ["numpy>=2.0,<3", "Pillow>=11,<13", "imageio-ffmpeg>=0.6,<1", "customtkinter>=5.2,<6", "onnxruntime>=1.20,<2"]
 
 [project.optional-dependencies]
 cpu = ["onnxruntime>=1.20,<2"]
@@ -16,6 +16,7 @@ cuda = ["onnxruntime-gpu>=1.20,<2"]
 
 [project.scripts]
 wigglinde-prototype = "wigglinde.cli:main"
+wigglinde = "wigglinde.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
