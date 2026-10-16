@@ -5,15 +5,18 @@
 RVS ist als CPU-Spezialrenderer ausführbar und lässt sich ohne Justage an unsere
 montierte Stereo-Geometrie anbinden. In der geprüften Konfiguration beruhigt es
 die zuvor nachgewiesenen abrupten Kantenwechsel, macht das Bild aber sichtbar
-weicher und verändert die beiden Endansichten. Deshalb **kein direkter Wechsel
-des Produkt-Renderers** aufgrund dieses Versuchs. Die NumPy-Implementierung bleibt
-eine Diagnosebasis mit bekanntem Verdeckungsfehler, ebenfalls kein fertiger Renderer.
+weicher und verändert die beiden Endansichten. Christoph bewertet das RVS-Ergebnis
+nach eigener Sichtung als sauberer und ohne das bisherige Randflackern. RVS ist
+deshalb die bevorzugte Richtung für die weitere Rendererarbeit. Die Anbindung ist
+weiter ein Forschungsversuch, noch kein umgestellter Produkt-Renderer. Die NumPy-
+Implementierung bleibt eine Diagnosebasis mit bekanntem Verdeckungsfehler.
 
-Der nächste fachliche Entscheidungspunkt ist die Originaltreue an den Endpositionen
-und die Konturschärfe. RVS mit Original-Endansichten zu kombinieren wäre in der
-geprüften Form unzureichend: Der Übergang zu den anders berechneten Innenansichten
-würde erneut sichtbare Sprünge erzeugen. Keine weitere Modellsuche oder GUI-Arbeit
-ist nötig, um diese Rendererfrage zu klären.
+Nächster Arbeitsschritt ist eine effiziente RVS-Stapelverarbeitung bei unveränderter
+Renderqualität. Zusätzliche teure Prüfungen gehören ausschließlich in ausdrücklich
+gestartete Entwicklungstests. Die Originaltreue und Konturschärfe bleiben dokumentiert.
+RVS mit Original-Endansichten zu kombinieren wäre in der geprüften Form unzureichend:
+Der Übergang zu den anders berechneten Innenansichten würde erneut Sprünge erzeugen.
+Keine weitere Modellsuche oder GUI-Arbeit ist für die Laufzeitdiagnose erforderlich.
 
 ## Tatsächlich ausgeführt
 
@@ -83,6 +86,38 @@ enthält einen Vorbehalt zu Patent-/Drittrechten; keine pauschale Patentfreigabe
 Die Originalquellen und Abhängigkeiten behalten ihre jeweiligen Lizenztexte.
 
 ## Fortsetzen ohne erneute Diskussion
+
+### Laufzeitdiagnose nach Nutzer-Sichtung
+
+Die wiederholte Projektionstest-Schleife ist seit diesem Stand standardmäßig aus.
+Sie läuft nur bei `--verify-projection`. Dieselben fünf Probeansichten mit Precision 2
+und Multispectral-Blending wurden ohne diese Prüfung erneut berechnet: alle RGB-
+Matrizen und Masken sind bytegleich zum ursprünglichen Vergleich. Keine Änderung
+von Auflösung, Rasterung, Blending, Farbbehandlung oder Füllung.
+
+Fünf Positionen (0, 0,000001, 0,5, 0,999999, 1), acht CPU-Threads:
+10,43 s insgesamt, rund 2,09 s pro Zwischenansicht, Prozessspitze 370,5 MiB.
+Das ist eine kurze Stufenmessung; keine neue 31-Ansichten- oder Stapelmessung.
+
+| Anteil über fünf Ansichten | Zeit | Anteil |
+| --- | --- | --- |
+| Projektion und Dreiecksrasterung | 5,62 s | 54 % |
+| Multispectral-Bildverschmelzung | 4,33 s | 42 % |
+| Füllung | 0,39 s | 4 % |
+| Verkleinerung und rohe Ausgabe | 0,046 s | unter 1 % |
+| Zusätzliche Geometrieprüfung | 0 s | aus |
+
+Der ausdrücklich gestartete Entwicklungstest an einer einzelnen mittleren Ansicht
+funktioniert weiterhin: maximaler Projektionsfehler 0,000109 px; Zusatzprüfung
+0,183 s bei 2,46 s Gesamtlaufzeit. Der Gewinn durch ihr Entfernen ist begrenzt.
+Ein größerer Gewinn muss daher aus effizienterer Ausführung der bestehenden
+RVS-Rasterung/Bildverschmelzung kommen, nicht aus dem Entfernen weiterer Prüfungen.
+
+Für normalen Stapelbetrieb verbindlich: keine volle Probe-Dekodierung jedes Exports,
+keine erneute Modellinitialisierung pro Foto, keine neu berechneten Rückwege oder
+Wiederholzyklen. Der ursprüngliche Clip nutzte bereits nur 31 verschiedene Ansichten.
+Der vorhandene RVS-OpenGL-Pfad ist ein möglicher nächster Beschleunigungstest;
+seine Qualität und Leistung sind hier noch nicht geprüft. Kein stiller Gerätewechsel.
 
 1. Gesichertes Vergleichspaket mit `scene.npz`, Clips, mittlerer Ansicht und
    `Messwerte.json` verwenden; LAS2 nicht erneut rechnen, solange die Szene vorhanden ist.

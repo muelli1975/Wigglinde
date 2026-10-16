@@ -46,6 +46,9 @@ python tools/rvs/prepare.py /path/to/work/rvs-check/scene.npz /path/to/work/rvs-
 ```
 
 Der Runner nimmt `config.json`, einen Ausgabeprefix und `multi` oder `simple`.
+Die zusätzliche Projektionsprüfung läuft ausschließlich bei ausdrücklich
+angehängtem `--verify-projection`. Sie ist ein Entwicklungstest, keine normale
+Stapelprüfung. Stufenzeiten werden separat protokolliert, ohne erneut zu rendern.
 Bei lokal entpackten OpenCV-Paketen muss deren Bibliotheksordner auch über
 `LD_LIBRARY_PATH` erreichbar sein. `OMP_NUM_THREADS=8` setzen. Geprüfter Umfang:
 zwei Eingaben, identische Größe, ausschließlich CPU. Aufrufbeispiel:

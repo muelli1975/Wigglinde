@@ -18,6 +18,9 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
   or convergence/window change. Remove temporary matching offsets after inference.
 - Normal PCs remain a target. Measure CPU time and RAM; never hide resource limits
   by silently lowering resolution, quality, or model precision.
+- Keep expensive geometry verification and full output-decode checks in explicit
+  development tests, outside normal batch processing. Reuse model sessions and
+  computed views; do not rerender repeated animation cycles or the return path.
 - Use established stereo correspondence, visibility, and view-synthesis methods.
   Keep research diagnostics separate from product input validation. Do not add
   speculative checks that reject otherwise usable photographs.

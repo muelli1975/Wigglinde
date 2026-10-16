@@ -10,6 +10,9 @@ unter ihren eigenen geprüften Bedingungen. Qualität ist wichtiger als Geschwin
 
 Wigglinde soll auf normalen PCs sinnvoll nutzbar sein. Speicher- und Laufzeitmessungen
 gehören zur Auswahl des Kerns; keine automatische Qualitäts-/Auflösungsreduktion.
+Stapelverarbeitung ohne zusätzliche teure Qualitätsprüfungen pro Datei oder Frame.
+Modellsitzungen und bereits berechnete Ansichten wiederverwenden. Entwicklungs-
+vergleiche und vollständige Probe-Dekodierungen gehören nicht in den normalen Ablauf.
 
 ## Oberfläche
 
@@ -41,6 +44,8 @@ Gewählter Modellansatz: Lite Any Stereo V2, zunächst LAS2-M. Der aktuelle nati
 Linux/CPU-Forschungsversuch und RVS-Vergleich stehen in `RVS_COMPARISON.md`.
 Der vorhandene CLI-Adapter für C-FoundationStereo-S ist ein früherer Entwicklungsstand;
 die vollständige LAS2-Anbindung und portable Auslieferung sind noch offen.
+Nach positivem Sichtvergleich ist RVS die bevorzugte Richtung für die Rendererarbeit.
+Die gemessene CPU-Laufzeit soll gezielt verbessert werden, bei gleicher Renderqualität.
 
 Eingaben sind fertig justierte Stereopaare. Keine automatische oder manuelle Justage,
 kein Beschnitt und keine Änderung der vorhandenen Scheinfensterlage. Ein temporärer
