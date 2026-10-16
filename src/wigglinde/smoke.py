@@ -38,12 +38,13 @@ def run(app_dir,report_path):
     for height in (720,1080,2160):assert WiggleOptions(video_height=height).output_size(3840,2160)==(round(height*16/9),height)
     for side in (640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
     # GUI startup and selected controls, on the actual packaged Tk runtime.
-    from .app import WigglindeApp
+    from .app import WigglindeApp,screen_work_area
     gui=WigglindeApp(app_dir);gui.update()
     for kind in ['GIF','PNG-Bildfolge','MP4']:
         gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
+    assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
     try:
         from PIL import ImageGrab
         ImageGrab.grab().save(report_path.parent/'gui-build-check.png')

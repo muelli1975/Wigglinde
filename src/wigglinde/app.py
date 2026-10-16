@@ -12,13 +12,28 @@ from .wiggle_export import ExportCancelled
 def app_directory():
     return Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[2]
 
+def screen_work_area(window):
+    if sys.platform=='win32':
+        import ctypes
+        from ctypes.wintypes import RECT
+        area=RECT()
+        if ctypes.windll.user32.SystemParametersInfoW(0x0030,0,ctypes.byref(area),0):
+            return area.left,area.top,area.right,area.bottom
+    return 0,0,window.winfo_screenwidth(),window.winfo_screenheight()
+
 class WigglindeApp(ctk.CTk):
     def __init__(self,app_dir=None):
         ctk.set_appearance_mode('dark');super().__init__()
         self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
         try:self.settings=json.loads(self.settings_path.read_text(encoding='utf-8'))
         except (OSError,ValueError):self.settings={}
-        self.title(f'Wigglinde – {__version__} Testversion');self.geometry('820x680');self.minsize(780,650)
+        self.title(f'Wigglinde – {__version__} Testversion')
+        left,top,right,bottom=screen_work_area(self);scale=self._get_window_scaling()
+        width=min(820,max(780,int((right-left-32)/scale)))
+        height=min(680,max(550,int((bottom-top-72)/scale)))
+        x=left+max(0,(right-left-round(width*scale))//2)
+        y=top+max(0,(bottom-top-round(height*scale)-40)//2)
+        self.minsize(780,550);self.geometry(f'{width}x{height}+{x}+{y}')
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(1,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
