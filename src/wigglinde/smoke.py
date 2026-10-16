@@ -4,6 +4,7 @@ import json,hashlib,subprocess,threading,time
 import numpy as np
 from PIL import Image
 from .processor import Processor
+from .las2 import LiteAnyStereo
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
 
@@ -40,7 +41,28 @@ def run(app_dir,report_path):
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
     gui=WigglindeApp(app_dir);gui.update()
-    for kind in ['GIF','PNG-Bildfolge','MP4']:
+    assert not hasattr(gui,'file_list')
+    gui.input_file.set(str(source));gui.update()
+    assert gui._collect_input()[0]==[source.resolve()]
+    gui.input_folder.set(str(work));gui.update()
+    assert not gui.input_file.get()
+    gui.own.set(str(work/'Custom output'));gui.standard.set(False);gui._dependencies()
+    for language in ['English','Deutsch']:
+        gui.kind.set(gui.tr('png'));gui._format_changed();gui.size.set('2160');gui.fps.set('60')
+        gui.language.set(language);gui._language_changed();gui.update()
+        assert gui._wiggle_options().png_height==2160 and gui._wiggle_options().png_fps==60
+        assert gui.input_folder.get()==str(work) and gui.own.get()==str(work/'Custom output')
+        assert gui.output_label.cget('text').endswith(str(work/'Custom output'))
+        assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
+    gui.running=True;gui._set_busy(True);gui.update()
+    assert all(c.cget('state')=='disabled' for c in gui.controls)
+    assert gui.stop.cget('state')=='normal' and gui.start.cget('border_color')=='#333333'
+    gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
+    assert gui.own_entry.cget('state')=='disabled'
+    adapters=list(gui.adapters)
+    sound=Path(app_dir)/'assets/ready.wav'
+    assert hashlib.sha1(b'blob '+str(sound.stat().st_size).encode()+b'\0'+sound.read_bytes()).hexdigest()=='260fb0d49982873a13dabd750b997448acb675ca'
+    for kind in ['GIF',gui.tr('png'),'MP4']:
         gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
@@ -50,4 +72,20 @@ def run(app_dir,report_path):
         ImageGrab.grab().save(report_path.parent/'gui-build-check.png')
     except OSError:pass
     gui.destroy()
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,model_session_reused=True,source_unchanged=True,gui_started=True),indent=2,ensure_ascii=False),encoding='utf-8')
+    # Explicit development probe, including WARP on a hosted runner if available.
+    # A software adapter does not establish performance on a physical GPU.
+    directml=dict(status='not-tested')
+    import onnxruntime as ort
+    if 'DmlExecutionProvider' in ort.get_available_providers():
+        try:
+            model=LiteAnyStereo(Path(app_dir)/'models/las2/LAS2_M_dynamic.onnx',device_id=0)
+        except Exception as error:
+            directml=dict(status='unavailable',reason=str(error),hardware_speed_not_validated=True)
+        else:
+            left=texture[:,:320];right=texture[:,8:328]
+            cpu=processor.model.predict(left,right,24,lambda:False)
+            begin=time.monotonic();gpu=model.predict(left,right,24,lambda:False)
+            diff=np.abs(cpu-gpu)
+            assert float(diff.max())<.05, float(diff.max())
+            directml=dict(status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True)
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,adapters=adapters,original_sound=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

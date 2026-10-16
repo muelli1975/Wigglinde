@@ -1,0 +1,74 @@
+"""German and English UI text; paths, format identifiers and logs stay unchanged."""
+import re
+
+TEXT = {
+    'test': ('Testversion 2', 'Test version 2'),
+    'single': ('Einzelbild', 'Single image'),
+    'folder': ('Bildordner', 'Image folder'),
+    'choose': ('Auswählen', 'Choose'),
+    'standard': ('Unterordner im Eingabeordner verwenden', 'Use subfolder in input folder'),
+    'own': ('Eigener Ausgabeordner', 'Custom output folder'),
+    'target': ('Ausgabeziel: {path}', 'Output destination: {path}'),
+    'after_input': ('Nach der Eingabeauswahl', 'After selecting the input'),
+    'format': ('Format', 'Format'),
+    'png': ('PNG-Bildfolge', 'PNG sequence'),
+    'size': ('Größe', 'Size'),
+    'height': ('px Höhe', 'px height'),
+    'long_side': ('px lange Seite', 'px long side'),
+    'duration': ('Zyklusdauer (s)', 'Cycle duration (s)'),
+    'swap': ('L/R tauschen', 'Swap L/R'),
+    'device': ('Tiefenberechnung', 'Depth estimation'),
+    'renderer': ('LAS2-M · RVS auf CPU', 'LAS2-M · RVS on CPU'),
+    'ready': ('Bereit.', 'Ready.'),
+    'start': ('Start', 'Start'),
+    'cancel': ('Abbrechen', 'Cancel'),
+    'file_dialog': ('SBS-Bild auswählen', 'Choose SBS image'),
+    'folder_dialog': ('Eingabeordner auswählen', 'Choose input folder'),
+    'output_dialog': ('Ausgabeordner auswählen', 'Choose output folder'),
+    'images': ('Bilder', 'Images'),
+    'choose_output': ('Bitte einen eigenen Ausgabeordner auswählen.', 'Please choose a custom output folder.'),
+    'choose_input': ('Bitte ein Einzelbild oder einen Bildordner auswählen.', 'Please choose a single image or an image folder.'),
+    'bad_file': ('Die Eingabedatei fehlt oder ist kein unterstütztes Bild.', 'The input file is missing or is not a supported image.'),
+    'bad_folder': ('Der Eingabeordner ist nicht vorhanden.', 'The input folder does not exist.'),
+    'empty': ('Keine unterstützten Bilder im Eingabeordner gefunden.', 'No supported images found in the input folder.'),
+    'selected': ('{count} Bild(er) ausgewählt.', '{count} image(s) selected.'),
+    'starting': ('Verarbeitung startet …', 'Starting processing …'),
+    'cancelling': ('Abbruch wird ausgeführt …', 'Cancelling …'),
+    'finished': ('Fertig: {count} Ausgaben', 'Finished: {count} outputs'),
+    'cancelled': ('Abgebrochen: {count} Ausgaben', 'Cancelled: {count} outputs'),
+    'errors': (' · {count} Fehler', ' · {count} errors'),
+    'details': ('Details: logs/errors.log', 'Details: logs/errors.log'),
+    'elapsed': ('Verstrichen: {minutes:02d}:{seconds:02d}', 'Elapsed: {minutes:02d}:{seconds:02d}'),
+    'numbers': ('Bitte gültige Zahlen für Größe, Bildrate und Zyklusdauer eingeben.', 'Please enter valid numbers for size, frame rate and cycle duration.'),
+    'memory': ('Der Arbeitsspeicher oder Grafikspeicher reicht für diese Berechnungsgröße nicht aus. Bitte eine kleinere Größe wählen.', 'There is not enough RAM or GPU memory for this processing size. Please choose a smaller size.'),
+    'gpu_failed': ('Die gewählte Grafikkarte konnte nicht verwendet werden. Bitte Treiber prüfen oder CPU wählen. Details: {error}', 'The selected GPU could not be used. Please check the driver or select CPU. Details: {error}'),
+}
+
+# The pipeline also remains usable from development tools without a UI locale.
+MESSAGES = {
+    'Bild vorbereiten': 'Preparing image', 'LAS2-M laden': 'Loading LAS2-M',
+    'Tiefenkarte links berechnen': 'Estimating left depth map',
+    'Tiefenkarte rechts berechnen': 'Estimating right depth map', 'Fertig': 'Finished',
+    'Diese Testversion benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.': 'This test version requires opaque RGB/grayscale images with 8 bits per channel.',
+    'Das SBS-Bild muss zwei gleich breite Halbbilder enthalten.': 'The SBS image must contain two equally wide half images.',
+    'Die LAS2-Modelldatei ist beschädigt. Bitte das Testpaket erneut entpacken.': 'The LAS2 model file is damaged. Please extract the test package again.',
+    'MP4: 720, 1080 oder 2160 Pixel Bildhöhe wählen.': 'MP4: choose a height of 720, 1080 or 2160 pixels.',
+    'PNG: 1080 oder 2160 Pixel Bildhöhe wählen.': 'PNG: choose a height of 1080 or 2160 pixels.',
+    'GIF: Lange Bildseite von 64 bis 2160 Pixeln wählen.': 'GIF: choose a long side between 64 and 2160 pixels.',
+}
+
+def tr(locale, key, **values):
+    return TEXT[key][1 if locale == 'en' else 0].format(**values)
+
+def message(locale, text):
+    if locale != 'en':
+        return text.split(' / ', 1)[0] if ' / ' in text else text
+    if text in MESSAGES:
+        return MESSAGES[text]
+    if ' / ' in text:
+        return text.split(' / ', 1)[1]
+    for prefix, translation in [('Die Modelldatei fehlt: ', 'The model file is missing: '), ('Der RVS-Renderer fehlt: ', 'The RVS renderer is missing: ')]:
+        if text.startswith(prefix):return translation + text[len(prefix):]
+    if text.startswith('Zwischenansicht '):return 'Rendering view ' + text[len('Zwischenansicht '):]
+    if re.fullmatch(r'(MP4|GIF|PNG) speichern', text):return 'Saving ' + text.split()[0]
+    return text

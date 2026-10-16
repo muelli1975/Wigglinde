@@ -1,5 +1,31 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Test 2: Rückmeldungen und Änderungen
+
+Christoph bestätigt insgesamt gute Bildqualität und saubere RVS-Kanten; CPU ist zu langsam.
+Weiterer konkreter Befund: Feine Aststrukturen erscheinen während der Animation
+teilweise gedoppelt. Noch keine gesicherte Ursache; bidirektionale Disparität,
+Verdeckung und beidseitiges Blending gezielt am betroffenen Foto vergleichen.
+GPU-Beschleunigung allein ist keine Lösung dieses Qualitätsfehlers.
+Reduzierte Eingabe mit Einzelbild-/Ordnerpfad statt Dateiliste, Deutsch/Englisch,
+unveränderter SplatTricia-Sound. Icon steht noch aus. LAS2 kann ausdrücklich auf
+CPU oder einer per DXGI gefundenen Grafikkarte über DirectML laufen. Windows-Paket
+nutzt privat gebautes ONNX Runtime DirectML 1.24.4 mit CPU-Provider und
+`onnxruntime_USE_TELEMETRY=OFF` (schon beim Kompilieren); kein paralleles CPU-ORT-Paket.
+Kein stiller Gesamtwechsel auf CPU bei fehlgeschlagenem GPU-Start. DirectML darf
+wie dokumentiert einzelne nicht unterstützte Graphoperationen auf CPU ausführen.
+RVS bleibt unverändert CPU, Precision 2, Multispectral 1/4; dessen OpenGL-Pfad
+verwendet eine andere Bildzusammenführung und ist nicht gleichwertig freigegeben.
+Protokoll ergänzt Tiefen-/Renderzeiten und tatsächliche ONNX-Provider.
+
+21 schnelle Prüfungen lokal bestanden. GUI lokal in beiden Sprachen geprüft,
+Sprachwechsel erhält Optionen/Pfade, Busy-Zustand und Eingabe-/Ausgabeabhängigkeiten.
+Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen. Physische
+GPU-Leistung und Ergebnisqualität bleiben auf einem echten Desktop zu testen.
+
+Die folgenden Angaben zu Test 1 dokumentieren den bisherigen Prüfstand.
+
+
 Stand: 16. Oktober 2026. Erste portable Windows-Testversion **0.1 Test 1**;
 keine freigegebene 1.0 und kein Installer.
 Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).

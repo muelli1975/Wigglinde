@@ -2,7 +2,7 @@ name: Portable Windows test build
 on:
   push:
     branches: [testversion-0.1]
-    paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'Liesmich.md', 'LICENSE', '.github/workflows/windows-test-build.yml']
+    paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'Liesmich.md', 'LICENSE', 'assets/**', '.github/workflows/windows-test-build.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,10 +37,46 @@ jobs:
           name: las2-m-onnx
           path: models/las2
           retention-days: 14
-  windows:
-    needs: model
+  runtime:
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        id: ort-cache
+        with:
+          path: runtime-wheel
+          key: ort-dml-1.24.4-no-telemetry-py312-v1
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: steps.ort-cache.outputs.cache-hit != 'true'
+      - name: Build DirectML runtime without telemetry
+        if: steps.ort-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          git clone --depth 1 --branch v1.24.4 https://github.com/microsoft/onnxruntime.git onnxruntime-reference
+          if ((git -C onnxruntime-reference rev-parse HEAD) -ne '2d924974ef147392ced8409d36bd6d2e7fcc8a74') { throw 'Unexpected ONNX Runtime revision' }
+          python -m pip install numpy packaging setuptools wheel ninja
+          python onnxruntime-reference/tools/ci_build/build.py --build_dir "$pwd/build/ort" --config Release --build_wheel --wheel_name_suffix directml --skip_tests --parallel 4 --use_dml --cmake_generator Ninja --cmake_extra_defines onnxruntime_USE_TELEMETRY=OFF onnxruntime_BUILD_UNIT_TESTS=OFF
+          if ($LASTEXITCODE -ne 0) { throw 'ONNX Runtime build failed' }
+          if (-not (Select-String -Quiet -Path build/ort/Release/CMakeCache.txt -Pattern '^onnxruntime_USE_TELEMETRY:BOOL=OFF$')) { throw 'Telemetry must be disabled at compile time' }
+          New-Item -ItemType Directory -Force runtime-wheel | Out-Null
+          Copy-Item build/ort/Release/dist/*.whl runtime-wheel/
+          New-Item -ItemType Directory -Force runtime-wheel/licenses | Out-Null
+          Copy-Item onnxruntime-reference/LICENSE runtime-wheel/licenses/ONNX-Runtime-LICENSE.txt
+          Copy-Item onnxruntime-reference/ThirdPartyNotices.txt runtime-wheel/licenses/ONNX-Runtime-ThirdPartyNotices.txt
+          Get-ChildItem build/ort -Recurse -File -Filter LICENSE* | Where-Object { $_.FullName -match '(?i)directml' } | ForEach-Object { Copy-Item $_.FullName (Join-Path runtime-wheel/licenses ('DirectML-' + $_.Name)) }
+          '{"revision":"2d924974ef147392ced8409d36bd6d2e7fcc8a74","version":"1.24.4","telemetry_compiled":false}' | Set-Content -Encoding utf8 runtime-wheel/provenance.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: directml-no-telemetry
+          path: runtime-wheel
+          retention-days: 14
+  windows:
+    needs: [model, runtime]
+    runs-on: windows-latest
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,8 +86,15 @@ jobs:
         with:
           name: las2-m-onnx
           path: models/las2
+      - uses: actions/download-artifact@v4
+        with:
+          name: directml-no-telemetry
+          path: runtime-wheel
       - name: Install application and packaging dependencies
-        run: python -m pip install -e . pyinstaller
+        shell: pwsh
+        run: |
+          python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
+          python -m pip install -e . pyinstaller
       - name: Get pinned native prerequisites
         shell: pwsh
         run: |
@@ -74,9 +117,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Wigglinde-0.1-Test1-Windows
+          name: Wigglinde-0.1-Test2-Windows
           path: |
-            dist/Wigglinde_0.1_Test1_Windows.zip
+            dist/Wigglinde_0.1_Test2_Windows.zip
             output/windows-smoke.json
             output/gui-build-check.png
           if-no-files-found: warn

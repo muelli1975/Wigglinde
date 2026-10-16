@@ -18,3 +18,12 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 
 Exact versions and build commit accompany the package. No claim is made that these
 licenses grant all third-party patent rights. No component is downloaded by the app.
+
+Test 2 builds ONNX Runtime DirectML 1.24.4 from official source on Windows
+(including the CPU provider), with `onnxruntime_USE_TELEMETRY=OFF`.
+Source revision: `2d924974ef147392ced8409d36bd6d2e7fcc8a74`.
+Retain its bundled MIT license, third-party notices and DirectML redistributable
+license. Official provider requirements: https://onnxruntime.ai/docs/execution-providers/DirectML-ExecutionProvider.html
+The unchanged completion sound is from SplatTricia commit
+`6217bb40629fd2c6f06a4662850e14610919b9b7`, `assets/ready.wav`,
+Git blob `260fb0d49982873a13dabd750b997448acb675ca`, same project owner.

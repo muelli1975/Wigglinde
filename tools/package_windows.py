@@ -17,9 +17,10 @@ def main():
             shutil.copy2(dll,target/'_internal')
     omps=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll')
     if omps:shutil.copy2(sorted(omps)[-1],backend)
+    shutil.copytree('assets',target/'assets')
     models=target/'models/las2';models.mkdir(parents=True)
     for name in ['LAS2_M_dynamic.onnx','LAS2_M_dynamic.json']:shutil.copy2(Path('models/las2')/name,models)
-    notices=target/'licenses';notices.mkdir();shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
+    notices=target/'licenses';notices.mkdir();shutil.copytree('runtime-wheel/licenses',notices/'DirectML-runtime');shutil.copy2('runtime-wheel/provenance.json',notices/'DirectML-build.json');shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
     for name in ['LICENSE.txt','tcl/tcl8.6/license.terms','tcl/tk8.6/license.terms']:
         file=Path(sys.base_prefix)/name
         if file.is_file():
@@ -29,7 +30,7 @@ def main():
         for f in a.opencv.rglob(name):
             if f.is_file() and f.stat().st_size<2_000_000:
                 dest=notices/'OpenCV'/f.relative_to(a.opencv);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    for name in ['numpy','pillow','onnxruntime','customtkinter','darkdetect','imageio-ffmpeg','protobuf','flatbuffers','packaging','pyinstaller']:
+    for name in ['numpy','pillow','onnxruntime-directml','customtkinter','darkdetect','imageio-ffmpeg','protobuf','flatbuffers','packaging','pyinstaller']:
         dist=metadata.distribution(name)
         for item in dist.files or []:
             if any(x in str(item).lower() for x in ['license','copying','copyright','notice']):
@@ -49,10 +50,10 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='0.1-test1',device='CPU',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='0.1-test2',devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=240)
-    archive=Path('dist/Wigglinde_0.1_Test1_Windows.zip')
+    archive=Path('dist/Wigglinde_0.1_Test2_Windows.zip')
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,6) as z:
         for f in target.rglob('*'):
             if f.is_file() and '_temp' not in f.parts and f.name!='settings.json':z.write(f,f.relative_to(target.parent))
