@@ -20,6 +20,7 @@ class WigglindeApp(ctk.CTk):
         except (OSError,ValueError):self.settings={}
         self.title(f'Wigglinde – {__version__} Testversion');self.geometry('820x680');self.minsize(780,650)
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1)
+        self.grid_rowconfigure(1,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
         self.layout=ctk.StringVar(value=self.settings.get('layout','Full-SBS'));self.swap=ctk.BooleanVar(value=False)
@@ -42,11 +43,11 @@ class WigglindeApp(ctk.CTk):
         head=ctk.CTkFrame(self,fg_color='transparent');head.grid(row=0,column=0,sticky='ew',padx=22,pady=(14,9));head.grid_columnconfigure(0,weight=1)
         ctk.CTkLabel(head,text='Wigglinde',font=(T.FONT_FAMILY,25,'bold'),text_color=T.GOLD_LIGHT).grid(row=0,column=0,sticky='w')
         self._label(head,f'{__version__} Testversion · LAS2-M / RVS · CPU').grid(row=0,column=1,sticky='e')
-        f=self._panel(1);bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=0,column=0,sticky='ew',padx=12,pady=(8,4));bar.grid_columnconfigure(0,weight=1)
+        f=self._panel(1);f.grid(sticky='nsew');f.grid_rowconfigure(1,weight=1);bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=0,column=0,sticky='ew',padx=12,pady=(8,4));bar.grid_columnconfigure(0,weight=1)
         self.input_label=self._label(bar,'Eingabe · Keine Bilder gewählt.');self.input_label.grid(row=0,column=0,sticky='w')
         self._button(bar,'Dateien auswählen',self._choose_files,width=145).grid(row=0,column=1,padx=(8,6))
         self._button(bar,'Ordner auswählen',self._choose_folder,width=145).grid(row=0,column=2)
-        self.file_list=ctk.CTkTextbox(f,height=49,fg_color=T.BG_SOFT,text_color=T.TEXT,corner_radius=5,font=(T.FONT_FAMILY,12));self.file_list.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,8));self.file_list.configure(state='disabled')
+        self.file_list=ctk.CTkTextbox(f,height=49,fg_color=T.BG_SOFT,text_color=T.TEXT,corner_radius=5,font=(T.FONT_FAMILY,12));self.file_list.grid(row=1,column=0,sticky='nsew',padx=12,pady=(0,8));self.file_list.configure(state='disabled')
         f=self._panel(2);self._check(f,'Unterordner im Eingabeordner verwenden',self.standard,self._dependencies).grid(row=0,column=0,sticky='w',padx=12,pady=(9,5))
         own=ctk.CTkFrame(f,fg_color='transparent');own.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,5));own.grid_columnconfigure(1,weight=1)
         self.own_label=self._label(own,'Eigener Ausgabeordner');self.own_label.grid(row=0,column=0,padx=(0,12))
@@ -99,7 +100,7 @@ class WigglindeApp(ctk.CTk):
         elif self.files:target=str(self.files[0].parent/'output') if len({p.parent for p in self.files})==1 else 'Jeweils <Eingabeordner>/output'
         else:target='Nach der Eingabeauswahl'
         self.output_label.configure(text='Ausgabeziel: '+target)
-    def _options(self):
+    def _wiggle_options(self):
         kind={'MP4':'mp4','GIF':'gif','PNG-Bildfolge':'png'}[self.kind.get()]
         size=int(self.size.get());fps=int(self.fps.get());duration=float(self.duration.get().replace(',','.'))
         return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 1080,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration)
@@ -109,12 +110,14 @@ class WigglindeApp(ctk.CTk):
     def _start(self):
         if self.running or not self.files:return
         try:
-            options=self._options();options.validate()
+            options=self._wiggle_options();options.validate()
             if not self.standard.get() and not self.own.get():raise ValueError('Bitte einen Ausgabeordner auswählen.')
             self._save()
         except (ValueError,OSError) as e:messagebox.showerror('Wigglinde',str(e),parent=self);return
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
-        for c in self.controls:c.configure(state='disabled')
+        for c in self.controls:
+            c.configure(state='disabled')
+            if isinstance(c,ctk.CTkEntry):c.configure(text_color=T.TEXT_DISABLED)
         self.stop.configure(state='normal');self.status.configure(text='Verarbeitung startet …')
         files=list(self.files);root=self.source_root;standard=self.standard.get();own=Path(self.own.get());layout=self.layout.get();swap=self.swap.get()
         threading.Thread(target=self._work,args=(files,root,standard,own,layout,swap,options),daemon=True).start()
@@ -134,7 +137,10 @@ class WigglindeApp(ctk.CTk):
                     with (self.app_dir/'logs/wigglinde.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(result,ensure_ascii=False)+'\n')
                 except ExportCancelled:raise
                 except Exception as e:
-                    errors.append(f'{path.name}: {e}')
+                    message=str(e)
+                    if isinstance(e,MemoryError) or any(s in message.lower() for s in ['bad_alloc','out of memory','failed to allocate','not enough memory']):
+                        message='Der Arbeitsspeicher reicht für diese Berechnungsgröße nicht aus. Bitte eine kleinere Größe wählen.'
+                    errors.append(f'{path.name}: {message}')
                     with (self.app_dir/'logs/errors.log').open('a',encoding='utf-8') as f:f.write(traceback.format_exc()+'\n')
         except ExportCancelled:cancelled=True
         except Exception as e:errors.append(str(e))
@@ -150,7 +156,9 @@ class WigglindeApp(ctk.CTk):
                 elif kind=='progress':self.status.configure(text=payload[0]);self.progress.set(payload[1])
                 elif kind=='done':
                     completed,errors,cancelled=payload;self.running=False
-                    for c in self.controls:c.configure(state='normal')
+                    for c in self.controls:
+                        c.configure(state='normal')
+                        if isinstance(c,ctk.CTkEntry):c.configure(text_color=T.TEXT)
                     self.stop.configure(state='disabled');self._dependencies()
                     self.status.configure(text=f'{"Abgebrochen" if cancelled else "Fertig"}: {completed} Ausgaben'+(f' · {len(errors)} Fehler' if errors else ''))
                     if not cancelled:self.progress.set(1)

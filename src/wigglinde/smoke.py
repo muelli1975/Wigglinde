@@ -41,8 +41,12 @@ def run(app_dir,report_path):
     from .app import WigglindeApp
     gui=WigglindeApp(app_dir);gui.update()
     for kind in ['GIF','PNG-Bildfolge','MP4']:
-        gui.kind.set(kind);gui._format_changed();gui._options().validate()
+        gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
+    try:
+        from PIL import ImageGrab
+        ImageGrab.grab().save(report_path.parent/'gui-build-check.png')
+    except OSError:pass
     gui.destroy()
     report_path.write_text(json.dumps(dict(status='passed',formats=results,model_session_reused=True,source_unchanged=True,gui_started=True),indent=2,ensure_ascii=False),encoding='utf-8')

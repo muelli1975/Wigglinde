@@ -29,7 +29,7 @@ class ConverterInputTests(unittest.TestCase):
             for sub in ['Tag1','output','_temp','foto_Wiggle_30fps_1080h_PNG']:
                 (root/sub).mkdir();(root/sub/'image.png').touch()
             files=collect_files(root,[root/'output'])
-            self.assertEqual(files,[root/'Tag1/image.png'])
+            self.assertEqual(files,[(root/'Tag1/image.png').resolve()])
 
     def test_high_bit_depth_is_not_silently_reduced(self):
         with TemporaryDirectory() as folder:

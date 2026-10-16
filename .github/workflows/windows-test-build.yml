@@ -78,5 +78,6 @@ jobs:
           path: |
             dist/Wigglinde_0.1_Test1_Windows.zip
             output/windows-smoke.json
+            output/gui-build-check.png
           if-no-files-found: warn
           retention-days: 30
