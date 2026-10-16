@@ -29,7 +29,7 @@ def main():
         for f in a.opencv.rglob(name):
             if f.is_file() and f.stat().st_size<2_000_000:
                 dest=notices/'OpenCV'/f.relative_to(a.opencv);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    for name in ['numpy','pillow','onnxruntime','customtkinter','darkdetect','imageio-ffmpeg','pyinstaller']:
+    for name in ['numpy','pillow','onnxruntime','customtkinter','darkdetect','imageio-ffmpeg','protobuf','flatbuffers','packaging','pyinstaller']:
         dist=metadata.distribution(name)
         for item in dist.files or []:
             if any(x in str(item).lower() for x in ['license','copying','copyright','notice']):
