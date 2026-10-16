@@ -21,10 +21,11 @@ Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).
 
 ## Bewusst noch offen
 
-- Das Modell läuft im kleinen Linux-/CPU-Versuch; siehe Modellprüfung unten.
+- Das Modell läuft in kleinen Linux-/CPU- und Windows-/CPU-Versuchen; siehe unten.
   Das belegt noch keine Ergebnisse an Stereo-Fotos.
 - Bildqualität auf realen Fotos, Speichernutzung und Laufzeiten bei Fotoauflösung.
-- Windows-/CUDA-Betrieb, portable Paketierung und vollständige Fremdlizenzbeigaben.
+- Desktop-Windows-Kompatibilität, CUDA-Betrieb, portable Paketierung und vollständige
+  Fremdlizenzbeigaben. Der erste Windows-Modellversuch lief auf einem Testserver.
 - Automatische Ausrichtung und Behandlung von ICC-Profilen. Der Diagnosepfad
   interpretiert RGB derzeit als sRGB; Farbmanagement ist vor Fotovergleichen zu
   ergänzen. Quellen mit höherer Farbtiefe, CMYK oder Transparenz werden mit einer
@@ -57,8 +58,8 @@ Padding ungerader Abmessungen. Keine Laufzeit-Modellprüfung in diesen schnellen
 
 GitHub Actions hat denselben Kern auf Windows und Linux erfolgreich geprüft
 ([erster Lauf](https://github.com/muelli1975/Wigglinde/actions/runs/38898283423)).
-Ein erfolgreicher Windows-Kerncheck ist kein Nachweis für Windows-Modellinferenz
-oder portable Builds.
+Der Kerncheck ist kein Nachweis für portable Builds. Die Modellinferenz wurde
+zusätzlich im separaten Windows-Versuch unten geprüft.
 
 ## Lokaler Modellversuch
 
@@ -116,7 +117,22 @@ Dies ist nur eine künstliche, texturierte Ebene und kein Beleg für Verdeckunge
 in echten Fotos. Laufzeiten sind einzelne Entwicklungs-Messungen, keine
 Geschwindigkeitszusage; der Prototyp hat keine voreingestellte Threadbegrenzung.
 Ein separater Modelllauf bei 736 × 320 px ergab im Innenbereich einen Median
-von 8,01448 px bei vorgegebenen 8 px. Windows-/CUDA-Modellinferenz bleibt offen.
+von 8,01448 px bei vorgegebenen 8 px. Die CUDA-Modellinferenz bleibt offen.
+
+Der [separate Windows-Modellversuch](https://github.com/muelli1975/Wigglinde/actions/runs/38899424940)
+war ebenfalls erfolgreich: Windows Server 2025, Python 3.12.10, ONNX Runtime 1.31.0,
+4 explizit gewählte CPU-Threads, dasselbe gehashte Modell und dieselbe 416 × 128 px
+große künstliche Szene. Modell laden: 12,2 s; linke/rechte Disparität: 14,75 / 14,5 s.
+Median absoluter Disparitätsfehler: 0,00451 / 0,00382 px; mittlere Ansicht im
+Innenbereich: MAE 0,0, Abdeckung 100 %. Modell und Laufzeit wurden nur für diesen
+ausdrücklich ausgelösten Entwicklungsversuch heruntergeladen. Der Anwendungscode
+enthält weiterhin keine Downloads. Der große Modelllauf startet automatisch nur
+bei Änderung seiner eigenen Workflowdatei; ansonsten ist er manuell auslösbar.
+
+Die verschiedenen Rechner erlauben keinen direkten Geschwindigkeitsvergleich.
+Windows 10/11 als Desktop-Ziel, GPU/CUDA, Fotoauflösung und portable Paketierung
+sind damit noch nicht freigegeben. Nächste fachliche Etappe ist der Vergleich an
+echten SBS-Fotos, bevor Hintergrundergänzung und Konverter-GUI finalisiert werden.
 
 ## Vergleich mit SplatTricia
 

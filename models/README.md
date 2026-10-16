@@ -48,5 +48,6 @@ Der Adapter prüft die gewählte CPU-/CUDA-Laufzeit. Ein fehlendes oder nicht
 initialisierbares CUDA-Gerät führt nicht zu einem vollständigen CPU-Ersatzlauf.
 Übliche CPU-Hilfsoperationen innerhalb einer CUDA-Sitzung sind damit nicht ausgeschlossen.
 
-Windows-/CUDA-Betrieb, Speicherbedarf großer Fotos und Fotoqualität sind noch offen.
+Ein kleiner CPU-Modellversuch unter Windows Server 2025 war erfolgreich.
+Desktop-Windows-/CUDA-Betrieb, Speicherbedarf großer Fotos und Fotoqualität sind noch offen.
 Aktuellen tatsächlichen Teststand in `docs/DEVELOPMENT.md` beachten.
