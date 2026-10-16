@@ -8,6 +8,9 @@ Ein portables Windows-Programm, nach Einrichtung lokal und offline; kostenlos
 nutzbar, auch außerhalb von Forschung. Eigener Code unter MIT, Fremdkomponenten
 unter ihren eigenen geprüften Bedingungen. Qualität ist wichtiger als Geschwindigkeit.
 
+Wigglinde soll auf normalen PCs sinnvoll nutzbar sein. Speicher- und Laufzeitmessungen
+gehören zur Auswahl des Kerns; keine automatische Qualitäts-/Auflösungsreduktion.
+
 ## Oberfläche
 
 Eine nüchterne, reduzierte Konverter-GUI, Bedienlogik ähnlich SplatTricia.
@@ -34,15 +37,20 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 
 ## Geometrie und Qualitätsziel
 
-Erster Kandidat: separat freigegebenes C-FoundationStereo-S als dynamisches ONNX.
-Keine Festlegung auf den Forschungscode von NVlabs. IGEV++ ist ein möglicher
-gezielter Vergleich, falls die erste Lösung entscheidende Schwächen zeigt.
+Gewählter Modellansatz: Lite Any Stereo V2, zunächst LAS2-M. Der aktuelle native
+Linux/CPU-Forschungsversuch und RVS-Vergleich stehen in `RVS_COMPARISON.md`.
+Der vorhandene CLI-Adapter für C-FoundationStereo-S ist ein früherer Entwicklungsstand;
+die vollständige LAS2-Anbindung und portable Auslieferung sind noch offen.
+
+Eingaben sind fertig justierte Stereopaare. Keine automatische oder manuelle Justage,
+kein Beschnitt und keine Änderung der vorhandenen Scheinfensterlage. Ein temporärer
+Suchversatz des Modells wird nach der Inferenz vollständig rückgängig gemacht.
 
 Korrespondenzen in beiden Richtungen, Konsistenz und Verdeckungen berücksichtigen;
 Zwischenansichten direkt aus einer gemeinsamen Darstellung erzeugen. Vorder- und
 Hintergrund an Tiefensprüngen trennen. Hintergrundergänzungen sollen über die
-gesamte Bewegung konsistent bleiben. Automatische Ausrichtung, größere Lücken und
-montierte Paare mit Scheinfenster-Verschiebungen brauchen eigene praktische Prüfung.
+gesamte Bewegung konsistent bleiben. Größere Lücken und montierte Paare mit
+Scheinfenster-Verschiebungen brauchen eigene praktische Prüfung.
 Keine stille Farbkorrektur oder generative Bildänderung.
 
 Ziel sind Ergebnisse auf dem Niveau der SplatTricia-Wiggles. Das ist erst anhand

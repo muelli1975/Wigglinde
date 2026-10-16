@@ -3,6 +3,13 @@
 Stand: 16. Oktober 2026. Es gibt noch keinen freigegebenen Konverter oder Installer.
 Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).
 
+**Aktueller Forschungsstand:** LAS2-M und ein begrenzter CPU-Vergleich mit MPEG-I RVS
+sind in [RVS_COMPARISON.md](RVS_COMPARISON.md) dokumentiert. Die folgenden Modell-
+und CLI-Angaben beschreiben den älteren C-FoundationStereo-S-Prototyp. Die zuvor
+nur lokal vorhandene LAS2-ONNX-Anbindung ging beim Zurücksetzen der temporären
+Arbeitsumgebung verloren; der RVS-Versuch verwendet die neu berechnete native
+LAS2-M-Geometrie. Kein automatischer Modell- oder Rendererwechsel im Produkt.
+
 ## Implementiert
 
 - Vollständiger gemeinsamer Gestaltungsstandard als unveränderte Referenzkopie.
@@ -26,7 +33,8 @@ Der vereinbarte Funktionsumfang steht in [PROJECT.md](PROJECT.md).
 - Bildqualität auf realen Fotos, Speichernutzung und Laufzeiten bei Fotoauflösung.
 - Desktop-Windows-Kompatibilität, CUDA-Betrieb, portable Paketierung und vollständige
   Fremdlizenzbeigaben. Der erste Windows-Modellversuch lief auf einem Testserver.
-- Automatische Ausrichtung und Behandlung von ICC-Profilen. Der Diagnosepfad
+- Behandlung von ICC-Profilen. Eine Ausrichtung ist ausdrücklich nicht vorgesehen.
+  Der Diagnosepfad
   interpretiert RGB derzeit als sRGB; Farbmanagement ist vor Fotovergleichen zu
   ergänzen. Quellen mit höherer Farbtiefe, CMYK oder Transparenz werden mit einer
   konkreten Prototyp-Grenze gemeldet und nicht still auf 8-Bit-RGB reduziert.

@@ -14,6 +14,10 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - The application must run locally and offline after setup. Keep required models
   under `models`; report missing local files clearly. No accounts or telemetry.
 - Preserve originals. Record transforms and inference settings in diagnostic output.
+- Input pairs are already aligned. No automatic/manual alignment, source crop,
+  or convergence/window change. Remove temporary matching offsets after inference.
+- Normal PCs remain a target. Measure CPU time and RAM; never hide resource limits
+  by silently lowering resolution, quality, or model precision.
 - Use established stereo correspondence, visibility, and view-synthesis methods.
   Keep research diagnostics separate from product input validation. Do not add
   speculative checks that reject otherwise usable photographs.
