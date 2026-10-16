@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image,ImageCms
 from wigglinde.processor import read_pair,collect_files
 from wigglinde.export_options import WiggleOptions
+from wigglinde.rvs import RVSRenderer
+from wigglinde.stereo import StereoScene
 
 class ConverterInputTests(unittest.TestCase):
     def test_explicit_size_full_half_swap_and_unchanged_source(self):
@@ -35,3 +37,13 @@ class ConverterInputTests(unittest.TestCase):
         with TemporaryDirectory() as folder:
             path=Path(folder)/'16bit.png';Image.fromarray(np.full((20,80),3000,np.uint16)).save(path)
             with self.assertRaises(ValueError):read_pair(path,'Full-SBS',False,WiggleOptions())
+
+    def test_rvs_json_contains_utf8_paths_without_unsupported_escapes(self):
+        import json
+        with TemporaryDirectory() as folder:
+            root=Path(folder)/'Größe';root.mkdir();exe=root/'renderer.exe';exe.touch()
+            rgb=np.zeros((4,8,3),np.uint8);d=np.ones((4,8),np.float32)
+            renderer=RVSRenderer(exe,StereoScene(rgb,rgb,d,d),[.5],root/'Arbeit')
+            raw=(renderer.work/'config.json').read_text(encoding='utf-8')
+            self.assertNotIn('\\',raw)
+            config=json.loads(raw);self.assertIn('Größe',config['InputCameraParameterFile'])

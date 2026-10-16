@@ -12,12 +12,18 @@ def main():
     roots=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.CRT')
     if not roots:raise RuntimeError('Microsoft C++ redistributable files not found')
     for folder in sorted(roots)[-1:]:
-        for dll in Path(folder).glob('*.dll'):shutil.copy2(dll,backend)
+        for dll in Path(folder).glob('*.dll'):
+            shutil.copy2(dll,backend)
+            shutil.copy2(dll,target/'_internal')
     omps=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll')
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     models=target/'models/las2';models.mkdir(parents=True)
     for name in ['LAS2_M_dynamic.onnx','LAS2_M_dynamic.json']:shutil.copy2(Path('models/las2')/name,models)
     notices=target/'licenses';notices.mkdir();shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
+    for name in ['LICENSE.txt','tcl/tcl8.6/license.terms','tcl/tk8.6/license.terms']:
+        file=Path(sys.base_prefix)/name
+        if file.is_file():
+            dest=notices/'Python-Tcl-Tk'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,dest)
     shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt')
     for name in ['LICENSE','LICENSE.txt','LICENSE-3RD-PARTY.txt','LICENSE_FFMPEG.txt']:
         for f in a.opencv.rglob(name):

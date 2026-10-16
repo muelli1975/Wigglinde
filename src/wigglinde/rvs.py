@@ -19,7 +19,9 @@ class RVSRenderer:
         def camera(name,t):return dict(Name=name,Position=[0,-float(t),0],Rotation=[0,0,0],Depthmap=1,Background=0,Depth_range=[.01,999],Resolution=[w,h],Projection='Perspective',Focal=[w,w],Principle_point=[w/2+bias*float(t),h/2],BitDepthColor=8,BitDepthDepth=16,ColorSpace='YUV420',DepthColorSpace='YUV400',HasInvalidDepth=False)
         cameras=[camera('left',0),camera('right',1)]+[camera(f'v{i}',t) for i,t in enumerate(positions)]
         cp=self.work/'cameras.json';cp.write_text(json.dumps(dict(Version='2.0',cameras=cameras)),encoding='utf-8')
-        config=dict(Version='2.0',InputCameraParameterFile=str(cp),VirtualCameraParameterFile=str(cp),InputCameraNames=['left','right'],VirtualCameraNames=[f'v{i}' for i in range(len(positions))],ViewImageNames=[str(self.work/f'color{i}.rgb') for i in range(2)],DepthMapNames=[str(self.work/f'depth{i}.z') for i in range(2)],StartFrame=0,NumberOfFrames=1,Precision=2,ColorSpace='RGB',ViewSynthesisMethod='Triangles',BlendingMethod='Multispectral',BlendingLowFreqFactor=1.,BlendingHighFreqFactor=4.)
+        # RVS' small JSON parser does not support escape sequences. Windows also
+        # accepts forward slashes; write UTF-8 and avoid escaped backslashes.
+        config=dict(Version='2.0',InputCameraParameterFile=cp.as_posix(),VirtualCameraParameterFile=cp.as_posix(),InputCameraNames=['left','right'],VirtualCameraNames=[f'v{i}' for i in range(len(positions))],ViewImageNames=[(self.work/f'color{i}.rgb').as_posix() for i in range(2)],DepthMapNames=[(self.work/f'depth{i}.z').as_posix() for i in range(2)],StartFrame=0,NumberOfFrames=1,Precision=2,ColorSpace='RGB',ViewSynthesisMethod='Triangles',BlendingMethod='Multispectral',BlendingLowFreqFactor=1.,BlendingHighFreqFactor=4.)
         (self.work/'config.json').write_text(json.dumps(config,ensure_ascii=False),encoding='utf-8')
 
     def cancel(self):

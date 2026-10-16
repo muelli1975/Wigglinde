@@ -70,6 +70,8 @@ class WigglindeApp(ctk.CTk):
         footer=ctk.CTkFrame(self,fg_color='transparent');footer.grid(row=5,column=0,sticky='ew',padx=18,pady=(0,12));footer.grid_columnconfigure(0,weight=1)
         self.start=self._button(footer,'Start',self._start,width=150);self.start.grid(row=0,column=1,padx=(0,8))
         self.start.configure(fg_color=T.START_BG,hover_color=T.START_HOVER_BG,text_color=T.START_TEXT,border_color=T.START_BORDER)
+        self.start.bind('<Enter>',lambda event:self.start.configure(text_color=T.START_HOVER_TEXT) if not self.running and self.files else None)
+        self.start.bind('<Leave>',lambda event:self.start.configure(text_color=T.START_TEXT))
         self.stop=ctk.CTkButton(footer,text='Abbrechen',command=self._cancel,width=120,height=30,fg_color=T.BG_SOFT,hover_color=T.PANEL_HOVER,border_color=T.BORDER,border_width=1,text_color=T.TEXT,state='disabled');self.stop.grid(row=0,column=2)
 
     def _format_changed(self,*_):
@@ -94,7 +96,7 @@ class WigglindeApp(ctk.CTk):
     def _dependencies(self):
         if self.running:return
         own=not self.standard.get();self.own_entry.configure(state='normal' if own else 'disabled',text_color=T.TEXT if own else T.TEXT_DISABLED);self.own_label.configure(text_color=T.TEXT if own else T.TEXT_DISABLED)
-        self.start.configure(state='normal' if self.files else 'disabled')
+        self.start.configure(state='normal' if self.files else 'disabled',text_color=T.START_TEXT)
         if own:target=self.own.get() or 'Bitte eigenen Ausgabeordner auswählen'
         elif self.source_root:target=str(self.source_root/'output')
         elif self.files:target=str(self.files[0].parent/'output') if len({p.parent for p in self.files})==1 else 'Jeweils <Eingabeordner>/output'
