@@ -1,5 +1,7 @@
 """Development-only export of pinned LAS2-M, using the author's ONNX substitutions."""
 from pathlib import Path
+import os
+os.environ['ORT_DISABLE_TELEMETRY']='1'
 import argparse,hashlib,json,subprocess,sys
 import numpy as np
 import torch
@@ -27,6 +29,7 @@ def main():
  torch.onnx.export=dynamic;a.output.parent.mkdir(parents=True,exist_ok=True)
  export_onnx.export('las2','m',str(a.weights),416,128,192,str(a.output))
  import onnxruntime as ort
+ ort.disable_telemetry_events()
  opt=ort.SessionOptions();opt.intra_op_num_threads=8;s=ort.InferenceSession(str(a.output),sess_options=opt,providers=['CPUExecutionProvider'])
  errors=[float(np.max(np.abs(s.run(None,{'left':l,'right':r})[0]-ref))) for l,r,ref in checks]
  assert max(errors)<0.001,errors

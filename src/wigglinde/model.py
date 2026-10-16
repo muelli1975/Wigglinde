@@ -61,6 +61,7 @@ class FoundationStereo:
             raise ValueError("Diese Modelldatei wurde für den Prototyp noch nicht geprüft (andere SHA-256).")
         try:
             import onnxruntime as ort
+            ort.disable_telemetry_events()
         except ImportError as exc:
             raise RuntimeError("Die gewählte ONNX-Laufzeit ist nicht installiert.") from exc
         requested = PROVIDERS[provider]

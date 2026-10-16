@@ -6,6 +6,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  ORT_DISABLE_TELEMETRY: '1'
 jobs:
   model:
     runs-on: ubuntu-latest

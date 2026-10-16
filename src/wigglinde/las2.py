@@ -7,6 +7,7 @@ from .wiggle_export import ExportCancelled
 class LiteAnyStereo:
     def __init__(self,model_path,threads=None):
         import onnxruntime as ort
+        ort.disable_telemetry_events()
         path=Path(model_path)
         if not path.is_file():raise FileNotFoundError(f"Die Modelldatei fehlt: {path}")
         meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))

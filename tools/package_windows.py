@@ -4,7 +4,7 @@ import argparse,glob,importlib.metadata as metadata,json,shutil,subprocess,sys,z
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--opencv',type=Path,required=True);p.add_argument('--rvs',type=Path,required=True);p.add_argument('--las2',type=Path,required=True);a=p.parse_args()
-    subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Wigglinde','--collect-all','customtkinter','--collect-all','imageio_ffmpeg','--collect-all','onnxruntime','--hidden-import','PIL.ImageCms','launch.py'],check=True)
+    subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Wigglinde','--runtime-hook','tools/pyi_offline.py','--collect-all','customtkinter','--collect-all','imageio_ffmpeg','--collect-all','onnxruntime','--hidden-import','PIL.ImageCms','launch.py'],check=True)
     target=Path('dist/Wigglinde');backend=target/'backend';backend.mkdir()
     shutil.copy2('build/rvs/Release/wigglinde_rvs.exe',backend)
     shutil.copy2(a.opencv/'build/x64/vc16/bin/opencv_world4100.dll',backend)
