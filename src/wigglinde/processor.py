@@ -13,7 +13,7 @@ from .wiggle_export import export_wiggle,check_cancelled
 
 EXTENSIONS={'.jpg','.jpeg','.png','.tif','.tiff','.bmp','.webp'}
 
-def read_pair(path,swap,options):
+def read_pair(path,options):
     with Image.open(path) as source:
         bits=getattr(source,'tag_v2',{}).get(258,(8,));bits=(bits,) if isinstance(bits,int) else bits
         high_depth=any(value>8 for value in bits) or any('16' in str(tile.args) for tile in source.tile)
@@ -29,7 +29,7 @@ def read_pair(path,swap,options):
         original=(w//2,h);size=options.output_size(*original)
         eyes=[e.resize(size,Image.Resampling.LANCZOS) if e.size!=size else e for e in eyes]
         pair=[np.asarray(e).copy() for e in eyes]
-        return tuple(pair[::-1] if swap else pair),original,size
+        return tuple(pair),original,size
 
 def collect_files(folder,excluded=()):
     folder=Path(folder).resolve();excluded={Path(x).resolve() for x in excluded};result=[]
@@ -51,21 +51,21 @@ class Processor:
         if self.model:self.model.cancel()
         if self.renderer:self.renderer.cancel()
 
-    def convert(self,path,output_root,options,swap=False,progress=lambda text,p:None):
-        return self._run(path,options,swap,progress,Path(output_root))
+    def convert(self,path,output_root,options,progress=lambda text,p:None):
+        return self._run(path,options,progress,Path(output_root))
 
-    def diagnose(self,path,options,swap=False,progress=lambda text,p:None):
-        return self._run(path,options,swap,progress,None)
+    def diagnose(self,path,options,progress=lambda text,p:None):
+        return self._run(path,options,progress,None)
 
-    def _run(self,path,options,swap,progress,output_root):
+    def _run(self,path,options,progress,output_root):
         options.validate();check_cancelled(self.event.is_set)
-        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32',layout='Full-SBS',swap=swap,
+        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
         trace=RunTrace(self.logs,context,self.device_id,child=lambda:self.renderer.process.pid if self.renderer and self.renderer.process else None)
         self.last_diagnostics=trace.data
         with trace:
             progress('Bild vorbereiten',0.)
-            with trace.stage('prepare'):(left,right),original,size=read_pair(path,swap,options)
+            with trace.stage('prepare'):(left,right),original,size=read_pair(path,options)
             offset=min(128,max(1,round(64*size[0]/960)))
             trace.data.update(source_eye_size=original,processing_size=size,matching_offset=offset)
             trace.event('prepared',processing_size=size,matching_offset=offset)

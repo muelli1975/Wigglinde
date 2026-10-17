@@ -18,6 +18,7 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
   or convergence/window change. Remove temporary matching offsets after inference.
 - The converter assumes Full-SBS with normal-width eye images, like the other
   Stereo-Tools. No Half-SBS selector or format auto-detection was agreed.
+- Input order is fixed: left view on the left, right view on the right. No L/R swap.
 - Normal PCs remain a target. Measure CPU time and RAM; never hide resource limits
   by silently lowering resolution, quality, or model precision.
 - Keep expensive geometry verification and full output-decode checks in explicit

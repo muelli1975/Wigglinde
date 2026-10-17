@@ -51,7 +51,8 @@ C-FoundationStereo-S bleibt ausschließlich als historischer Entwicklungsverglei
 Nach positivem Sichtvergleich ist RVS die bevorzugte Richtung für die Rendererarbeit.
 Die gemessene CPU-Laufzeit soll gezielt verbessert werden, bei gleicher Renderqualität.
 
-Eingaben sind fertig justierte Full-SBS-Stereopaare mit ungestauchten Einzelansichten.
+Eingaben sind fertig justierte Full-SBS-Stereopaare mit ungestauchten Einzelansichten,
+linke Ansicht links, rechte rechts. Kein L/R-Tausch im Konverter.
 Keine Half-SBS-Option oder automatische Formaterkennung. Keine automatische oder manuelle Justage,
 kein Beschnitt und keine Änderung der vorhandenen Scheinfensterlage. Ein temporärer
 Suchversatz des Modells wird nach der Inferenz vollständig rückgängig gemacht.

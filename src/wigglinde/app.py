@@ -42,7 +42,7 @@ class WigglindeApp(ctk.CTk):
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1);self.grid_rowconfigure(4,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
-        self.settings.pop('layout',None);self.swap=ctk.BooleanVar(value=False)
+        self.settings.pop('layout',None)
         self.standard=ctk.BooleanVar(value=self.settings.get('standard_output',True));self.own=ctk.StringVar(value=self.settings.get('own_output',''))
         self.input_file=ctk.StringVar();self.input_folder=ctk.StringVar();self.changing_input=False
         self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='1080');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
@@ -103,7 +103,6 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),width=80);self.fps_menu.grid(row=0,column=7)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,6));bar.grid_columnconfigure(2,weight=1)
         self._label(bar,'duration').grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
-        self._check(bar,'swap',self.swap).grid(row=0,column=4)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
         self._label(bar,DEFAULT_MODEL,width=112,anchor='w').grid(row=0,column=1,sticky='w')
@@ -212,7 +211,7 @@ class WigglindeApp(ctk.CTk):
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),self.swap.get(),options,self.adapters[self.device.get()],self.device.get(),depth_only),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only),daemon=True).start()
     def _set_busy(self,busy):
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
@@ -229,7 +228,7 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,swap,options,device_id,device_name,depth_only=False):
+    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
             self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name)
@@ -240,8 +239,8 @@ class WigglindeApp(ctk.CTk):
                 target=base/path.parent.relative_to(root) if root else base
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
-                    if depth_only:diagnosis=self.processor.diagnose(path,options,swap=swap,progress=progress)
-                    else:self.processor.convert(path,target,options,swap=swap,progress=progress)
+                    if depth_only:diagnosis=self.processor.diagnose(path,options,progress=progress)
+                    else:self.processor.convert(path,target,options,progress=progress)
                     completed+=1
                 except ExportCancelled:raise
                 except Exception as e:

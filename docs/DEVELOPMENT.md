@@ -1,5 +1,32 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Rendererprüfung nach Test 3 (17. Oktober 2026)
+
+Die Anwenderprotokolle mit RTX 3060 grenzen den Engpass ein: 1080p bei 1620×1080,
+191,05 s gesamt, Modellladen 1,46 s, beide H-Tiefenkarten 1,61 s, 31 RVS-Ansichten
+181,59 s (95 %), Kodierung/Kopieren 4,19 s. Die vollständige CPU-/GPU-Ausgabezeit
+wird überwiegend vom CPU-Renderer bestimmt.
+2160p bei 3239×2160 scheitert nach 10,23 s im linken DirectML-Aufruf, AveragePool_1,
+mit 0x8007000E und wiederhergestellter Meldung zu fehlenden Speicherressourcen.
+Abgetastete lokale DXGI-Prozessnutzung 26,16 GiB bei ca. 11 GiB Budget, kein Maß
+für physisch vorhandenen VRAM. Verfügbare Commit-Reserve des aufrufenden Prozesses
+zeitweise 64 MiB bei noch ca. 9,3 GiB verfügbarem physischem RAM. Speichermangel
+bestätigt, ausschließlich physischer VRAM als Ursache damit nicht bewiesen.
+Die `system_commit_*`-Feldnamen sind verkürzt: GlobalMemoryStatusEx liefert beim
+Limit das kleinere System-/Prozesslimit und bei verfügbarer Zusicherung einen
+prozessbezogenen Wert. Die Rohwerte werden hier entsprechend eingeordnet.
+
+RVSVulkan-Quellcode und Apache-2.0-Lizenz tatsächlich abgerufen und geprüft.
+Befund und konkrete Anschlussstellen: [RVSVULKAN_REVIEW.md](RVSVULKAN_REVIEW.md).
+Noch keine Kompilierung oder GPU-/Qualitätsmessung, kein Rendererwechsel.
+
+Auf Christophs Wunsch L/R-Tausch aus Oberfläche, Konverter-API und Übersetzungen
+entfernt; Eingabe bleibt fest Full-SBS, links/rechts. Vorhandene Eingabeprüfung auf
+feste Reihenfolge aktualisiert, GUI-Paketprüfung für den nächsten Build ergänzt.
+27 lokale Prüfungen bestanden. Kein neuer Windows-Build; Test 3 bleibt das zuletzt
+bereitgestellte Paket. Historische CLI-Vergleichswerkzeuge sind davon unabhängig.
+
+
 ## Test 3: H und Ressourcenmessung
 
 LAS2-H fest, vier Iterationen, Float32; M/L und Modellmenü entfallen.

@@ -6,8 +6,8 @@ oder Internetverbindung erforderlich. Sprache oben rechts: Deutsch oder English.
 
 1. Ein Einzelbild oder einen Bildordner mit fertig justierten Full-SBS-Bildern auswählen.
    Die andere Eingabe wird dabei geleert. Ordner werden mit Unterordnern verarbeitet.
-2. Bei Bedarf L/R tauschen. Beide Ansichten werden mit ihren vorhandenen Proportionen
-   eingelesen; eine Formatumschaltung ist nicht erforderlich.
+2. Die linke Ansicht steht links, die rechte rechts. Beide Ansichten werden mit ihren
+   vorhandenen Proportionen eingelesen.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
 4. LAS2-H ist fest eingestellt: vier veröffentlichte Iterationen, Float32.
 5. Unter „Berechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.

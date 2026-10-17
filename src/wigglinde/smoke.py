@@ -105,6 +105,7 @@ def run(app_dir,report_path):
     if sys.platform=='win32':assert gui._iconbitmap_method_called
     assert not hasattr(gui,'file_list')
     assert not hasattr(gui,'layout') and 'layout' not in gui.settings
+    assert not hasattr(gui,'swap')
     assert not hasattr(gui,'model_name') and 'model' not in gui.settings
     assert gui.diagnose_button.cget('state')=='disabled'
     gui.input_file.set(str(source));gui.update()
