@@ -9,6 +9,7 @@ from .models import DEFAULT_MODEL
 from .diagnostics import error_message,memory_failure
 from .i18n import tr,message,TEXT
 from .export_options import WiggleOptions
+from .blending_options import BlendingOptions
 from .processor import Processor,collect_files,EXTENSIONS
 from .wiggle_export import ExportCancelled
 
@@ -45,10 +46,10 @@ class WigglindeApp(ctk.CTk):
         self.locale=self.settings.get('language','de');self.locale='en' if self.locale=='en' else 'de'
         left,top,right,bottom=screen_work_area(self);scale=self._get_window_scaling()
         width=min(820,max(780,int((right-left-32)/scale)))
-        height=min(650,max(600,int((bottom-top-72)/scale)))
+        height=min(690,max(640,int((bottom-top-72)/scale)))
         x=left+max(0,(right-left-round(width*scale))//2)
         y=top+max(0,(bottom-top-round(height*scale)-40)//2)
-        self.minsize(780,600);self.geometry(f'{width}x{height}+{x}+{y}')
+        self.minsize(780,640);self.geometry(f'{width}x{height}+{x}+{y}')
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1);self.grid_rowconfigure(4,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
@@ -60,6 +61,11 @@ class WigglindeApp(ctk.CTk):
         self.kind=ctk.StringVar(value=self.tr('png') if saved_options.format=='png' else saved_options.format.upper())
         saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height}[saved_options.format]
         self.size=ctk.StringVar(value=str(saved_size));self.fps=ctk.StringVar(value=str(saved_options.fps));self.duration=ctk.StringVar(value=f'{saved_options.cycle_seconds:g}')
+        blend=BlendingOptions.from_settings(self.settings.get('blending',{}))
+        self.blending_method=ctk.StringVar(value=blend.method)
+        self.blending_low=ctk.StringVar(value=f'{blend.low_factor:g}')
+        self.blending_high=ctk.StringVar(value=f'{blend.high_factor:g}')
+        self.blending_simple=ctk.StringVar(value=f'{blend.simple_factor:g}')
         self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
         self.settings.pop('model',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
@@ -124,8 +130,18 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
         self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
-        self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
-        self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
+        bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,9))
+        self._label(bar,'blending',width=140,anchor='w').grid(row=0,column=0,padx=(0,8))
+        self.blending_menu=self._menu(bar,self.blending_method,['Multispectral','Simple'],self._blending_changed,140);self.blending_menu.grid(row=0,column=1,padx=(0,12))
+        self.blending_first_label=self._label(bar,'',width=85,anchor='w');self.blending_first_label.grid(row=0,column=2,padx=(0,6))
+        self.blending_first_entry=self._entry(bar,self.blending_low,70);self.blending_first_entry.grid(row=0,column=3,padx=(0,12))
+        self.blending_high_label=self._label(bar,'blend_high',width=50,anchor='w');self.blending_high_label.grid(row=0,column=4,padx=(0,6))
+        self.blending_high_entry=self._entry(bar,self.blending_high,70);self.blending_high_entry.grid(row=0,column=5)
+        for entry in (self.blending_first_entry,self.blending_high_entry):entry.bind('<FocusOut>',lambda event:self._save_quietly())
+        bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=4,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(0,weight=1)
+        self.depth_check=self._check(bar,'save_depth',self.save_depth,self._save_quietly)
+        self.depth_check.grid(row=0,column=0,sticky='w')
+        self.blending_reset=self._button(bar,'reset_blending',self._reset_blending,width=170);self.blending_reset.grid(row=0,column=1)
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -164,6 +180,28 @@ class WigglindeApp(ctk.CTk):
         self.stop.configure(text=self.tr('cancel'))
         self.title(f'Wigglinde – {__version__}')
         self._show_status();self._show_elapsed();self._dependencies();self._save_quietly()
+    def _blending_dependencies(self):
+        simple=self.blending_method.get()=='Simple'
+        self.blending_first_label.configure(text=self.tr('blend_weight' if simple else 'blend_low'),text_color=T.TEXT_DISABLED if self.running else T.TEXT)
+        self.blending_first_entry.configure(textvariable=self.blending_simple if simple else self.blending_low)
+        enabled=not simple and not self.running
+        self.blending_high_entry.configure(state='normal' if enabled else 'disabled',text_color=T.TEXT if enabled else T.TEXT_DISABLED)
+        self.blending_high_label.configure(text_color=T.TEXT if enabled else T.TEXT_DISABLED)
+    def _blending_changed(self,*_):
+        self._blending_dependencies();self._save_quietly()
+    def _reset_blending(self):
+        self.blending_low.set('1');self.blending_high.set('4');self.blending_simple.set('5');self._save_quietly()
+    def _blending_options(self):
+        values=BlendingOptions.from_settings(self.settings.get('blending',{})).to_settings()
+        method=self.blending_method.get();values['method']=method
+        for key,var in [('low_factor',self.blending_low),('high_factor',self.blending_high),('simple_factor',self.blending_simple)]:
+            active=(key=='simple_factor')==(method=='Simple')
+            try:
+                value=float(var.get().replace(',','.'))
+                BlendingOptions(method='Simple',simple_factor=value).validate();values[key]=value
+            except (ValueError,OverflowError):
+                if active:raise ValueError(self.tr('blend_numbers')) from None
+        result=BlendingOptions(**values);result.validate();return result
     def _has_input(self):return bool(self.input_file.get().strip() or self.input_folder.get().strip())
     def _input_changed(self,active,other):
         if self.changing_input:return
@@ -182,6 +220,7 @@ class WigglindeApp(ctk.CTk):
         folder=filedialog.askdirectory(parent=self,title=self.tr('output_dialog'),initialdir=self.own.get() or str(Path.home()))
         if folder:self.own.set(folder);self.standard.set(False);self._dependencies();self._save_quietly()
     def _dependencies(self):
+        self._blending_dependencies()
         if self.running:return
         own=not self.standard.get();self.own_entry.configure(state='normal' if own else 'disabled',text_color=T.TEXT if own else T.TEXT_DISABLED);self.own_label.configure(text_color=T.TEXT if own else T.TEXT_DISABLED)
         self.start.configure(state='normal' if self._has_input() else 'disabled');self._style_start()
@@ -202,6 +241,8 @@ class WigglindeApp(ctk.CTk):
         # A partly typed invalid number must not discard the last valid options.
         try:
             options=self._wiggle_options();options.validate();self.settings['wiggle']=options.to_settings()
+        except ValueError:pass
+        try:self.settings['blending']=self._blending_options().to_settings()
         except ValueError:pass
         temporary=self.settings_path.with_name(self.settings_path.name+'.partial')
         temporary.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -229,19 +270,21 @@ class WigglindeApp(ctk.CTk):
         if depth_only and not self.input_file.get().strip():return
         try:
             options=self._wiggle_options();options.validate()
+            blending=None if depth_only else self._blending_options()
             if not depth_only and not self.standard.get() and not self.own.get().strip():raise ValueError(self.tr('choose_output'))
             self.files,self.source_root=self._collect_input();self._save()
         except (ValueError,OSError) as e:messagebox.showerror('Wigglinde',message(self.locale,str(e)),parent=self);return
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,blending),daemon=True).start()
     def _set_busy(self,busy):
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
             if isinstance(control,ctk.CTkEntry):control.configure(text_color=T.TEXT_DISABLED if busy else T.TEXT)
             if isinstance(control,ctk.CTkCheckBox):control.configure(fg_color=T.CHECKBOX_DISABLED if busy else T.GOLD,hover_color=T.CHECKBOX_DISABLED if busy else T.GOLD_LIGHT)
         self.stop.configure(state='normal' if busy else 'disabled')
+        self._blending_dependencies()
         if busy:self._style_start()
         else:self._dependencies()
     def _set_status(self,key,**values):self.status_value=(key,values);self._show_status()
@@ -252,7 +295,7 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False):
+    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,blending=None):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
             self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name)
@@ -263,7 +306,7 @@ class WigglindeApp(ctk.CTk):
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
                     if depth_only:diagnosis=self.processor.diagnose(path,options,progress=progress)
-                    else:self.processor.convert(path,base,options,progress=progress)
+                    else:self.processor.convert(path,base,options,progress=progress,blending=blending)
                     completed+=1
                 except ExportCancelled:raise
                 except Exception as e:

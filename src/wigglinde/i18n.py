@@ -2,7 +2,13 @@
 import re
 
 TEXT = {
-    'version': ('Version 1.0', 'Version 1.0'),
+    'version': ('Version 1.1 Test 1', 'Version 1.1 Test 1'),
+    'blending': ('Bildverschmelzung', 'Blending'),
+    'blend_low': ('Flächen', 'Areas'),
+    'blend_high': ('Details', 'Details'),
+    'blend_weight': ('Gewichtung', 'Weight'),
+    'reset_blending': ('Faktoren zurücksetzen', 'Reset factors'),
+    'blend_numbers': ('Bitte positive, endliche Zahlen für die aktiven Blending-Faktoren eingeben.', 'Please enter positive, finite numbers for the active blending factors.'),
     'save_depth': ('Tiefenkarten zusätzlich speichern', 'Also save depth maps'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),

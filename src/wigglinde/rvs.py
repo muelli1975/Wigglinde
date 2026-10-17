@@ -4,9 +4,11 @@ import json,os,subprocess,threading
 import numpy as np
 from .wiggle_export import ExportCancelled,check_cancelled
 from .resources import render_plan
+from .blending_options import BlendingOptions
 
 class RVSRenderer:
-    def __init__(self,executable,scene,positions,work,matching_offset=64):
+    def __init__(self,executable,scene,positions,work,matching_offset=64,blending=None):
+        blending=blending or BlendingOptions();blending.validate()
         self.executable=Path(executable);self.scene=scene;self.positions=positions;self.work=Path(work)
         self.work.mkdir(parents=True,exist_ok=True);self.process=None;self.metrics={}
         if not self.executable.is_file():raise FileNotFoundError(f'Der RVS-Renderer fehlt: {self.executable}')
@@ -23,7 +25,7 @@ class RVSRenderer:
         cp=self.work/'cameras.json';cp.write_text(json.dumps(dict(Version='2.0',cameras=cameras)),encoding='utf-8')
         # RVS' small JSON parser does not support escape sequences. Windows also
         # accepts forward slashes; write UTF-8 and avoid escaped backslashes.
-        config=dict(Version='2.0',InputCameraParameterFile=cp.as_posix(),VirtualCameraParameterFile=cp.as_posix(),InputCameraNames=['left','right'],VirtualCameraNames=[f'v{i}' for i in range(len(positions))],ViewImageNames=[(self.work/f'color{i}.rgb').as_posix() for i in range(2)],DepthMapNames=[(self.work/f'depth{i}.z').as_posix() for i in range(2)],StartFrame=0,NumberOfFrames=1,Precision=1,ColorSpace='RGB',ViewSynthesisMethod='Triangles',BlendingMethod='Multispectral',BlendingLowFreqFactor=1.,BlendingHighFreqFactor=4.)
+        config=dict(Version='2.0',InputCameraParameterFile=cp.as_posix(),VirtualCameraParameterFile=cp.as_posix(),InputCameraNames=['left','right'],VirtualCameraNames=[f'v{i}' for i in range(len(positions))],ViewImageNames=[(self.work/f'color{i}.rgb').as_posix() for i in range(2)],DepthMapNames=[(self.work/f'depth{i}.z').as_posix() for i in range(2)],StartFrame=0,NumberOfFrames=1,Precision=1,ColorSpace='RGB',ViewSynthesisMethod='Triangles',**blending.rvs_config())
         (self.work/'config.json').write_text(json.dumps(config,ensure_ascii=False),encoding='utf-8')
 
     def cancel(self):

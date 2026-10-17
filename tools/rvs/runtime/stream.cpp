@@ -13,6 +13,8 @@
 #include <future>
 #include <vector>
 #include <algorithm>
+#include <memory>
+#include <cmath>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -38,6 +40,10 @@ int main(int argc,char**argv){Stats stats;try{
  // Upstream diagnostic text must never enter the binary frame stream.
  std::cout.rdbuf(std::cerr.rdbuf());cv::setNumThreads(stats.opencv);rvs::g_with_opengl=false;
  auto cfg=rvs::Config::loadFromFile(argv[1]);std::vector<rvs::View> inputs;
+ const bool multispectral=cfg.blending_method=="Multispectral";
+ if(!multispectral && cfg.blending_method!="Simple")throw std::runtime_error("Unknown blending method");
+ auto valid=[](float value){return std::isfinite(value) && value>0 && std::isfinite(1.f/value);};
+ if(multispectral ? (!valid(cfg.blending_low_freq_factor) || !valid(cfg.blending_high_freq_factor)) : !valid(cfg.blending_factor))throw std::runtime_error("Invalid blending factor");
  for(int i=0;i<2;i++){
   auto size=cfg.params_real[i].getSize();
   inputs.emplace_back(readmat<cv::Mat3f>(cfg.texture_names[i],size),readmat<cv::Mat1f>(cfg.depth_names[i],size),cv::Mat1f(size,1.f),cv::Mat1f(size,1.f));
@@ -49,12 +55,14 @@ int main(int argc,char**argv){Stats stats;try{
   if(stats.inner)omp_set_num_threads(stats.inner);
 #endif
   auto render_start=Clock::now();
-  rvs::BlendedViewMultiSpec blender(1.f,4.f);
+  std::unique_ptr<rvs::BlendedView> blender;
+  if(multispectral)blender.reset(new rvs::BlendedViewMultiSpec(cfg.blending_low_freq_factor,cfg.blending_high_freq_factor));
+  else blender.reset(new rvs::BlendedViewSimple(cfg.blending_factor));
   for(int i=0;i<2;i++){
    rvs::GenericTransformer tr;tr.set_inputPosition(&cfg.params_real[i]);tr.set_targetPosition(&cfg.params_virtual[v]);
-   rvs::SynthetisedViewTriangle synth;synth.setSpaceTransformer(&tr);synth.compute(inputs[i]);blender.blend(synth);
+   rvs::SynthetisedViewTriangle synth;synth.setSpaceTransformer(&tr);synth.compute(inputs[i]);blender->blend(synth);
   }
-  auto color=rvs::detail::inpaint(blender.get_color(),blender.get_inpaint_mask(),true);
+  auto color=rvs::detail::inpaint(blender->get_color(),blender->get_inpaint_mask(),true);
   cv::resize(color,color,cfg.params_virtual[v].getSize());
   if(!color.isContinuous())color=color.clone();
   return Result{color,seconds(render_start)};

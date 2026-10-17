@@ -10,6 +10,7 @@ from .stereo import StereoScene
 from .las2 import LiteAnyStereo
 from .models import DEFAULT_MODEL,model_path
 from .rvs import RVSRenderer
+from .blending_options import BlendingOptions
 from .depth_export import save_depth_maps
 from .wiggle_export import export_wiggle,check_cancelled
 
@@ -62,13 +63,15 @@ class Processor:
         if self.model:self.model.cancel()
         if self.renderer:self.renderer.cancel()
 
-    def convert(self,path,output_root,options,progress=lambda text,p:None):
-        return self._run(path,options,progress,Path(output_root))
+    def convert(self,path,output_root,options,progress=lambda text,p:None,blending=None):
+        return self._run(path,options,progress,Path(output_root),blending)
 
     def diagnose(self,path,options,progress=lambda text,p:None):
         return self._run(path,options,progress,None)
 
-    def _run(self,path,options,progress,output_root):
+    def _run(self,path,options,progress,output_root,blending=None):
+        blending=blending or BlendingOptions()
+        if output_root is not None:blending.validate()
         options.validate();check_cancelled(self.event.is_set)
         context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32' if self.device_id is None else 'mixed_float16_float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
@@ -95,12 +98,12 @@ class Processor:
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')
+                trace.data.update(output=str(output),renderer=blending.description,blending=blending.rvs_config())
                 with temporary_workspace(temp_root) as work:
                     exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
                     if not exe.is_file() and getattr(sys,'frozen',False):
                         exe=Path(sys._MEIPASS)/'backend'/exe.name
-                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
+                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset,blending=blending)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule
                     def render(position):

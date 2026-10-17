@@ -1,4 +1,23 @@
-# Wigglinde 1.0
+# Wigglinde 1.1 Test 1
+
+**Separate Windows-Testversion:** `Wigglinde_1.1_Test1_Windows_x64.zip`.
+Die veröffentlichte 1.0 bleibt bestehen. Neu: Bildverschmelzung **Multispectral**
+oder **Simple**, mit Zahlenfeldern für **Flächen/Details** bzw. **Gewichtung**.
+Startwerte: Multispectral **1/4**, Simple **5**. **Faktoren zurücksetzen** setzt
+alle drei Faktoren zurück und behält das Verfahren bei. Inaktive Felder bleiben
+sichtbar und sind deaktiviert. Faktoren werden gespeichert und für jeden Lauf
+protokolliert. Positive Dezimalzahlen sind möglich, auch mit Dezimalkomma.
+LAS2-H bleibt bei vier Iterationen; es gibt keinen Iterationsregler.
+
+Die Faktoren sind RVS-Gewichtungsexponenten, keine Qualitätsstufen. Höhere Werte
+bevorzugen die Ansicht mit dem höheren RVS-Gewicht stärker. **1/4 ist Wigglindes
+bisheriger Ausgangspunkt**, kein eingebauter Multispectral-Standard von RVS.
+Simple **5** ist der RVS-Standard. Für Multispectral muss RVS beide Faktoren
+explizit erhalten; dokumentiert sind die Parameter, kein allgemeiner optimaler
+Wertebereich. Hinweise: [RVS-Konfiguration](https://hovitron.gitlab-pages.ulb.be/html/classrvs_1_1_config.html).
+Eine Verbesserung bei Gittern oder feinen Ästen ist motivabhängig und wird hier
+nicht zugesichert. Normale Konvertierungen berechnen die Tiefe jeweils neu;
+Ausgaben gleichen Namens werden nach erfolgreichem Export ersetzt.
 
 [English](README.md)
 

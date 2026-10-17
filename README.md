@@ -1,4 +1,23 @@
-# Wigglinde 1.0
+# Wigglinde 1.1 Test 1
+
+**Separate Windows test build:** `Wigglinde_1.1_Test1_Windows_x64.zip`.
+The released 1.0 remains available. New: **Multispectral / Simple** blending,
+with **Areas/Details** or **Weight** numeric fields. Initial factors are
+Multispectral **1/4** and Simple **5**. **Reset factors** restores all three
+factors while retaining the selected method. Inactive fields stay visible and
+are disabled. Settings are retained and actual factors are logged for each run.
+Positive decimal values are accepted, including a decimal comma.
+LAS2-H remains at four iterations; there is no iteration control.
+
+Factors are native RVS weighting exponents, not quality levels. Larger exponents
+prefer the view with the higher RVS weight more strongly. **1/4 is Wigglinde's
+existing starting point**, not a built-in RVS Multispectral default. Simple **5**
+is the RVS default. Multispectral requires both factors explicitly; parameters
+are documented, without a universally optimal range. See the
+[RVS configuration](https://hovitron.gitlab-pages.ulb.be/html/classrvs_1_1_config.html).
+Improvement on grids or fine branches depends on the photograph and is not
+promised. Each normal conversion estimates depth again; existing outputs with
+the same name are replaced after successful export.
 
 [Deutsch](README_DE.md)
 

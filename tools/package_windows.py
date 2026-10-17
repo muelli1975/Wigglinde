@@ -57,10 +57,10 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.0',models=['LAS2-H'],default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1-test1',models=['LAS2-H'],default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=360)
-    archive=Path('dist/Wigglinde_1.0_Windows_x64.zip')
+    archive=Path('dist/Wigglinde_1.1_Test1_Windows_x64.zip')
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,6) as z:
         for f in target.rglob('*'):
             if f.is_file() and '_temp' not in f.parts and f.relative_to(target).parts[0]!='logs' and f.name!='settings.json':z.write(f,f.relative_to(target.parent))

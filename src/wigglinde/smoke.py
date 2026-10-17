@@ -9,6 +9,7 @@ from .las2 import LiteAnyStereo
 from .models import MODELS,DEFAULT_MODEL,model_path
 from .memory import MemorySampler
 from .export_options import WiggleOptions
+from .blending_options import BlendingOptions
 from .wiggle_export import ffmpeg_path
 
 def check_button_colors(gui):
@@ -58,7 +59,9 @@ def run(app_dir,report_path):
     before=hashlib.sha256(source.read_bytes()).hexdigest();processor=Processor(app_dir);results=[];session=None
     for kind in ['mp4','gif','png']:
         options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5,save_depth=kind=='png')
-        result=processor.convert(source,work/'Ausgabe_Größe',options)
+        blend={'mp4':BlendingOptions(),'gif':BlendingOptions(method='Simple'),'png':BlendingOptions(high_factor=2.)}[kind]
+        result=processor.convert(source,work/'Ausgabe_Größe',options,blending=blend)
+        assert result['renderer']==blend.description and result['blending']==blend.rvs_config()
         assert not (work/'Ausgabe_Größe'/'_temp').exists()
         if session is None:session=id(processor.model.session)
         assert id(processor.model.session)==session
@@ -93,7 +96,6 @@ def run(app_dir,report_path):
     assert results[0]['model']==DEFAULT_MODEL
     for result in results:
         assert result['status']=='passed' and result['model']=='LAS2-H'
-        assert result['renderer']=='RVS CPU Precision 1 Multispectral 1/4'
         assert result['stage_seconds']['depth_left']>0 and result['stage_seconds']['depth_right']>0
         assert result['rvs']['render_work_seconds']>0 and result['rvs']['views']>1
         assert result['rvs']['parallel_workers']==result['rvs_schedule']['workers']
@@ -120,6 +122,21 @@ def run(app_dir,report_path):
     gui=WigglindeApp(app_dir);gui.update()
     assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
     assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
+    assert gui._blending_options()==BlendingOptions()
+    gui.blending_low.set('1,5');gui.blending_high.set('8');gui.blending_simple.set('2,5')
+    gui.blending_method.set('Simple');gui._blending_changed();gui.update()
+    assert gui.blending_first_entry.cget('textvariable')==gui.blending_simple
+    assert gui.blending_high_entry.cget('state')=='disabled'
+    gui.blending_high.set('invalid')
+    assert gui._blending_options().simple_factor==2.5
+    gui.blending_simple.set('0')
+    try:gui._blending_options();raise AssertionError('Invalid factor accepted')
+    except ValueError:pass
+    gui._reset_blending();assert gui.blending_method.get()=='Simple'
+    assert gui._blending_options()==BlendingOptions(method='Simple')
+    gui.blending_method.set('Multispectral');gui._blending_changed()
+    assert gui.blending_high_entry.cget('state')=='normal'
+
     icon=Path(app_dir)/'assets/wigglinde.ico'
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
     if sys.platform=='win32':assert gui._iconbitmap_method_called
@@ -154,8 +171,11 @@ def run(app_dir,report_path):
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
     gui.save_depth.set(True);gui.kind.set('MP4');gui._format_changed()
-    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui._save();gui.destroy()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3')
+    gui.blending_high.set('8');gui.blending_simple.set('2.5');gui.blending_method.set('Simple');gui._blending_changed();gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
+    assert gui._blending_options()==BlendingOptions(method='Simple',high_factor=8.,simple_factor=2.5)
+    assert gui.blending_high_entry.cget('state')=='disabled'
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
@@ -168,6 +188,9 @@ def run(app_dir,report_path):
         def geometry_snapshot():
             return [(w.winfo_rootx(),w.winfo_rooty(),w.winfo_width(),w.winfo_height()) for w in gui.controls]
         baseline=geometry_snapshot();device_before=gui.device.get()
+        for method in ['Multispectral','Simple','Multispectral']:
+            gui.blending_method.set(method);gui._blending_changed();gui.update()
+            assert geometry_snapshot()==baseline
         for kind in ['GIF',gui.tr('png'),'MP4']:
             gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
             # A long label exercises layout only; it does not probe a device.
@@ -185,6 +208,7 @@ def run(app_dir,report_path):
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
+    gui._reset_blending();gui.blending_method.set('Multispectral');gui._blending_changed();gui.update()
     try:
         from PIL import ImageGrab
         ImageGrab.grab().save(report_path.parent/'gui-build-check.png')
@@ -221,4 +245,4 @@ def run(app_dir,report_path):
                 np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,blending_modes=True,blending_settings_restored=True,blending_reset=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

@@ -30,7 +30,10 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Code, model weights and runtime dependencies can have different licenses.
   Retain the exact notices applicable to each distributed component. Never copy
   the research-only FoundationStereo source into the application.
-- Current milestone: version 1.0, LAS2-H (four iterations; CPU Float32, GPU mixed Float16/Float32), CPU/DirectML + RVS CPU.
+- Active authorized test: 1.1 Test 1 adds Simple/Multispectral and editable factors,
+  reset, persistence and logging. Defaults remain Multi 1/4 / Simple 5; H four
+  iterations unchanged. Build on test-blending-1.1; do not replace release 1.0.
+- Released milestone: version 1.0, LAS2-H (four iterations; CPU Float32, GPU mixed Float16/Float32), CPU/DirectML + RVS CPU.
   Precision 1, RGB, Multispectral 1/4, normalized encoded sRGB without extra gamma
   conversions. Default MP4 720p / CPU. Optional jointly normalized 16-bit depth maps.
   Output folders wiggle/depth_maps. Folder input processes direct images only,

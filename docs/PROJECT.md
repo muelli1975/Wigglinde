@@ -14,6 +14,17 @@ Stapelverarbeitung ohne zusätzliche teure Qualitätsprüfungen pro Datei oder F
 Modellsitzungen und bereits berechnete Ansichten wiederverwenden. Entwicklungs-
 vergleiche und vollständige Probe-Dekodierungen gehören nicht in den normalen Ablauf.
 
+## Freigegebene Testversion 1.1 Test 1
+
+Christoph beauftragt am 17. Oktober 2026 eine separate Windows-Testversion mit
+wählbarem Simple und Multispectral sowie editierbaren Faktoren. Multispectral:
+Flächen/Details, Start 1/4. Simple: Gewichtung, Start 5. Zurücksetzen nur für die
+Faktoren, Verfahren bleibt erhalten. Werte speichern und tatsächlich verwendete
+Parameter protokollieren. Stabile Geometrie, inaktive Felder sichtbar deaktiviert,
+Deutsch/Englisch und bisherige Farben. Keine unbelegten Qualitätspresets.
+LAS2-H vier Iterationen, Precision 1, RGB und CPU/GPU-Präzision bleiben erhalten.
+Die veröffentlichte 1.0 wird durch diesen Testbuild nicht verändert.
+
 ## Oberfläche
 
 Eine nüchterne, reduzierte Konverter-GUI, Bedienlogik ähnlich SplatTricia.

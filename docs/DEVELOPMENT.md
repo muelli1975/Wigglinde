@@ -1,5 +1,20 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Windows-Testversion 1.1 Test 1: Blending
+
+Separate Branch `test-blending-1.1`, Basis main 19d1970. Native RVS-Klassen bleiben
+unverändert; der Stream-Adapter liest jetzt Verfahren und Faktoren aus der
+Konfiguration statt fest Multi 1/4 zu instanziieren. Beide Modi werden pro Ansicht
+wie bisher unabhängig und parallel berechnet. Simple 5 und Multi 1/4 bleiben die
+Startwerte; UI-Felder akzeptieren positive endliche Float32-Faktoren. Keine
+Faktor- oder Iterationspresets. Konfiguration wird vor dem Lauf validiert, nicht
+pro Bildpunkt. Keine neue Tiefenberechnung zwischen Frames, kein zusätzlicher
+Normalbetriebs-Test. Zwischen separaten Konvertierungen werden Tiefen wie bisher
+neu geschätzt. H vier Iterationen, RGB, Precision 1 und Modellpräzision unverändert.
+
+Windows-CI verwendet exakt die bereits geprüften Modell-/DirectML-Artefakte aus
+Run 39041230523 erneut. Testpaket mit eigenem Namen, kein Release-Upload.
+Prüfergebnisse werden nach dem Build ergänzt.
 ## Einheitlicher Windows-Archivname
 
 Am 17. Oktober 2026 wird das bestehende Windows-Release-Asset in
