@@ -88,8 +88,10 @@ def main():
                 'imageio-ffmpeg', 'protobuf', 'flatbuffers', 'packaging', 'pyinstaller']
     if sys.platform == 'darwin':
         packages.append('psutil')
-    for name in packages:
-        dist = metadata.distribution(name)
+    # Include transitive runtime/build dependency notices as well (e.g. sympy,
+    # mpmath and Intel ORT's coloredlogs/humanfriendly).
+    for dist in metadata.distributions():
+        name = dist.metadata['Name']
         for item in dist.files or []:
             if any(term in str(item).lower() for term in ('license', 'copying', 'copyright', 'notice')):
                 file = Path(dist.locate_file(item))

@@ -56,11 +56,11 @@ jobs:
           git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
           git clone --depth 1 --branch 4.10.0 https://github.com/opencv/opencv.git opencv-reference
           test "$(git -C opencv-reference rev-parse HEAD)" = 71d3237a093b60a27601c20e9ee6c3e52154e8b1
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         id: opencv
         with:
           path: opencv-install
-          key: opencv-static-4.10.0-${{ matrix.label }}-v1
+          key: opencv-static-4.10.0-${{ matrix.label }}-v2
       - name: Build minimal portable OpenCV
         if: steps.opencv.outputs.cache-hit != 'true'
         shell: bash
@@ -71,10 +71,16 @@ jobs:
             -DBUILD_JAVA=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF \
             -DWITH_OPENCL=OFF -DWITH_IPP=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF \
             -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_QT=OFF -DWITH_GTK=OFF \
+            -DWITH_PROTOBUF=OFF -DBUILD_PROTOBUF=OFF \
             -DWITH_OPENEXR=OFF -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_JASPER=OFF -DWITH_OPENJPEG=OFF \
             -DWITH_JPEG=OFF -DWITH_PNG=ON -DBUILD_PNG=ON -DBUILD_ZLIB=ON
           cmake --build build/opencv --parallel 4
           cmake --install build/opencv
+      - uses: actions/cache/save@v4
+        if: steps.opencv.outputs.cache-hit != 'true'
+        with:
+          path: opencv-install
+          key: opencv-static-4.10.0-${{ matrix.label }}-v2
       - name: Build the RVS CPU adapter
         shell: bash
         run: |
