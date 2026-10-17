@@ -3,7 +3,37 @@
 
 ## 1.0 neu mit Simple 5
 
-Auftrag vom 17. Oktober 2026: auf dem freigegebenen main-Stand 19d1970 aufbauen. Nur festen Blender von Multi 1/4 auf native BlendedViewSimple(5.f) und passende RVS-Konfiguration/Diagnostik ändern. App-Oberfläche, Version 1.0, H vier Iterationen, CPU Float32/Windows DirectML Mixed Precision, Precision 1, RGB, Suchversatz, Auflösung, Export, Dateinamen und Einstellungen bleiben erhalten. Experimentelle Blending-Regler werden nicht übernommen. Modelle und private DirectML-Laufzeit aus geprüftem Run 39041230523 erneut verwenden. Build und Pakettests für Windows, Linux, Apple Silicon und Intel-Mac vor gemeinsamer Aktualisierung der Releaseassets und des Tags; Ergebnisse werden nach dem Build ergänzt.
+Auftrag vom 17. Oktober 2026: auf dem freigegebenen main-Stand 19d1970 aufbauen. Nur festen Blender von Multi 1/4 auf native BlendedViewSimple(5.f) und passende RVS-Konfiguration/Diagnostik ändern. App-Oberfläche, Version 1.0, H vier Iterationen, CPU Float32/Windows DirectML Mixed Precision, Precision 1, RGB, Suchversatz, Auflösung, Export, Dateinamen und Einstellungen bleiben erhalten. Experimentelle Blending-Regler werden nicht übernommen. Modelle und private DirectML-Laufzeit aus geprüftem Run 39041230523 erneut verwenden. Build und Pakettests für Windows, Linux, Apple Silicon und Intel-Mac vor gemeinsamer Aktualisierung der Releaseassets und des Tags; Erfolgreicher Build und gemeinsame Veröffentlichung:
+https://github.com/muelli1975/Wigglinde/actions/runs/39057394985
+Quellcodeprüfungen unter Windows/Linux:
+https://github.com/muelli1975/Wigglinde/actions/runs/39057394938
+
+Alle vier Pakete enthalten Quellstand db215d8460eb798b4f4b4e914cab0ef6e3a2194f;
+Tag v1.0 und Release-Ziel wurden nach erfolgreichen Paketprüfungen auf diesen
+Quellstand gesetzt. Die experimentelle Branch test-blending-1.1 bleibt separat.
+Je Plattform 38 Quellcodeprüfungen, nativer serieller/paralleler RVS-Vergleich
+bitgleich, Abbruch-/Fehlerbehandlung und tatsächliche Paket-Ausgabe mit CPU
+bestanden. MP4/GIF/PNG, optionale gemeinsame 16-Bit-Disparitätskarten samt JSON,
+Deutsch/Englisch, Farben, stabile Bediengeometrie, Originalicon/-sound,
+Einstellungswiederherstellung und Temp-Bereinigung geprüft. Native Unix-Pakete
+nach Entpacken getestet; Mac-Ad-hoc-Signaturen geprüft. Keine neue Fototestserie.
+Windows-Modelle und DirectML-Laufzeit aus geprüftem Run wiederverwendet; keine
+neue physische GPU-Ausführung auf gehosteten Runnern belegt.
+
+| Archiv | Byte | SHA-256 |
+| --- | ---: | --- |
+| Wigglinde_1.0_Windows_x64.zip | 185408673 | 13cd863e25fa1890641a602490b0b6d05460ed730976a0f68e4790c40d3ab446 |
+| Wigglinde_1.0_Linux_x64.tar.gz | 150296373 | 810e1eade79f50e2596445fc7b91806cd771b8c2bae6e26e565ac14bea704e98 |
+| Wigglinde_1.0_macOS_AppleSilicon.zip | 114215202 | ba1d0874422e1ddb5db620bd2816e64af99028197526d872a9a9aa04dcdfdac5 |
+| Wigglinde_1.0_macOS_Intel.zip | 124813847 | 9d3376767e46bf44ff1f8f5276ffb63929090ce000af0580dfdfe6461b6dbdaf |
+
+Alle vier veröffentlichten Asset-Digests und Größen mit den erfolgreichen
+Build-Berichten abgeglichen; exakt vier endgültige Pakete, keine Staging-Assets.
+Depth-Map-JSON bleibt nach Rückfrage ausdrücklich erhalten: Zuordnung,
+gemeinsame Normierung und Rekonstruktion der Disparität in Verarbeitungspixeln.
+Christoph meldet: Problemgitter in 2160p nur minimal besser; Simple 5 bei vielen
+Bildern ruhiger als Multispectral. Keine allgemeine Behebung von Gitterfehlern
+behauptet, höhere Berechnungsauflösung/weitere Modelle vorerst nicht übernommen.
 
 ## Einheitlicher Windows-Archivname
 
