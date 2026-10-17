@@ -1,5 +1,10 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+
+## 1.0 neu mit Simple 5
+
+Auftrag vom 17. Oktober 2026: auf dem freigegebenen main-Stand 19d1970 aufbauen. Nur festen Blender von Multi 1/4 auf native BlendedViewSimple(5.f) und passende RVS-Konfiguration/Diagnostik ändern. App-Oberfläche, Version 1.0, H vier Iterationen, CPU Float32/Windows DirectML Mixed Precision, Precision 1, RGB, Suchversatz, Auflösung, Export, Dateinamen und Einstellungen bleiben erhalten. Experimentelle Blending-Regler werden nicht übernommen. Modelle und private DirectML-Laufzeit aus geprüftem Run 39041230523 erneut verwenden. Build und Pakettests für Windows, Linux, Apple Silicon und Intel-Mac vor gemeinsamer Aktualisierung der Releaseassets und des Tags; Ergebnisse werden nach dem Build ergänzt.
+
 ## Einheitlicher Windows-Archivname
 
 Am 17. Oktober 2026 wird das bestehende Windows-Release-Asset in

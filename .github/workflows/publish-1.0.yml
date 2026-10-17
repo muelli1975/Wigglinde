@@ -1,46 +1,93 @@
-name: Normalize Windows 1.0 archive name
+name: Publish verified 1.0 packages
 
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/publish-1.0.yml']
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: write
-
-concurrency:
-  group: publish-wigglinde-1.0
-  cancel-in-progress: false
+  actions: read
 
 jobs:
-  rename:
+  publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
-      - name: Rename the verified existing asset without rebuilding or reuploading
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Wigglinde-1.0-*
+          path: packages
+      - name: Verify all platform packages and update the existing 1.0 release
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs'), path = require('path'), crypto = require('crypto');
             const owner = context.repo.owner, repo = context.repo.repo, tag = 'v1.0';
-            const oldName = 'Wigglinde_1.0_Windows.zip';
-            const newName = 'Wigglinde_1.0_Windows_x64.zip';
-            const expectedDigest = 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea';
-            const expectedSize = 185371902, expectedId = 650707400;
+            const expectedTag = '642773fd642d28e30959a4df554829e4d56493da';
+            const renderer = 'RVS CPU Precision 1 Simple 5';
+            const previous = {
+              Windows_x64: 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea',
+              Linux_x64: 'sha256:84da918be4efdb67bd7abe42869d6bd116d1730ad1876220f6c7306bccae30b9',
+              macOS_AppleSilicon: 'sha256:e000d95cf1ef6298868b09669dad158b70a7976e2eeea40761f9fe688360cc96',
+              macOS_Intel: 'sha256:dd57e47626cdc26a368ba9c86edc09256bde37a4a667e904e0498fdbc8c39570'
+            };
             const release = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
             const ref = (await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag})).data;
-            if (ref.object.sha !== '642773fd642d28e30959a4df554829e4d56493da') throw new Error('Release tag differs.');
-            const old = release.assets.find(a => a.name === oldName);
-            const renamed = release.assets.find(a => a.name === newName);
-            if (old && renamed) throw new Error('Both archive names exist.');
-            const asset = renamed || old;
-            if (!asset || asset.id !== expectedId || asset.digest !== expectedDigest || asset.size !== expectedSize) throw new Error('Existing Windows asset identity differs.');
-            if (old) await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.id, name: newName});
-            const checked = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
-            const final = checked.assets.find(a => a.name === newName);
-            if (!final || final.id !== expectedId || final.digest !== expectedDigest || final.size !== expectedSize || checked.assets.some(a => a.name === oldName)) throw new Error('Rename verification failed.');
-            for (const before of release.assets.filter(a => a.id !== expectedId)) {
-              const after = checked.assets.find(a => a.id === before.id);
-              if (!after || after.name !== before.name || after.digest !== before.digest || after.size !== before.size) throw new Error('Another release asset changed.');
+            if (![expectedTag, context.sha].includes(ref.object.sha)) throw new Error('Release tag changed.');
+            const verified = [];
+            for (const label of Object.keys(previous)) {
+              const root = path.join('packages', 'Wigglinde-1.0-' + label);
+              const report = JSON.parse(fs.readFileSync(path.join(root, 'output/package-verification.json')));
+              const smoke = JSON.parse(fs.readFileSync(path.join(root, 'output', label === 'Windows_x64' ? 'windows-smoke.json' : 'native-smoke.json')));
+              const parallel = JSON.parse(fs.readFileSync(path.join(root, 'output/rvs-parallel.json')));
+              const expectedName = 'Wigglinde_1.0_' + label + (label === 'Linux_x64' ? '.tar.gz' : '.zip');
+              if (report.status !== 'passed' || report.platform !== label || report.commit !== context.sha || report.renderer !== renderer || report.filename !== expectedName || smoke.status !== 'passed' || parallel.status !== 'passed') throw new Error('Package checks failed: ' + label);
+              if (label === 'Windows_x64' ? !report.actual_packaged_application_tested || !smoke.mixed_model_bundled : !report.actual_extracted_package_tested || smoke.mixed_model_bundled) throw new Error('Packaged runtime checks missing: ' + label);
+              if (!smoke.formats.every(r => r.status === 'passed' && r.renderer === renderer && r.blending?.BlendingMethod === 'Simple' && r.blending?.BlendingFactor === 5)) throw new Error('Wrong actual renderer: ' + label);
+              const data = fs.readFileSync(path.join(root, label === 'Windows_x64' ? 'dist' : 'release', expectedName));
+              const digest = 'sha256:' + crypto.createHash('sha256').update(data).digest('hex');
+              if (data.length !== report.bytes || digest !== 'sha256:' + report.sha256) throw new Error('Package identity differs: ' + label);
+              const old = release.assets.find(a => a.name === expectedName);
+              if (!old || ![previous[label], digest].includes(old.digest)) throw new Error('Existing asset changed: ' + label);
+              verified.push({name: expectedName, data, digest, size: data.length, old});
             }
-            core.notice('Renamed the existing verified ZIP: ' + final.browser_download_url);
+            // Upload and verify replacements before renaming any published asset.
+            const suffix = '.simple5-' + context.sha.slice(0, 12);
+            for (const asset of verified) {
+              if (asset.old.digest === asset.digest) continue;
+              const stageName = asset.name + suffix;
+              asset.staged = release.assets.find(a => a.name === stageName);
+              if (!asset.staged) asset.staged = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id, name: stageName, data: asset.data,
+                headers: {'content-type': asset.name.endsWith('.zip') ? 'application/zip' : 'application/gzip', 'content-length': asset.size}})).data;
+              if (asset.staged.digest !== asset.digest || asset.staged.size !== asset.size) throw new Error('Staged asset differs: ' + asset.name);
+            }
+            let tagMoved = false;
+            try {
+              for (const asset of verified.filter(a => a.staged)) {
+                await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.old.id, name: asset.name + suffix + '.previous'});
+                asset.oldRenamed = true;
+                await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.staged.id, name: asset.name});
+                asset.newRenamed = true;
+              }
+              if (ref.object.sha !== context.sha) {
+                await github.rest.git.updateRef({owner, repo, ref: 'tags/' + tag, sha: context.sha, force: true});
+                tagMoved = true;
+              }
+              let body = release.body.replace('Multispectral blending', 'Simple blending (factor 5)').split('\n\nNative package source:')[0].split('\n\n### Updated 1.0 build')[0];
+              body += '\n\n### Updated 1.0 build — 17 October 2026\n\nAll four packages now use fixed RVS Simple blending with factor 5, following practical photo comparisons. The reduced interface is retained without experimental blending controls. LAS2-H, four iterations, model precision, processing resolution and export settings are unchanged.\n\nAll package builds and CPU output/GUI checks passed. DirectML hardware execution was not established on hosted build runners; the verified Windows mixed-precision model and runtime are unchanged.\n\nSource for all four packages: [' + context.sha.slice(0, 7) + '](https://github.com/' + owner + '/' + repo + '/tree/' + context.sha + '), also included in each package.';
+              await github.rest.repos.updateRelease({owner, repo, release_id: release.id, target_commitish: context.sha, body});
+              const final = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
+              for (const asset of verified) {
+                const checked = final.assets.find(a => a.name === asset.name);
+                if (!checked || checked.digest !== asset.digest || checked.size !== asset.size) throw new Error('Final asset differs: ' + asset.name);
+              }
+            } catch (error) {
+              for (const asset of [...verified].reverse()) {
+                if (asset.newRenamed) await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.staged.id, name: asset.name + suffix});
+                if (asset.oldRenamed) await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.old.id, name: asset.name});
+              }
+              if (tagMoved) await github.rest.git.updateRef({owner, repo, ref: 'tags/' + tag, sha: ref.object.sha, force: true});
+              await github.rest.repos.updateRelease({owner, repo, release_id: release.id, target_commitish: release.target_commitish, body: release.body});
+              throw error;
+            }
+            for (const asset of verified.filter(a => a.staged)) await github.rest.repos.deleteReleaseAsset({owner, repo, asset_id: asset.old.id});
+            core.notice('Updated all four verified 1.0 packages to Simple 5.');

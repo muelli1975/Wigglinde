@@ -69,7 +69,7 @@ ohne Bildränder abzuschneiden.
 LAS2-H verwendet vier Iterationen. Auf CPU wird Float32 verwendet; auf GPU eine
 separate Mixed-Precision-Fassung mit Float16/Float32. Ausgewählte Normalisierungs-,
 Wahrscheinlichkeits-, Summen- und Abtastoperationen bleiben in Float32.
-**RVS rendert in beiden Modi auf CPU**, mit Precision 1, RGB und Multispectral 1/4.
+**RVS rendert in beiden Modi auf CPU**, mit Precision 1, RGB und Simple-Blending mit Faktor 5.
 Unabhängige Ansichten werden innerhalb der CPU- und Speichergrenzen parallel berechnet.
 
 Große Bilder benötigen mehr Speicher. Mixed Precision garantiert nicht, dass 2160p

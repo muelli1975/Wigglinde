@@ -48,7 +48,10 @@ class ConverterInputTests(unittest.TestCase):
             self.assertNotIn('\\',raw)
             config=json.loads(raw);self.assertIn('Größe',config['InputCameraParameterFile'])
             self.assertEqual(config['Precision'],1)
-            self.assertEqual(config['BlendingMethod'],'Multispectral')
+            self.assertEqual(config['BlendingMethod'],'Simple')
+            self.assertEqual(config['BlendingFactor'],5.)
+            self.assertNotIn('BlendingLowFreqFactor',config)
+            self.assertNotIn('BlendingHighFreqFactor',config)
 
     def test_rvs_input_uses_encoded_rgb_without_gamma_linearization(self):
         with TemporaryDirectory() as folder:

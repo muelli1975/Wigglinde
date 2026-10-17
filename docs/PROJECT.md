@@ -1,5 +1,10 @@
 # Wigglinde: vereinbarter Projektumfang
 
+
+## Festgelegter Standard nach Bildvergleich
+
+Christoph entscheidet am 17. Oktober 2026: Version 1.0 mit festem RVS-Simple-Blending, Faktor 5, neu bauen. Multispectral bringt bei den meisten seiner Bilder keinen Vorteil; Simple 5 liefert ruhigere Details. Keine Blending-Regler in 1.0. Die separate Testversion bleibt erhalten. Berechnungsauflösung weiter an Ausgabe gekoppelt; kein neues Modell, keine zusätzlichen Iterationen oder Filter. Alle bestehenden Plattformpakete erhalten denselben Standard.
+
 Stand: 17. Oktober 2026. Diese Datei beschreibt das Ziel, nicht vorhandene Funktionen.
 
 Wigglinde soll vorhandene stereoskopische SBS-Fotos in hochwertige Zwischenansichten

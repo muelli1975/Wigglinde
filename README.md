@@ -66,7 +66,7 @@ cycle. Odd MP4 dimensions are padded by at most one black row/column, without cr
 LAS2-H uses four iterations. CPU uses Float32; GPU uses a separate mixed Float16/Float32
 model, retaining selected normalization, probability, summation and sampling operations
 in Float32. **RVS renders on CPU in both modes**, using Precision 1, RGB and
-Multispectral 1/4. Independent views run in parallel within CPU and memory limits.
+Simple blending with factor 5. Independent views run in parallel within CPU and memory limits.
 
 Large images require more memory. Mixed precision does not guarantee that 2160p fits
 on every GPU. Memory errors do not silently change the selected device, model,

@@ -49,7 +49,7 @@ int main(int argc,char**argv){Stats stats;try{
   if(stats.inner)omp_set_num_threads(stats.inner);
 #endif
   auto render_start=Clock::now();
-  rvs::BlendedViewMultiSpec blender(1.f,4.f);
+  rvs::BlendedViewSimple blender(5.f);
   for(int i=0;i<2;i++){
    rvs::GenericTransformer tr;tr.set_inputPosition(&cfg.params_real[i]);tr.set_targetPosition(&cfg.params_virtual[v]);
    rvs::SynthetisedViewTriangle synth;synth.setSpaceTransformer(&tr);synth.compute(inputs[i]);blender.blend(synth);

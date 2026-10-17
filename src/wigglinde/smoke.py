@@ -93,7 +93,8 @@ def run(app_dir,report_path):
     assert results[0]['model']==DEFAULT_MODEL
     for result in results:
         assert result['status']=='passed' and result['model']=='LAS2-H'
-        assert result['renderer']=='RVS CPU Precision 1 Multispectral 1/4'
+        assert result['renderer']=='RVS CPU Precision 1 Simple 5'
+        assert result['blending']==dict(BlendingMethod='Simple',BlendingFactor=5.)
         assert result['stage_seconds']['depth_left']>0 and result['stage_seconds']['depth_right']>0
         assert result['rvs']['render_work_seconds']>0 and result['rvs']['views']>1
         assert result['rvs']['parallel_workers']==result['rvs_schedule']['workers']
@@ -124,6 +125,7 @@ def run(app_dir,report_path):
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
     if sys.platform=='win32':assert gui._iconbitmap_method_called
     assert not hasattr(gui,'file_list')
+    assert not hasattr(gui,'blending_method') and not hasattr(gui,'blending_menu')
     assert not hasattr(gui,'layout') and 'layout' not in gui.settings
     assert not hasattr(gui,'swap')
     assert not hasattr(gui,'model_name') and 'model' not in gui.settings

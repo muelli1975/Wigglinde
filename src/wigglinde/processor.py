@@ -95,7 +95,7 @@ class Processor:
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')
+                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
                 with temporary_workspace(temp_root) as work:
                     exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
                     if not exe.is_file() and getattr(sys,'frozen',False):

@@ -131,7 +131,7 @@ def main():
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / file, destination)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    info = dict(version='1.0', commit=commit, platform=args.label, python=sys.version,
+    info = dict(version='1.0', renderer='RVS CPU Precision 1 Simple 5', commit=commit, platform=args.label, python=sys.version,
                 models=['LAS2-H'], model_sha256=MODEL_SHA, model_precision={'CPU': 'float32'},
                 devices='CPU (LAS2 and RVS)', tcl_version=tcl_version,
                 packages={name: metadata.version(name) for name in packages})
@@ -164,7 +164,7 @@ def main():
     report = json.loads((output / 'native-smoke.json').read_text(encoding='utf-8'))
     assert report['status'] == 'passed' and not report['mixed_model_bundled']
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    verification = dict(status='passed', platform=args.label, commit=commit,
+    verification = dict(status='passed', renderer='RVS CPU Precision 1 Simple 5', platform=args.label, commit=commit,
                         filename=archive.name, bytes=archive.stat().st_size, sha256=digest,
                         model_sha256=MODEL_SHA, actual_extracted_package_tested=True)
     (output / 'package-verification.json').write_text(json.dumps(verification, indent=2) + '\n')

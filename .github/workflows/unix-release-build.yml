@@ -1,9 +1,7 @@
 name: Portable Linux and macOS builds
 
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/unix-release-build.yml', 'tools/package_unix.py']
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -112,52 +110,3 @@ jobs:
             output/package-verification.json
           if-no-files-found: warn
           retention-days: 30
-
-  publish:
-    needs: native
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      actions: read
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: Wigglinde-1.0-*
-          path: packages
-      - name: Verify and append native packages to 1.0
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs'), path = require('path'), crypto = require('crypto');
-            const owner = context.repo.owner, repo = context.repo.repo, tag = 'v1.0';
-            const release = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
-            const ref = (await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag})).data;
-            const windows = release.assets.find(a => a.name === 'Wigglinde_1.0_Windows_x64.zip');
-            if (ref.object.sha !== '642773fd642d28e30959a4df554829e4d56493da' || windows?.digest !== 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea') throw new Error('Windows release identity changed.');
-            const verified = [];
-            for (const label of ['Linux_x64', 'macOS_AppleSilicon', 'macOS_Intel']) {
-              const root = path.join('packages', 'Wigglinde-1.0-' + label);
-              const report = JSON.parse(fs.readFileSync(path.join(root, 'output/package-verification.json')));
-              const smoke = JSON.parse(fs.readFileSync(path.join(root, 'output/native-smoke.json')));
-              const parallel = JSON.parse(fs.readFileSync(path.join(root, 'output/rvs-parallel.json')));
-              if (report.status !== 'passed' || report.platform !== label || report.commit !== context.sha || !report.actual_extracted_package_tested || smoke.status !== 'passed' || smoke.mixed_model_bundled || parallel.status !== 'passed') throw new Error('Native checks failed: ' + label);
-              const data = fs.readFileSync(path.join(root, 'release', report.filename));
-              const digest = 'sha256:' + crypto.createHash('sha256').update(data).digest('hex');
-              if (data.length !== report.bytes || digest !== 'sha256:' + report.sha256) throw new Error('Package identity differs: ' + label);
-              verified.push({name: report.filename, data, digest, size: data.length});
-            }
-            for (const asset of verified) {
-              const existing = release.assets.find(a => a.name === asset.name);
-              if (existing) {
-                if (existing.digest !== asset.digest || existing.size !== asset.size) throw new Error('Existing native asset differs: ' + asset.name);
-                continue;
-              }
-              const uploaded = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id,
-                name: asset.name, data: asset.data, headers: {'content-type': asset.name.endsWith('.zip') ? 'application/zip' : 'application/gzip', 'content-length': asset.size}})).data;
-              if (uploaded.digest !== asset.digest || uploaded.size !== asset.size) throw new Error('Uploaded asset differs.');
-            }
-            const marker = '\n\n### Linux and macOS packages';
-            const base = release.body.split(marker)[0];
-            const notes = marker + '\n\nNative CPU/Float32 packages are also available for Linux x64 (Ubuntu 22.04 or newer) and macOS 15 or newer, separately for Apple Silicon and Intel. Keep the complete `Wigglinde` folder together, including the local model and assets. On Linux start `Wigglinde`; on macOS open `Wigglinde.app`. The macOS apps are ad-hoc signed, not Apple-notarized. Linux completion audio uses `paplay` or `aplay` when installed.\n\nEach extracted native package passed MP4/GIF/PNG output, depth-map, GUI and settings checks on its build host. These packages use CPU only; DirectML GPU processing remains available in the Windows package.\n\nNative package source: [' + context.sha.slice(0, 7) + '](https://github.com/' + owner + '/' + repo + '/tree/' + context.sha + '), included in each package with build information and license notices.';
-            await github.rest.repos.updateRelease({owner, repo, release_id: release.id, body: base + notes});
-            core.notice('Added all three verified native packages without replacing the Windows asset or tag.');

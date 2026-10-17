@@ -13,10 +13,11 @@ expects local prerequisites and never downloads them at startup:
 
 ## Models
 
-[The Windows build workflow](.github/workflows/windows-test-build.yml) pins the
-LAS2 source revision and weight hashes. `tools/export_las2.py` uses the author's
-ONNX substitutions, exports dynamic image dimensions and compares the Float32
-model with native inference on two small shapes. Cached Float32 exports are reused.
+[The release build workflow](.github/workflows/windows-test-build.yml) reuses
+the verified H model artifacts from run 39041230523 without re-exporting them.
+`tools/export_las2.py` records the pinned LAS2 source revision and weight hashes,
+uses the author's ONNX substitutions, exports dynamic image dimensions and
+compares the Float32 model with native inference on two small shapes.
 
 `tools/convert_las2_mixed.py` creates the GPU model using ONNX Runtime 1.24.4's
 Float16 converter. It retains Float32 public inputs/output and selected sensitive
@@ -27,8 +28,9 @@ that it reproduces PyTorch/CUDA autocast operation for operation.
 
 ## Windows package
 
-The workflow builds ONNX Runtime DirectML 1.24.4 from its pinned source with telemetry
-compiled out. Do not replace this with overlapping CPU/DirectML Python distributions.
+The workflow reuses ONNX Runtime DirectML 1.24.4 built from its pinned source
+with telemetry compiled out (run 39041230523). Do not replace this with
+overlapping CPU/DirectML Python distributions.
 It builds the pinned MPEG-I RVS CPU adapter against OpenCV 4.10, runs source checks,
 compares serial/parallel native outputs and tests the actual packaged executable.
 
@@ -67,9 +69,12 @@ The Mac apps are not Apple-notarized.
 
 Before publication, the extracted archive runs the same packaged MP4/GIF/PNG,
 optional depth-map, GUI, language and settings checks, plus the native
-serial/parallel RVS comparison. The workflow appends only successful packages to
-the existing 1.0 release. It preserves the Windows archive and tag; native package
-source commits are recorded separately in build-info.json and release notes.
+serial/parallel RVS comparison. The common release workflow waits for Windows
+and all three native packages. It verifies every report and archive digest,
+uploads replacements before changing existing names, then updates all four
+assets and the v1.0 source tag together. Existing assets remain available until
+the replacements are uploaded. Source commits are recorded in build-info.json
+and release notes. RVS uses fixed Simple blending with factor 5 on every platform.
 
 ## Validation limits
 

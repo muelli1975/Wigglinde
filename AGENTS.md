@@ -30,8 +30,11 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Code, model weights and runtime dependencies can have different licenses.
   Retain the exact notices applicable to each distributed component. Never copy
   the research-only FoundationStereo source into the application.
+- User-authorized 1.0 rebuild (17 October 2026): fixed native Simple factor 5,
+  no blending controls. Rebuild all four released platforms. Retain the separate
+  experimental 1.1 Test 1 branch; do not merge its options into 1.0.
 - Current milestone: version 1.0, LAS2-H (four iterations; CPU Float32, GPU mixed Float16/Float32), CPU/DirectML + RVS CPU.
-  Precision 1, RGB, Multispectral 1/4, normalized encoded sRGB without extra gamma
+  Precision 1, RGB, Simple 5, normalized encoded sRGB without extra gamma
   conversions. Default MP4 720p / CPU. Optional jointly normalized 16-bit depth maps.
   Output folders wiggle/depth_maps. Folder input processes direct images only,
   no subfolders or folder prefixes in filenames. Precision-1 memory estimates;

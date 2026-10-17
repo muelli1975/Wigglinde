@@ -1,5 +1,13 @@
 # Changelog
 
+
+## 1.0 — updated build, 2026-10-17
+
+- Use native RVS Simple blending with factor 5 after practical image comparisons.
+- Keep the reduced 1.0 interface, without experimental blending controls.
+- Retain LAS2-H, four iterations, CPU/GPU model precision, resolution and exports.
+- Rebuild all existing platform packages with the same fixed blending standard.
+
 ## 1.0
 
 - Portable Windows Full-SBS to MP4, GIF and PNG-sequence conversion.
