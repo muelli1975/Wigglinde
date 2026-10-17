@@ -8,10 +8,11 @@ oder Internetverbindung erforderlich. Sprache oben rechts: Deutsch oder English.
    Die andere Eingabe wird dabei geleert. Ordner werden mit Unterordnern verarbeitet.
 2. Full-SBS beziehungsweise Half-SBS passend zur Eingabe wählen. Bei Bedarf L/R tauschen.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
-4. Unter „Tiefenberechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.
+4. Modell wählen: LAS2-M, LAS2-L oder LAS2-H. Standard beim ersten Start ist L.
+5. Unter „Berechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.
 
 Die Oberfläche zeigt Pfadfelder statt einer Dateiliste. Die aktuelle Datei erscheint
-während der Verarbeitung im Statusbereich. Sprache, Gerätewahl und Ausgabeordner
+während der Verarbeitung im Statusbereich. Sprache, Modell, Gerätewahl und Ausgabeordner
 bleiben gespeichert; Bilder werden beim nächsten Start nicht automatisch geladen.
 
 | Format | Größe | Bildrate | Ablauf |
@@ -36,7 +37,12 @@ Ausgaben werden erst nach erfolgreicher Verarbeitung ersetzt. Ein Abbruch lässt
 vorherige Ergebnisse bestehen. Protokolle: `logs` im Programmordner; temporäre
 Dateien: `_temp` im jeweiligen Ausgabeordner.
 
-## GPU-Modus und Teststand
+## Modelle, GPU-Modus und Teststand
+
+M benötigt weniger Rechenaufwand, L ist unser Standard, H verfeinert die Tiefenkarte
+iterativ mit den veröffentlichten vier Durchläufen. H kann bei großen Fotos
+besonders viel Speicher benötigen. Die Wahl ändert weder Auflösung noch Renderer.
+Alle drei Modelle sind enthalten. Es gibt keine automatische Modellumschaltung.
 
 Der GPU-Modus beschleunigt die LAS2-Tiefenberechnung über DirectML. Er benötigt eine
 DirectX-12-fähige Grafikkarte und passende Treiber; kompatible NVIDIA-, AMD- und
@@ -55,7 +61,7 @@ praktisch verglichen werden. Ein Windows-Buildtest auf einem gehosteten Server
 ersetzt das nicht. Noch keine freigegebene 1.0. Große Auflösungen benötigen mehr
 Zeit und Speicher. Das eigene Programmsymbol wird später ergänzt.
 
-LAS2-M hat einen festen Suchbereich von 192 Pixeln in der Berechnungsgröße.
+LAS2 hat einen festen Suchbereich von 192 Pixeln in der Berechnungsgröße.
 Sehr große Parallaxen können fehlerhafte Tiefenkarten erzeugen. Die RVS-Endansichten
 sind gerenderte Bilder, keine eingesetzten Originale. Glas, Spiegelungen und
 Verdeckungen können weiterhin Fehler zeigen. Feine Aststrukturen können während

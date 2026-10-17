@@ -5,7 +5,7 @@ or asset changes. The file is an unchanged reference from SplatTricia; its expli
 rules for other projects do not become Wigglinde features. Read `docs/PROJECT.md`
 for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 
-- The user is Christoph. Product language is German, with English support planned.
+- The user is Christoph. Product language is German, with English support.
 - Build a restrained converter, with the established Stereo-Tools colors and
   SplatTricia interaction conventions. Do not invent controls or alter stereo
   mathematics or defaults without discussing meaningful changes.
@@ -27,7 +27,7 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Code, model weights and runtime dependencies can have different licenses.
   Retain the exact notices applicable to each distributed component. Never copy
   the research-only FoundationStereo source into the application.
-- Current milestone: portable test version (0.1 Test 2), LAS2-M CPU/DirectML + RVS CPU.
+- Current milestone: portable test version (0.1 Test 2), LAS2-M/L/H (default L), CPU/DirectML + RVS CPU.
   A passing packaged smoke test does not establish full real-photo quality,
   Windows 10/11 desktop validation, or parity with SplatTricia. Not a 1.0 release.
 - Changes stay in this repository. Do not edit other Stereo-Tools repositories

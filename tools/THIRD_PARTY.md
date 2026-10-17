@@ -4,7 +4,7 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 
 | Component | License and source |
 | --- | --- |
-| LAS2 code and published LAS2-M weights | MIT; https://github.com/TomTomTommi/LiteAnyStereo and https://huggingface.co/tomtomtommi/LiteAnyStereoV2 |
+| LAS2 code and published LAS2-M/L/H weights | MIT; https://github.com/TomTomTommi/LiteAnyStereo and https://huggingface.co/tomtomtommi/LiteAnyStereoV2 |
 | RVS | Modified BSD, including its patent/third-party-rights reservation; https://gitlab.com/mpeg-i-visual/rvs |
 | OpenCV 4.10 | Apache-2.0 and third-party notices; https://github.com/opencv/opencv/tree/4.10.0 |
 | ONNX Runtime | MIT; https://github.com/microsoft/onnxruntime |

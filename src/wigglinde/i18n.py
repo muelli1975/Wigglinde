@@ -17,8 +17,10 @@ TEXT = {
     'long_side': ('px lange Seite', 'px long side'),
     'duration': ('Zyklusdauer (s)', 'Cycle duration (s)'),
     'swap': ('L/R tauschen', 'Swap L/R'),
-    'device': ('Tiefenberechnung', 'Depth estimation'),
-    'renderer': ('LAS2-M · RVS auf CPU', 'LAS2-M · RVS on CPU'),
+    'model': ('Modell', 'Model'),
+    'unavailable': ('nicht verfügbar', 'unavailable'),
+    'device': ('Berechnung', 'Compute'),
+    'renderer': ('RVS: CPU', 'RVS: CPU'),
     'ready': ('Bereit.', 'Ready.'),
     'start': ('Start', 'Start'),
     'cancel': ('Abbrechen', 'Cancel'),
@@ -46,7 +48,7 @@ TEXT = {
 
 # The pipeline also remains usable from development tools without a UI locale.
 MESSAGES = {
-    'Bild vorbereiten': 'Preparing image', 'LAS2-M laden': 'Loading LAS2-M',
+    'Bild vorbereiten': 'Preparing image',
     'Tiefenkarte links berechnen': 'Estimating left depth map',
     'Tiefenkarte rechts berechnen': 'Estimating right depth map', 'Fertig': 'Finished',
     'Diese Testversion benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.': 'This test version requires opaque RGB/grayscale images with 8 bits per channel.',
@@ -69,6 +71,7 @@ def message(locale, text):
         return text.split(' / ', 1)[1]
     for prefix, translation in [('Die Modelldatei fehlt: ', 'The model file is missing: '), ('Der RVS-Renderer fehlt: ', 'The RVS renderer is missing: ')]:
         if text.startswith(prefix):return translation + text[len(prefix):]
+    if re.fullmatch(r'LAS2-[MLH] laden',text):return 'Loading '+text.split()[0]
     if text.startswith('Zwischenansicht '):return 'Rendering view ' + text[len('Zwischenansicht '):]
     if re.fullmatch(r'(MP4|GIF|PNG) speichern', text):return 'Saving ' + text.split()[0]
     return text

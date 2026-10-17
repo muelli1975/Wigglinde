@@ -6,6 +6,7 @@ from PIL import Image,ImageCms,ImageOps
 from .export_options import camera_weight
 from .stereo import StereoScene
 from .las2 import LiteAnyStereo
+from .models import DEFAULT_MODEL,model_path
 from .rvs import RVSRenderer
 from .wiggle_export import export_wiggle,ExportCancelled,check_cancelled
 
@@ -39,8 +40,8 @@ def collect_files(folder,excluded=()):
     return result
 
 class Processor:
-    def __init__(self,app_dir,cancel_event=None,device_id=None):
-        self.device_id=device_id;self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
+    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL):
+        self.model_name=model_name;self.device_id=device_id;self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
     def cancel(self):
         self.event.set()
         if self.model:self.model.cancel()
@@ -53,10 +54,11 @@ class Processor:
         start=time.monotonic();progress('Bild vorbereiten',0.)
         (left,right),original,size=read_pair(path,layout,swap,options)
         if self.model is None:
-            progress('LAS2-M laden',0.)
-            self.model=LiteAnyStereo(self.app_dir/'models/las2/LAS2_M_dynamic.onnx',device_id=self.device_id)
+            progress(self.model_name+' laden',0.)
+            self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name),device_id=self.device_id)
+        if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
         # Reversible search padding, scaled with the explicitly selected image size.
-        # LAS2-M has a fixed 192-pixel correspondence range; keep room on both sides.
+        # LAS2 has a fixed 192-pixel correspondence range; keep room on both sides.
         offset=min(128,max(1,round(64*size[0]/960)))
         depth_start=time.monotonic()
         dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress)
@@ -82,4 +84,4 @@ class Processor:
             try:export_wiggle(render,size,options,output,work,exporting,self.event.is_set)
             finally:frames.close();self.renderer=None
         progress('Fertig',1.)
-        return dict(output=str(output),source=str(path),source_eye_size=original,processing_size=size,model='LAS2-M',depth_provider=self.model.session.get_providers(),depth_device_id=self.device_id,renderer='RVS CPU Precision 2 Multispectral 1/4',matching_offset=offset,elapsed_seconds=time.monotonic()-start,depth_seconds=depth_seconds,render_seconds=render_seconds,options=options.to_settings())
+        return dict(output=str(output),source=str(path),source_eye_size=original,processing_size=size,model=self.model_name,depth_provider=self.model.session.get_providers(),depth_device_id=self.device_id,renderer='RVS CPU Precision 2 Multispectral 1/4',matching_offset=offset,elapsed_seconds=time.monotonic()-start,depth_seconds=depth_seconds,render_stream_wait_seconds=render_seconds,options=options.to_settings())

@@ -1,4 +1,25 @@
-# Lokales Modell für den Qualitätsprototyp
+# Lokale Modelle
+
+Test 2 bietet **LAS2-M, LAS2-L und LAS2-H**. Beim ersten Start ist **L** vorausgewählt,
+danach wird die letzte Wahl gespeichert. Alle drei Modelle werden mitgeliefert;
+keine Downloads oder automatische Modellumschaltung im Anwendungscode.
+
+- Code: TomTomTommi/LiteAnyStereo, Revision `8c97bd4c4da3712c2ac60003a23201dfdb5935f4`.
+- Gewichte: tomtomtommi/LiteAnyStereoV2, Revision `17788d91618646fa781a14462e2926a034b9f49d`.
+- M: 41925933 Byte, SHA-256 `c41b61efce9b36e6b8b38b580421cd20cc9e84a47f0f45361767281938f69696`.
+- L: 109270797 Byte, SHA-256 `12f86f758b0aa6cd59c11d40f41e7d954121d7626e4719eff71d9dd22da36539`.
+- H: 46698761 Byte, SHA-256 `758585a25c3a332711f92a28ad1437e08080fb714ad1146de7cf2c01ce8479f4`.
+- Code und veröffentlichte Gewichte: MIT; Lizenztext im Paket.
+- Dynamische ONNX-Exporte: `models/las2/LAS2_{M,L,H}_dynamic.onnx`, jeweils
+  mit JSON-Metadaten und tatsächlichem ONNX-Hash.
+- Export nach offiziellen Ersetzungen; Vergleich mit nativem Modell an zwei
+  Bildgrößen. H behält die vier Iterationen des veröffentlichten Modells.
+- RGB float32 0..255, Normalisierung im Modell, Edge-Padding auf Vielfache von 32.
+  Temporärer Suchversatz wird vollständig entfernt. Keine Justage oder Crop.
+- Suchbereich 192 Pixel; beidseitige Berechnung.
+- Windows: eigener ONNX-Runtime-DirectML-Build mit `onnxruntime_USE_TELEMETRY=OFF`.
+
+## Historischer Qualitätsprototyp: C-FoundationStereo-S
 
 Die Anwendung lädt ausschließlich eine bereits vorhandene Datei. Sie enthält
 keine Downloadfunktion und benötigt weder Token noch externen Modell-Cache.

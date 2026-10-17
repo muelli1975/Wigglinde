@@ -10,6 +10,9 @@ env:
   ORT_DISABLE_TELEMETRY: '1'
 jobs:
   model:
+    strategy:
+      matrix:
+        model: [m, l, h]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -21,8 +24,8 @@ jobs:
         id: model-cache
         with:
           path: models/las2
-          key: las2-m-${{ hashFiles('tools/export_las2.py') }}
-      - name: Export and verify LAS2-M
+          key: las2-${{ matrix.model }}-${{ hashFiles('tools/export_las2.py') }}
+      - name: Export and verify LAS2-${{ matrix.model }}
         if: steps.model-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
@@ -30,11 +33,12 @@ jobs:
           python -m pip install timm onnx onnxscript onnxruntime numpy
           git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
           git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
-          curl -fL --retry 3 -o LAS2_M.pth https://huggingface.co/tomtomtommi/LiteAnyStereoV2/resolve/17788d91618646fa781a14462e2926a034b9f49d/LAS2_M.pth
-          python tools/export_las2.py --source las2-reference --weights LAS2_M.pth --output models/las2/LAS2_M_dynamic.onnx
+          model_letter=$(echo '${{ matrix.model }}' | tr '[:lower:]' '[:upper:]')
+          curl -fL --retry 3 -o LAS2.pth "https://huggingface.co/tomtomtommi/LiteAnyStereoV2/resolve/17788d91618646fa781a14462e2926a034b9f49d/LAS2_${model_letter}.pth"
+          python tools/export_las2.py --model-size '${{ matrix.model }}' --source las2-reference --weights LAS2.pth --output "models/las2/LAS2_${model_letter}_dynamic.onnx"
       - uses: actions/upload-artifact@v4
         with:
-          name: las2-m-onnx
+          name: las2-${{ matrix.model }}-onnx
           path: models/las2
           retention-days: 14
   runtime:
@@ -87,7 +91,8 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@v4
         with:
-          name: las2-m-onnx
+          pattern: las2-*-onnx
+          merge-multiple: true
           path: models/las2
       - uses: actions/download-artifact@v4
         with:

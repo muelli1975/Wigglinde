@@ -1,6 +1,6 @@
 # Wigglinde: vereinbarter Projektumfang
 
-Stand: 16. Oktober 2026. Diese Datei beschreibt das Ziel, nicht vorhandene Funktionen.
+Stand: 17. Oktober 2026. Diese Datei beschreibt das Ziel, nicht vorhandene Funktionen.
 
 Wigglinde soll vorhandene stereoskopische SBS-Fotos in hochwertige Zwischenansichten
 umwandeln und daraus Wiggle-Animationen und Vorlagen für Lentikularbilder erzeugen.
@@ -42,7 +42,9 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 
 ## Geometrie und Qualitätsziel
 
-Gewählter Modellansatz: Lite Any Stereo V2, zunächst LAS2-M. Die erste Testversion
+Gewählter Modellansatz: Lite Any Stereo V2. Test 2 bietet LAS2-M, LAS2-L und LAS2-H,
+mit L als Standard beim ersten Start und gespeicherter letzter Modellwahl.
+Modell und Berechnungsgerät sind getrennt wählbar, ohne automatische Umschaltung. Die erste Testversion
 verwendet LAS2-M als ONNX und RVS auf der CPU. Der frühere native Forschungsversuch
 und RVS-Vergleich stehen in `RVS_COMPARISON.md`. Der CLI-Adapter für
 C-FoundationStereo-S bleibt ausschließlich als historischer Entwicklungsvergleich.
@@ -71,3 +73,13 @@ Gleichmäßig verteilte Blickpositionen unabhängig vom Wiggle-Zeitverlauf. Zun�
 verlustfreie nummerierte Ansichten; später Streifenverschachtelung mit Druckgröße,
 Ausgabeauflösung, gemessenem Pitch und druckbarem Pitch-Test. Die eigentliche
 Druckvorbereitung wird erst nach bestandenem Ansichtsvergleich umgesetzt.
+
+Ein professioneller Anwender kann später freiwillig testen. Zunächst benötigt er
+verlustfreie Ansichtsserien für seinen bestehenden Druckworkflow. Fachliche
+Referenzen für den späteren Interlacer: Triaxes 3DMasterKit, 3DZ und DP Lenticular.
+Exakte Druckmaße, PPI getrennt von Drucker-DPI, gemessener Pitch mit Nachkommastellen,
+Linsenrichtung, Betrachtungsabstand, Grob-/Fein-Pitchtest, Montage-/Schnittmarken,
+Phasenlage, Reihenfolge/Spiegelung, TIFF/BigTIFF und ICC-/RIP-Übergabe sowie
+reproduzierbare Material-/Druckprofile sind vor Implementierung zu spezifizieren.
+Keine Behauptung professioneller Druckeignung ohne reale, kalibrierte Testdrucke.
+Diese Funktionen gehören noch nicht zum Test-2-Paket.

@@ -1,4 +1,4 @@
-"""Local LAS2-M ONNX inference; explicit CPU/DirectML, signed mounted disparity."""
+"""Local LAS2 M/L/H ONNX inference; explicit CPU/DirectML, signed mounted disparity."""
 from pathlib import Path
 import hashlib,json,threading
 import numpy as np
@@ -15,7 +15,7 @@ class LiteAnyStereo:
             raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Testpaket erneut entpacken.')
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
-        self.device_id=device_id
+        self.model_name=meta.get('model');self.device_id=device_id
         if device_id is None:
             self.session=ort.InferenceSession(str(path),sess_options=settings,providers=['CPUExecutionProvider'])
         else:

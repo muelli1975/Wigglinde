@@ -8,7 +8,10 @@ teilweise gedoppelt. Noch keine gesicherte Ursache; bidirektionale Disparität,
 Verdeckung und beidseitiges Blending gezielt am betroffenen Foto vergleichen.
 GPU-Beschleunigung allein ist keine Lösung dieses Qualitätsfehlers.
 Reduzierte Eingabe mit Einzelbild-/Ordnerpfad statt Dateiliste, Deutsch/Englisch,
-unveränderter SplatTricia-Sound. Icon steht noch aus. LAS2 kann ausdrücklich auf
+unveränderter SplatTricia-Sound. Icon steht noch aus.
+Modellwahl: LAS2-M/L/H, Standard L, letzte Wahl gespeichert; H mit vier veröffentlichten
+Iterationen. Modelle, Auflösung und Geräte werden nicht automatisch reduziert.
+LAS2 kann ausdrücklich auf
 CPU oder einer per DXGI gefundenen Grafikkarte über DirectML laufen. Windows-Paket
 nutzt privat gebautes ONNX Runtime DirectML 1.24.4 mit CPU-Provider und
 `onnxruntime_USE_TELEMETRY=OFF` (schon beim Kompilieren); kein paralleles CPU-ORT-Paket.
@@ -16,11 +19,14 @@ Kein stiller Gesamtwechsel auf CPU bei fehlgeschlagenem GPU-Start. DirectML darf
 wie dokumentiert einzelne nicht unterstützte Graphoperationen auf CPU ausführen.
 RVS bleibt unverändert CPU, Precision 2, Multispectral 1/4; dessen OpenGL-Pfad
 verwendet eine andere Bildzusammenführung und ist nicht gleichwertig freigegeben.
-Protokoll ergänzt Tiefen-/Renderzeiten und tatsächliche ONNX-Provider.
+Protokoll ergänzt Modell, Tiefenzeit, Wartezeit auf Renderframes und ONNX-Provider.
+Die Wartezeit ist kein isolierter Renderer-Benchmark, weil das Backend parallel rechnet.
 
 21 schnelle Prüfungen lokal bestanden. GUI lokal in beiden Sprachen geprüft,
 Sprachwechsel erhält Optionen/Pfade, Busy-Zustand und Eingabe-/Ausgabeabhängigkeiten.
-Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen. Physische
+Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen.
+Der erste Runtime-Build scheiterte an MSVC-2026-Warnung C4875 unter /WX im
+unveränderten ORT-Code. Der Build verwendet nun die VS-2022-Umgebung. Physische
 GPU-Leistung und Ergebnisqualität bleiben auf einem echten Desktop zu testen.
 
 Die folgenden Angaben zu Test 1 dokumentieren den bisherigen Prüfstand.
