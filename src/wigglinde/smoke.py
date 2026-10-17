@@ -1,6 +1,6 @@
 """Explicit build-time test only. Never called during normal conversion."""
 from pathlib import Path
-import json,hashlib,subprocess,threading,time
+import json,hashlib,subprocess,sys,threading,time
 import numpy as np
 from PIL import Image
 from .processor import Processor
@@ -52,6 +52,9 @@ def run(app_dir,report_path):
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
     gui=WigglindeApp(app_dir);gui.update()
+    icon=Path(app_dir)/'assets/wigglinde.ico'
+    assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
+    if sys.platform=='win32':assert gui._iconbitmap_method_called
     assert not hasattr(gui,'file_list')
     assert gui.model_name.get()==DEFAULT_MODEL
     gui.model_name.set('LAS2-H')
@@ -121,4 +124,4 @@ def run(app_dir,report_path):
                 assert float(diff.max())<.05,(label,float(diff.max()))
                 directml.append(dict(model=label,status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,adapters=adapters,original_sound=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

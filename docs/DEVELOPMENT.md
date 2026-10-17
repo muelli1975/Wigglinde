@@ -8,7 +8,8 @@ teilweise gedoppelt. Noch keine gesicherte Ursache; bidirektionale Disparität,
 Verdeckung und beidseitiges Blending gezielt am betroffenen Foto vergleichen.
 GPU-Beschleunigung allein ist keine Lösung dieses Qualitätsfehlers.
 Reduzierte Eingabe mit Einzelbild-/Ordnerpfad statt Dateiliste, Deutsch/Englisch,
-unveränderter SplatTricia-Sound. Icon steht noch aus.
+unveränderter SplatTricia-Sound. Geliefertes Wigglinde-Icon bytegetreu unter assets,
+in der EXE und für das Programmfenster eingebunden; Originalhash im Pakettest geprüft.
 Modellwahl: LAS2-M/L/H, Standard L, letzte Wahl gespeichert; H mit vier veröffentlichten
 Iterationen. Modelle, Auflösung und Geräte werden nicht automatisch reduziert.
 LAS2 kann ausdrücklich auf

@@ -21,7 +21,7 @@ Eingabe, Ausgabe, wenige fachliche Optionen, Start, Abbrechen, Status und Fortsc
 Farben und Steuerelemente nach dem unveränderten gemeinsamen Gestaltungsstandard.
 Keine ungefragten Stereo-Regler, große Editoroberfläche oder zusätzliche Formate.
 Einzelbild und Bildordner mit Pfadfeldern wie SplatTricia, ohne Dateiliste.
-Deutsch/Englisch und unveränderter Fertigstellungssound; Icon wird nachgereicht.
+Deutsch/Englisch, unveränderter Fertigstellungssound und geliefertes Wigglinde-Icon.
 Einzelbilder und Stapelverarbeitung sind vorgesehen. Eingabe und Ausgabe haben
 getrennte Dialoggedächtnisse. Der SplatTricia-Standard für das Ausgabeziel ist
 `<Eingabeordner>/output` bzw. ein bewusst gewählter eigener Ordner.
