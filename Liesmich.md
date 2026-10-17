@@ -1,4 +1,4 @@
-# Wigglinde 0.1 – Testversion 4
+# Wigglinde 0.1 – Testversion 5
 
 Den vollständigen Ordner entpacken und `Wigglinde.exe` starten. Modell, Renderer,
 Laufzeiten und Fertigstellungssound sind enthalten; keine Installation, Anmeldung
@@ -73,8 +73,8 @@ von DirectML nicht unterstützte ONNX-Operationen können innerhalb der Modellsi
 auf CPU laufen. Ein fehlgeschlagener GPU-Start wird gemeldet; kein stiller Wechsel
 des gesamten Auftrags auf CPU. Bei Problemen CPU ausdrücklich auswählen.
 
-**RVS rendert auch im GPU-Modus weiterhin auf CPU**, mit unveränderter zweifacher
-interner Abtastung und Multispectral-Blending 1/4. Zwischenansichten werden parallel
+**RVS rendert auch im GPU-Modus weiterhin auf CPU**, in der gewählten
+Ausgabeauflösung (Precision 1), mit Multispectral-Blending 1/4. Zwischenansichten werden parallel
 berechnet, soweit CPU und verfügbarer Speicher es zulassen. Die Anzahl wird pro Bild
 automatisch bestimmt; bei großen Bildern können weniger Ansichten gleichzeitig laufen.
 Modell, Präzision,

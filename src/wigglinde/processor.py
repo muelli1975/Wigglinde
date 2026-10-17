@@ -93,7 +93,7 @@ class Processor:
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
                 output=output_root/(Path(path).stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 2 Multispectral 1/4')
+                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')
                 with temporary_workspace(temp_root) as work:
                     exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
                     with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)

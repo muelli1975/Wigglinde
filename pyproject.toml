@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wigglinde"
-version = "0.1.0.dev5"
+version = "0.1.0.dev6"
 description = "Stereo SBS view-synthesis quality prototype"
 requires-python = ">=3.11"
 license = "MIT"

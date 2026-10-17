@@ -1,5 +1,16 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Test 5: Precision 1
+
+Christoph hat den Bau der nächsten Testversion freigegeben. Einzige Änderung
+an der Bildberechnung: RVS Precision 1 statt 2. Modell, vier Iterationen, Float32,
+Multispectral 1/4, Linearisierung, Suchversatz und Export bleiben erhalten.
+Die konservative Speicherplanung bleibt numerisch unverändert und verwendet
+weiterhin die Schätzung der bisherigen Precision-2-Konfiguration.
+Kein neuer Schalter und keine weitere Foto-Vergleichsserie. Bestehende schnelle
+Prüfungen und Prüfung der gepackten Windows-EXE laufen im Build.
+Windows-Paketprüfung für diesen Stand noch ausstehend.
+
 ## Neuer Fotoversuch: Precision 1 / 2
 
 Drei Motive mit denselben H-Karten verglichen: Precision 1 spart lokal 40–43 %

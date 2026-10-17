@@ -2,7 +2,7 @@
 import re
 
 TEXT = {
-    'test': ('Testversion 4', 'Test version 4'),
+    'test': ('Testversion 5', 'Test version 5'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),
     'diagnosis_result': ('Tiefentest: LAS2-H · {device}\nBildgröße: {size}\nModell laden: {load} s\nTiefenberechnung: {depth} s\nGemessene RAM-Spitze (Programm): {ram}\nGemessene lokale GPU-Speicherspitze (Programm): {gpu}\n\nVollständiger Bericht: logs/latest_run.json',

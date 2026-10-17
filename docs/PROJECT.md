@@ -43,7 +43,7 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 ## Geometrie und Qualitätsziel
 
 Gewählter Modellansatz: Lite Any Stereo V2. Nach praktischem Vergleich wird für
-Test 4 ausschließlich LAS2-H verwendet, mit vier Iterationen und Float32.
+Test 5 ausschließlich LAS2-H verwendet, mit vier Iterationen und Float32.
 Berechnungsgerät CPU/DirectML bleibt ausdrücklich wählbar, ohne automatische Umschaltung. Die erste Testversion
 verwendet LAS2-M als ONNX und RVS auf der CPU. Der frühere native Forschungsversuch
 und RVS-Vergleich stehen in `RVS_COMPARISON.md`. Der CLI-Adapter für
@@ -84,7 +84,7 @@ Linsenrichtung, Betrachtungsabstand, Grob-/Fein-Pitchtest, Montage-/Schnittmarke
 Phasenlage, Reihenfolge/Spiegelung, TIFF/BigTIFF und ICC-/RIP-Übergabe sowie
 reproduzierbare Material-/Druckprofile sind vor Implementierung zu spezifizieren.
 Keine Behauptung professioneller Druckeignung ohne reale, kalibrierte Testdrucke.
-Diese Funktionen gehören noch nicht zum Test-4-Paket.
+Diese Funktionen gehören noch nicht zum Test-5-Paket.
 
 ## Nächster freigegebener Schritt: Diagnoseversion
 
@@ -103,3 +103,11 @@ Precision 2, RGB, Multispectral 1/4, bestehende Füllung. Parallelität nach CPU
 verfügbarem RAM/Commit begrenzen; kein zusätzlicher Regler, keine Qualitätsreduktion.
 Lentikularoptionen bleiben vorerst zurückgestellt. Kein Wechsel zu Open3D, Vulkan
 oder einem eigenen Renderer als Teil dieses Schrittes.
+
+## Freigegebene Testversion 5 (17. Oktober)
+
+Precision 1 fest als einzige Änderung an der Bildberechnung gegenüber Test 4.
+H, vier Iterationen, Float32, Multispectral 1/4, bisherige Linearisierung und
+Suchversatz bleiben für diese Version erhalten. Kein neues Menü und keine weiteren
+Fotovergleiche vor diesem Paket. Die bisherige konservative Speicherplanung bleibt
+unverändert; deren Schätzbasis Precision 2 ist kein aktiver Renderparameter.

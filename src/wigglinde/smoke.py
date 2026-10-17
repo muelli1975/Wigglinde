@@ -80,6 +80,7 @@ def run(app_dir,report_path):
     assert results[0]['model']==DEFAULT_MODEL
     for result in results:
         assert result['status']=='passed' and result['model']=='LAS2-H'
+        assert result['renderer']=='RVS CPU Precision 1 Multispectral 1/4'
         assert result['stage_seconds']['depth_left']>0 and result['stage_seconds']['depth_right']>0
         assert result['rvs']['render_work_seconds']>0 and result['rvs']['views']>1
         assert result['rvs']['parallel_workers']==result['rvs_schedule']['workers']

@@ -46,3 +46,4 @@ class ConverterInputTests(unittest.TestCase):
             raw=(renderer.work/'config.json').read_text(encoding='utf-8')
             self.assertNotIn('\\',raw)
             config=json.loads(raw);self.assertIn('Größe',config['InputCameraParameterFile'])
+            self.assertEqual(config['Precision'],1)
