@@ -38,7 +38,10 @@ jobs:
           path: models/las2
           retention-days: 14
   runtime:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    concurrency:
+      group: wigglinde-ort-dml-no-telemetry-v2
+      cancel-in-progress: false
     timeout-minutes: 45
     steps:
       - uses: actions/setup-python@v5
@@ -48,7 +51,7 @@ jobs:
         id: ort-cache
         with:
           path: runtime-wheel
-          key: ort-dml-1.24.4-no-telemetry-py312-v1
+          key: ort-dml-1.24.4-no-telemetry-py312-v2-vs2022
       - uses: ilammy/msvc-dev-cmd@v1
         if: steps.ort-cache.outputs.cache-hit != 'true'
       - name: Build DirectML runtime without telemetry
