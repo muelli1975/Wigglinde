@@ -43,8 +43,30 @@ Renderer-RSS-Spitze 1017,7 / 2860,0 MiB. Linux, OpenCV 4.6, acht CPU-Kapazitäte
 Die Speicherschätzung von 1772,6 MiB je Arbeiter liegt über diesem beobachteten
 Bedarf. Größere Auflösungen und andere Motive können anders ausfallen.
 
-Windows-Build und Paketprüfung stehen für diesen Stand noch aus. Lentikular,
+[Windows-Build und Paketprüfung](https://github.com/muelli1975/Wigglinde/actions/runs/39029996378)
+bestanden, Quellstand `851063a0101d56ef1b5c8038d795269d9b9c3b4c`.
+31 schnelle Windows-Prüfungen und separater nativer Vergleich mit zwei/vier Arbeitern
+sowie Wiederholung bestanden, alle Float32-Daten bitgleich; Abbruch 0,000662 s.
+Tatsächliche EXE: H-CPU-Exporte MP4/GIF/PNG mit vier parallelen Ansichten, leeres
+`_temp` nach jedem Export entfernt, Tiefentest ohne Bildausgabe, Sitzungswiederverwendung,
+Originalerhalt, DE/EN, Buttonfarben, stabile Geometrie bei 100/125/150 %, geliefertes
+Icon und Sound bestätigt. Screenshot angesehen. Gehosteter Basic Render Driver
+erlaubt keine reale DirectML-Inferenz; physische GPU-Geschwindigkeit weiter offen.
+ZIP CRC-geprüft, nur H, keine Testlogs/Einstellungen/temporären Dateien, 163881756 Bytes,
+SHA-256 `864ad4a2dbbc43fd3448daa080b62ed1c83114cb39503097c3bcf60ed60b5ecc`.
+Die separaten Prototype-Prüfungen desselben Commits sind ebenfalls bestanden. Lentikular,
 Open3D, ein eigener Renderer und Vulkan sind nicht Teil dieser Umsetzung.
+
+### Neue Anwenderbeobachtung: GIF-Schleifenwechsel
+
+Christoph beobachtet in IrfanView Flackern am Zyklusende bei SplatTricia-GIFs,
+bei Wigglinde-GIFs nicht. Aktuellen SplatTricia-main-Export und Wigglinde tatsächlich
+verglichen: gleicher GIF-Pfad mit gemeinsamer Palette, gespiegelter Bildfolge,
+Zeitverteilung, loop=0, disposal=2, optimize=False. Damit ist ein grundsätzlicher
+Unterschied im aktuellen Exportcode keine belegte Erklärung. Verwendete ältere
+Paketversionen, konkrete GIF-Metadaten/Teilbildrechtecke und Wiedergabeverhalten
+sind ohne betroffene Originaldateien noch nicht verglichen. Kein Fix behauptet
+und kein Eingriff in SplatTricia erfolgt.
 
 ## Rendererprüfung nach Test 3 (17. Oktober 2026)
 
