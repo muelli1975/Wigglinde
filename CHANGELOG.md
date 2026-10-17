@@ -1,5 +1,15 @@
 # Changelog
 
+
+## 1.1 Test 1 — separate Windows test build, 2026-10-17
+
+- Select native RVS Multispectral or Simple blending.
+- Edit Areas/Details or Weight; retain 1/4 and 5 as initial factors.
+- Reset factors, preserve settings, and log actual native parameters.
+- Fixed control geometry, German/English labels and inactive-field states.
+- Keep LAS2-H at four iterations, Precision 1, RGB and existing CPU/GPU models.
+- Stable version 1.0 remains unchanged. No grid-quality improvement is claimed.
+
 ## 1.0
 
 - Portable Windows Full-SBS to MP4, GIF and PNG-sequence conversion.

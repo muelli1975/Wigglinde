@@ -14,7 +14,24 @@ neu geschätzt. H vier Iterationen, RGB, Precision 1 und Modellpräzision unver�
 
 Windows-CI verwendet exakt die bereits geprüften Modell-/DirectML-Artefakte aus
 Run 39041230523 erneut. Testpaket mit eigenem Namen, kein Release-Upload.
-Prüfergebnisse werden nach dem Build ergänzt.
+Build erfolgreich: https://github.com/muelli1975/Wigglinde/actions/runs/39054756874
+Quellstand im Paket: 23aa39e3de14ba91f172734d6df5a38430c7ad1b.
+40 Quellcodeprüfungen lokal und in CI unter Windows/Linux bestanden.
+10 native Fälle (zwei Größen, jeweils Multi 1/4, 1/2, 1/8 und Simple 5/2):
+Faktoren/Modi erzeugen unterschiedliche Float32-Ausgaben; seriell, zwei und vier
+Worker einschließlich Wiederholung jeweils bitgleich, Abbruch/Fehler bestanden.
+Gepackte EXE: MP4 mit Multi 1/4, GIF mit Simple 5, PNG mit Multi 1/2 inklusive
+16-Bit-Tiefenkarten bestanden. Deutsch/Englisch, Zahlenkomma, inaktive Felder,
+Zurücksetzen, gespeicherte Faktoren, Busy-Sperre, stabile Geometrie und Buttonfarben
+geprüft; Windows-Screenshot visuell kontrolliert. Keine neue Foto-Testserie.
+DirectML auf dem Buildhost nicht initialisierbar; keine Hardware-GPU-Zusage aus
+diesem Lauf. CPU-Float32-/GPU-Mixed-Modelle aus 1.0 unverändert, Hashes im Archiv
+mit Metadaten abgeglichen. Originalicon/-sound erhalten. Keine Settings/Logs/Temp
+im Paket. Archivintegrität und Build-Provenienz nach Download geprüft.
+
+Archiv: Wigglinde_1.1_Test1_Windows_x64.zip, 185426655 Byte.
+SHA-256: 8d822fc94a10393254d83209239b63b0383d3dee869c4a36c2e6bc3d7df1c6f4.
+Nur als separater Test bereitgestellt; main, Tag v1.0 und Releaseassets unverändert.
 ## Einheitlicher Windows-Archivname
 
 Am 17. Oktober 2026 wird das bestehende Windows-Release-Asset in
