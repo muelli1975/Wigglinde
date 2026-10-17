@@ -117,11 +117,15 @@ unverändert; deren Schätzbasis Precision 2 ist kein aktiver Renderparameter.
 LAS2-H, vier Iterationen, Float32, Precision 1, RGB und Multispectral 1/4 bleiben.
 Standard MP4 720p / CPU; höhere Größen und DirectML bleiben wählbar. Zusätzliche
 sRGB-Linearisierung und Rückwandlung entfallen, ICC-Umrechnung nach sRGB bleibt.
-Suchversatz und konservative Parallelitäts-/Speicherplanung bleiben unverändert.
+Suchversatz bleibt unverändert. Speicherplanung an Precision 1 anpassen,
+Systemreserve erhalten. Bisherige PNG-Kompression bleibt erhalten. Sprache, Gerät,
+letzte Eingabepfade, Ausgabemodus/-ordner, Tiefenkartenoption und Wiggle-Einstellungen
+wie bei SplatTricia speichern; kein automatischer Verarbeitungsstart.
 
 Wiggles unter wiggle, optionale linke/rechte 16-Bit-PNG-Tiefenkarten unter depth_maps.
 Gemeinsame lineare Min/Max-Normierung, Weiß nah / Schwarz fern, relative Disparität
 statt Meter; JSON mit Skala und Rückrechnung. Speicheroption anfangs aus.
-SplatTricias tatsächliche Ordnerlogik ist maßgeblich: relative Unterordner werden
-mit __ in den Dateinamen übernommen, nicht als Ausgabeunterordner gespiegelt.
+Christophs ausdrückliche Korrektur: nur Bilder direkt im gewählten Eingabeordner
+verarbeiten. Keine Rekursion, keine Unterordnerpfade oder Präfixe im Dateinamen.
+Dies ersetzt die zuvor vorgeschlagene Nachbildung von SplatTricias Pfadpräfixen.
 Lentikular bleibt zurückgestellt. Frühere Abschnitte dokumentieren frühere Schritte.

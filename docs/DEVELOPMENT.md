@@ -10,8 +10,20 @@ sRGB entsprechend dem ursprünglichen RGB-Lader. ICC nach sRGB bleibt erhalten.
 Suchversatz unverändert: min(128, max(1, round(64 * Breite / 960))). Dies ist
 Wigglindes Heuristik für signierte Disparitäten, keine LAS2-Autorenempfehlung.
 Temporärer Versatz wird nach der Inferenz abgezogen. Keine Änderung der Geometrie.
-Die Speicherplanung bleibt auf der konservativen Precision-2-Schätzbasis, während
-RVS tatsächlich mit Precision 1 arbeitet; keine neue Parallelitätsbegrenzung.
+Die Speicherplanung wird auf Precision 1 angepasst: Pixelterm von 1024 auf 256 Byte
+pro Ausgabepixel, da Precision 1 gegenüber 2 ein Viertel der Arbeitspixel benötigt.
+Feste 64 MiB je Aufgabe und Reserve max(1 GiB, 10 % des physischen RAMs) bleiben.
+Die drei vorhandenen 1620x1080-Vergleiche erreichten mit drei P1-Aufgaben 0,83–0,85 GiB
+nativen RSS; die neue Schätzung reserviert dafür 1,44 GiB. Dies ist eine konservative
+Schätzung, keine Speichergarantie. Verfügbaren RAM/Commit nach der Inferenz messen.
+CPU-/Ansichtszahl bleibt Obergrenze; unbekannter/knapper Speicher bleibt seriell.
+Policy precision1_memory_bounded_v1. Kein Qualitäts- oder Auflösungswechsel.
+Temporäre und fertige PNGs behalten ihre bisherige Kompression. Level 0 wurde
+nicht übernommen: reine Kodierersparnis belegt keinen schnelleren Gesamtlauf.
+Sprache, Gerät, letzte Eingabepfade, Ausgabemodus/-ordner, Tiefenkartenoption und
+Wiggle-Einstellungen bleiben wie bei SplatTricia erhalten. Eingabepfade anzeigen,
+kein automatischer Verarbeitungsstart. settings.json atomar über .partial ersetzen;
+bei unvollständiger Zahleneingabe die letzte gültige Wiggle-Konfiguration erhalten.
 
 Wiggle-Ausgabe unter wiggle, optional beide vorhandenen Disparitätskarten unter
 depth_maps; 16-Bit-PNG, gemeinsame lineare Min/Max-Normierung über beide Karten,
@@ -22,9 +34,9 @@ neuen Mittelansicht. Konstante Karten ergeben Null ohne Division durch Null.
 Keine zusätzliche Inferenz oder Prüfung pro Renderframe. Erst vollständige PNGs
 im temporären Arbeitsordner schreiben, danach fertige Kartendateien ersetzen.
 
-Wie tatsächlich in SplatTricia implementiert: relative Quellpfade werden mit __
-im Dateinamen abgebildet. Keine zusätzlichen relativen Ausgabeunterordner.
-Beispiel Tag1/Bild.jpg -> wiggle/Tag1__Bild_wiggle_30fps_720p.mp4.
+Christophs ausdrückliche Korrektur vor dem fertigen Paket: Ordnerverarbeitung nur
+für direkt enthaltene Bilder, ohne Rekursion. Keine Unterordnerpfade im Dateinamen.
+Die zuvor untersuchte SplatTricia-Pfadpräfixregel wird hier nicht übernommen.
 
 Paketprüfung dieses Quellstands steht noch aus. Die folgenden Testversionen sind
 historische Prüfstände und belegen die Änderungen der 1.0 nicht.

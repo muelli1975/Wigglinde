@@ -9,16 +9,16 @@ from wigglinde.wiggle_export import ExportCancelled
 
 
 class DepthExportTests(unittest.TestCase):
-    def test_joint_scale_negative_disparity_and_flat_batch_names(self):
+    def test_joint_scale_and_negative_disparity(self):
         with TemporaryDirectory() as directory:
             root=Path(directory);work=root/'work';work.mkdir()
             left=np.array([[-40,-30],[-20,0]],np.float32)
             right=np.array([[-30,-20],[0,20]],np.float32)
-            result=save_depth_maps(left,right,'Bild.jpg','Tag1__Bild',root/'output',work,lambda:False)
+            result=save_depth_maps(left,right,'Bild.jpg','Bild',root/'output',work,lambda:False)
             decoded=[]
             for path in result['files']:
                 self.assertEqual(Path(path).parent,root/'output/depth_maps')
-                self.assertTrue(Path(path).name.startswith('Tag1__Bild_depth_2p_'))
+                self.assertTrue(Path(path).name.startswith('Bild_depth_2p_'))
                 with Image.open(path) as image:
                     self.assertEqual(image.size,(2,2));values=np.asarray(image)
                     self.assertEqual(values.dtype,np.uint16);decoded.append(values)

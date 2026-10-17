@@ -58,7 +58,7 @@ def run(app_dir,report_path):
     before=hashlib.sha256(source.read_bytes()).hexdigest();processor=Processor(app_dir);results=[];session=None
     for kind in ['mp4','gif','png']:
         options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5,save_depth=kind=='png')
-        result=processor.convert(source,work/'Ausgabe_Größe',options,output_stem='Tag1__Bild_Größe' if kind=='png' else None)
+        result=processor.convert(source,work/'Ausgabe_Größe',options)
         assert not (work/'Ausgabe_Größe'/'_temp').exists()
         if session is None:session=id(processor.model.session)
         assert id(processor.model.session)==session
@@ -70,7 +70,7 @@ def run(app_dir,report_path):
             assert Path(depth['metadata_file']).is_file()
             for file in depth['files']:
                 assert Path(file).parent==work/'Ausgabe_Größe'/'depth_maps'
-                assert Path(file).name.startswith('Tag1__Bild_Größe_depth_160p_')
+                assert Path(file).name.startswith('Bild_Größe_depth_160p_')
                 with Image.open(file) as image:
                     assert image.size==(320,160) and np.asarray(image).dtype==np.uint16
         else:
@@ -134,6 +134,7 @@ def run(app_dir,report_path):
     check_button_colors(gui)
     gui.input_folder.set(str(work));gui.update()
     assert not gui.input_file.get()
+    assert gui._collect_input()[0]==[source.resolve()]
     assert gui.diagnose_button.cget('state')=='disabled'
     gui.own.set(str(work/'Custom output'));gui.standard.set(False);gui._dependencies()
     for language in ['English','Deutsch']:
@@ -152,9 +153,12 @@ def run(app_dir,report_path):
     assert gui.stop.cget('state')=='normal' and gui.start.cget('border_color')=='#333333'
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
-    gui.save_depth.set(True);gui._save();gui.destroy()
+    gui.save_depth.set(True);gui.kind.set('MP4');gui._format_changed()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
+    assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
+    assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     gui.input_file.set(str(source));gui.update()
     adapters=list(gui.adapters)
     sound=Path(app_dir)/'assets/ready.wav'

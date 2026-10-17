@@ -9,7 +9,8 @@ class RenderResourcesTests(unittest.TestCase):
 
     def test_high_resolution_limits_concurrency_not_quality(self):
         p=plan_views(3840,2160,31,16,32*GIB,14*GIB)
-        self.assertEqual(p['workers'],1)
+        self.assertEqual(p['workers'],5)
+        self.assertLessEqual(p['estimated_bytes_per_view']*p['workers'],p['memory_budget_bytes'])
 
     def test_near_exhausted_or_unknown_memory_keeps_serial_operation(self):
         for available in (None,0,64*1024**2):

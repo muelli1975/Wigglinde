@@ -8,17 +8,19 @@ using Lite Any Stereo V2 (LAS2-H) and MPEG-I RVS.
 Processing works locally and offline, without accounts, telemetry or automatic downloads.
 German instructions: [Liesmich.md](Liesmich.md).
 
-- German/English interface, single-image or image-folder processing, no file list.
+- German/English interface, single-image or image-folder processing, no file list. Image folders are processed without subfolders.
 - Default: **MP4, 720p, 30 fps, two-second cycle, CPU**.
 - LAS2-H, four iterations, float32. CPU or compatible NVIDIA/AMD/Intel GPU via DirectML.
 - RVS CPU renderer: Precision 1, RGB, Multispectral 1/4. Intermediate views run
-  concurrently within CPU and available-memory limits; return views and repeated cycles are reused.
+  concurrently within CPU and available-memory limits estimated for Precision 1; return views and repeated cycles are reused.
 - Full-SBS only: normal-width left half followed by the right half. No alignment,
   L/R swap, source crop or convergence adjustment.
 - ICC-managed RGB input, Lanczos scaling before depth estimation, preserved aspect
   ratio and no upscaling of smaller inputs. Opaque 8-bit RGB/grayscale images.
 - Optional left/right depth maps as **16-bit grayscale PNG**, disabled by default.
 - Cancellation, separate input/output dialog memories and completion sound.
+- Language, device, last input paths, output mode/folder, depth-map option and
+  animation settings are remembered; processing never starts automatically.
 
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
@@ -34,10 +36,9 @@ padded by at most one black pixel row/column, without cropping.
 
 Default destination: `output` in the input folder; a custom destination is optional.
 Animations are stored under `wiggle`, optional depth maps under `depth_maps`.
-For folder input, relative subfolder names become filename prefixes separated by
-`__`, as in SplatTricia: `Holiday/Day1/Image.jpg` becomes
-`output/wiggle/Day1__Image_wiggle_30fps_720p.mp4` when `Holiday` is the selected input.
-Single images use their original filename stem. Suffixes are lowercase.
+Only images directly inside the selected input folder are processed; subfolders are
+ignored. Output filenames retain the original stem, without source-folder prefixes,
+e.g. `Image_wiggle_30fps_720p.mp4`. Suffixes are lowercase.
 PNG sequences have their own `_png` folder. Existing animation outputs are replaced
 only after successful export. Originals remain unchanged.
 
@@ -60,8 +61,7 @@ job never silently switches device, model, precision or resolution.
 a selected single image, without rendering or writing maps. Choose the resolution first.
 `logs/latest_run.json` is overwritten each run and records stage times, render scheduling,
 sampled RAM/commit and available DXGI process GPU usage/budget. `wigglinde.jsonl` and
-`errors.log` rotate at 5 MiB with three backups each. Temporary files are removed after
-processing; an empty `_temp` parent is removed as well.
+`errors.log` rotate at 5 MiB with three backups each. Temporary PNG compression is unchanged. Temporary files are removed after processing; an empty `_temp` parent is removed as well.
 
 Extreme disparities, occlusions, glass, reflections and fine structures can cause
 transition artifacts or doubled contours. No artifact-free result is guaranteed.

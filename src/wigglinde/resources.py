@@ -30,10 +30,12 @@ def available_memory():
     return total,min(limits) if limits else None
 
 def plan_views(width,height,count,cpus,total_memory,available):
-    # Conservative estimate for unchanged Precision-2 RGB RVS working matrices,
-    # integral images, allocator overhead and one queued float32 output per worker.
-    # Not a measured allocation guarantee; keep one view possible as before.
-    per_view=width*height*1024+64*1024**2
+    # Precision 1 has one quarter of Precision 2's working pixels. Scale the
+    # existing per-pixel allowance accordingly, retaining fixed allocator/queue
+    # overhead and the separate system reserve. Three 1620x1080 photo runs at P1
+    # used 0.83-0.85 GiB native RSS with 3 workers; this budgets 1.44 GiB for them.
+    # An estimate, not an allocation guarantee; keep one view possible as before.
+    per_view=width*height*256+64*1024**2
     reserve=max(GIB,total_memory//10)
     budget=max(0,available-reserve) if available is not None else 0
     memory_workers=max(1,budget//per_view) if available is not None else 1
@@ -41,7 +43,7 @@ def plan_views(width,height,count,cpus,total_memory,available):
     return dict(workers=workers,threads_per_view=max(1,cpus//workers),cpu_capacity=cpus,
                 estimated_bytes_per_view=per_view,memory_available_bytes=available,
                 memory_reserve_bytes=reserve,memory_budget_bytes=budget,
-                policy='precision2_memory_bounded_v1')
+                policy='precision1_memory_bounded_v1')
 
 def render_plan(width,height,count):
     total,available=available_memory()

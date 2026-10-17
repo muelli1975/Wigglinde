@@ -7,6 +7,8 @@
 - Precision 1, RGB, Multispectral 1/4; normalized sRGB input without extra gamma conversions.
 - Default MP4 output: 720p, 30 fps, two-second cycle; CPU selected on first launch.
 - Optional jointly normalized left/right 16-bit PNG depth maps with scale metadata.
-- Separate `wiggle` and `depth_maps` output folders; relative source paths encoded in filenames.
+- Separate `wiggle` and `depth_maps` output folders; direct folder images only, without recursion.
+- Precision-1 memory scheduling.
+- Remembered input/output paths, language, device, depth-map option and animation settings.
 - German/English interface, batch processing, cancellation, icon and completion sound.
 - Bounded rotating logs and depth-only diagnostics.

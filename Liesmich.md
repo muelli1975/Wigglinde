@@ -7,7 +7,7 @@ keine Installation, Anmeldung oder Internetverbindung für die Verarbeitung erfo
 Sprache oben rechts: Deutsch oder English.
 
 1. Einzelbild oder Bildordner auswählen. Die andere Eingabe wird dabei geleert.
-   Bildordner werden einschließlich ihrer Unterordner verarbeitet.
+   Nur Bilder direkt im gewählten Ordner werden verarbeitet, keine Unterordner.
 2. Die linke Ansicht muss links und die rechte rechts stehen, mit ungestauchten Halbbildern.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
 4. Bei Bedarf „Tiefenkarten zusätzlich speichern“ einschalten.
@@ -15,8 +15,9 @@ Sprache oben rechts: Deutsch oder English.
 
 Standard: **MP4, maximal 720 Pixel Höhe, 30 fps, zwei Sekunden pro Pendelzyklus, CPU**.
 LAS2-H bleibt fest eingestellt: vier Iterationen, Float32. Sprache, Gerätewahl,
-Tiefenkartenoption und Ausgabeordner bleiben gespeichert. Bilder werden beim
-nächsten Start nicht automatisch geladen. Die Oberfläche verwendet keine Dateiliste.
+Eingabepfade, Ausgabemodus/-ordner, Tiefenkartenoption, Format, Größe, Bildrate und
+Zyklusdauer bleiben gespeichert. Die letzten Eingabepfade werden beim nächsten
+Start wieder angezeigt; die Verarbeitung beginnt erst mit Start. Die Oberfläche verwendet keine Dateiliste.
 
 | Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
@@ -43,11 +44,10 @@ Einzelbild. Ein eigener Ausgabeordner ist ebenfalls möglich. Darin liegen:
 - `wiggle`: MP4, GIF oder Ordner mit PNG-Bildfolgen.
 - `depth_maps`: die optionalen Tiefenkarten, nur bei eingeschalteter Speicheroption.
 
-Wie bei SplatTricia wird der relative Unterordnerpfad in den Dateinamen übernommen,
-mit `__` als Trenner. Bei Eingabeordner `Urlaub` wird `Urlaub/Tag1/Bild.jpg` zum Beispiel
-zu `output/wiggle/Tag1__Bild_wiggle_30fps_720p.mp4`. Es entsteht kein Unterordner `Tag1`.
-Einzelbilder behalten ihren ursprünglichen Stammnamen. Zusätze sind klein geschrieben:
-`p` für die Bildhöhe, bei GIF `px` für die lange Seite; PNG-Folgen enden auf `_png`.
+Es werden keine Unterordner verarbeitet. Ausgaben behalten den ursprünglichen
+Stammnamen ohne Ordnerpräfixe. Zusätze sind klein geschrieben, beispielsweise
+`Bild_wiggle_30fps_720p.mp4`: `p` für die Bildhöhe, bei GIF `px` für die lange Seite;
+PNG-Folgen enden auf `_png`.
 Fertige Animationen werden erst nach erfolgreichem Export ersetzt; Originale bleiben erhalten.
 
 Die Tiefenkarten werden ohne zusätzliche Modellberechnung als 16-Bit-Graustufen-PNG
@@ -70,6 +70,7 @@ Präzision und Auflösung werden niemals automatisch heruntergesetzt oder gewech
 
 **RVS rendert auch im GPU-Modus auf CPU**, mit Precision 1, RGB und Multispectral 1/4.
 Zwischenansichten werden innerhalb der CPU- und Speichergrenzen parallel berechnet.
+Die Speicherplanung ist auf Precision 1 abgestimmt.
 Hohe Auflösungen benötigen entsprechend mehr Zeit und Speicher.
 
 „Tiefenberechnung testen“ verarbeitet das gewählte Einzelbild mit derselben Vorbereitung

@@ -45,11 +45,9 @@ def read_pair(path,options):
         return tuple(pair),original,size
 
 def collect_files(folder,excluded=()):
-    folder=Path(folder).resolve();excluded={Path(x).resolve() for x in excluded};result=[]
-    for root,dirs,files in os.walk(folder):
-        dirs[:]=sorted(d for d in dirs if d!='_temp' and not ('_wiggle_' in d.lower() and d.lower().endswith('_png')) and (Path(root)/d).resolve() not in excluded)
-        result.extend(Path(root)/n for n in sorted(files) if Path(n).suffix.lower() in EXTENSIONS)
-    return result
+    folder=Path(folder).resolve();excluded={Path(x).resolve() for x in excluded}
+    return sorted((p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in EXTENSIONS
+                   and p.resolve() not in excluded),key=lambda p:p.name)
 
 class Processor:
     def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None):
@@ -64,13 +62,13 @@ class Processor:
         if self.model:self.model.cancel()
         if self.renderer:self.renderer.cancel()
 
-    def convert(self,path,output_root,options,progress=lambda text,p:None,output_stem=None):
-        return self._run(path,options,progress,Path(output_root),output_stem)
+    def convert(self,path,output_root,options,progress=lambda text,p:None):
+        return self._run(path,options,progress,Path(output_root))
 
     def diagnose(self,path,options,progress=lambda text,p:None):
         return self._run(path,options,progress,None)
 
-    def _run(self,path,options,progress,output_root,output_stem=None):
+    def _run(self,path,options,progress,output_root):
         options.validate();check_cancelled(self.event.is_set)
         context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
@@ -94,7 +92,7 @@ class Processor:
                 output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp'
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
-                stem=output_stem or Path(path).stem
+                stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
                 trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')

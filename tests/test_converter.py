@@ -24,13 +24,14 @@ class ConverterInputTests(unittest.TestCase):
             pair,_,_=read_pair(path,WiggleOptions())
             self.assertTrue(np.array_equal(pair[0],np.full((20,40,3),(12,80,210),np.uint8)))
 
-    def test_folder_snapshot_excludes_output_temp_and_generated_png_sequences(self):
+    def test_folder_input_ignores_all_subfolders_and_keeps_only_direct_images(self):
         with TemporaryDirectory() as folder:
             root=Path(folder)
             for sub in ['Tag1','output','_temp','foto_Wiggle_30fps_1080h_PNG']:
                 (root/sub).mkdir();(root/sub/'image.png').touch()
+            (root/'direct.jpg').touch();(root/'notes.txt').touch()
             files=collect_files(root,[root/'output'])
-            self.assertEqual(files,[(root/'Tag1/image.png').resolve()])
+            self.assertEqual(files,[(root/'direct.jpg').resolve()])
 
     def test_high_bit_depth_is_not_silently_reduced(self):
         with TemporaryDirectory() as folder:

@@ -33,8 +33,12 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Current milestone: version 1.0, LAS2-H (four iterations, float32), CPU/DirectML + RVS CPU.
   Precision 1, RGB, Multispectral 1/4, normalized encoded sRGB without extra gamma
   conversions. Default MP4 720p / CPU. Optional jointly normalized 16-bit depth maps.
-  Output folders wiggle/depth_maps; flatten relative source paths into filename
-  prefixes separated by __, matching SplatTricia. Lenticular options remain postponed.
+  Output folders wiggle/depth_maps. Folder input processes direct images only,
+  no subfolders or folder prefixes in filenames. Precision-1 memory estimates;
+  existing temporary/final PNG compression retained. Persist language, device,
+  last input paths, output mode/folder, depth option and animation settings,
+  matching SplatTricia without automatically starting processing.
+  Lenticular options remain postponed.
   A passing packaged smoke test does not establish full real-photo quality,
   Windows 10/11 desktop validation, or parity with SplatTricia.
 - Changes stay in this repository. Do not edit other Stereo-Tools repositories

@@ -44,8 +44,12 @@ class WigglindeApp(ctk.CTk):
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
         self.settings.pop('layout',None)
         self.standard=ctk.BooleanVar(value=self.settings.get('standard_output',True));self.own=ctk.StringVar(value=self.settings.get('own_output',''))
-        self.input_file=ctk.StringVar();self.input_folder=ctk.StringVar();self.changing_input=False
-        self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='720');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
+        self.input_file=ctk.StringVar(value=self.settings.get('last_input_file',''))
+        self.input_folder=ctk.StringVar(value='' if self.input_file.get() else self.settings.get('last_input_folder',''));self.changing_input=False
+        saved_options=WiggleOptions.from_settings(self.settings.get('wiggle',{}))
+        self.kind=ctk.StringVar(value=self.tr('png') if saved_options.format=='png' else saved_options.format.upper())
+        saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height}[saved_options.format]
+        self.size=ctk.StringVar(value=str(saved_size));self.fps=ctk.StringVar(value=str(saved_options.fps));self.duration=ctk.StringVar(value=f'{saved_options.cycle_seconds:g}')
         self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
         self.settings.pop('model',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
@@ -183,8 +187,15 @@ class WigglindeApp(ctk.CTk):
         except ValueError:raise ValueError(self.tr('numbers')) from None
         return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration,save_depth=self.save_depth.get())
     def _save(self):
-        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get())
-        self.settings_path.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
+        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
+            last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get())
+        # A partly typed invalid number must not discard the last valid options.
+        try:
+            options=self._wiggle_options();options.validate();self.settings['wiggle']=options.to_settings()
+        except ValueError:pass
+        temporary=self.settings_path.with_name(self.settings_path.name+'.partial')
+        temporary.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
+        temporary.replace(self.settings_path)
     def _save_quietly(self):
         try:self._save()
         except OSError:pass
@@ -239,11 +250,10 @@ class WigglindeApp(ctk.CTk):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))
                 base=(root/'output' if root else path.parent/'output') if standard else own
-                stem='__'.join(path.relative_to(root).with_suffix('').parts) if root else path.stem
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
                     if depth_only:diagnosis=self.processor.diagnose(path,options,progress=progress)
-                    else:self.processor.convert(path,base,options,progress=progress,output_stem=stem)
+                    else:self.processor.convert(path,base,options,progress=progress)
                     completed+=1
                 except ExportCancelled:raise
                 except Exception as e:
