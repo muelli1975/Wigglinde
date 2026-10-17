@@ -1,113 +1,46 @@
-name: Publish verified Wigglinde 1.0
+name: Normalize Windows 1.0 archive name
 
 on:
   push:
-    branches: [testversion-0.1]
+    branches: [main]
     paths: ['.github/workflows/publish-1.0.yml']
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: write
 
 concurrency:
   group: publish-wigglinde-1.0
   cancel-in-progress: false
 
-env:
-  RELEASE_COMMIT: '642773fd642d28e30959a4df554829e4d56493da'
-  RELEASE_SHA256: 'f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea'
-  RELEASE_BYTES: '185371902'
-
 jobs:
-  publish:
+  rename:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
-      - name: Download the already verified Windows package
-        uses: actions/download-artifact@v4
-        with:
-          name: Wigglinde-1.0-Windows
-          run-id: 39041230523
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: release-input
-      - name: Verify exact package identity
-        shell: python
-        run: |
-          from pathlib import Path
-          import hashlib, json, os, zipfile
-          path = Path('release-input/dist/Wigglinde_1.0_Windows.zip')
-          assert path.stat().st_size == int(os.environ['RELEASE_BYTES'])
-          assert hashlib.sha256(path.read_bytes()).hexdigest() == os.environ['RELEASE_SHA256']
-          with zipfile.ZipFile(path) as archive:
-              assert archive.testzip() is None
-              build = json.loads(archive.read('Wigglinde/build-info.json'))
-              assert build['version'] == '1.0'
-              assert build['commit'] == os.environ['RELEASE_COMMIT']
-              assert build['model_precision'] == {'CPU': 'float32', 'GPU': 'mixed_float16_float32'}
-              model = json.loads(archive.read('Wigglinde/models/las2/LAS2_H_mixed.json'))
-              assert model['precision'] == 'mixed_float16_float32'
-              assert hashlib.sha256(archive.read('Wigglinde/models/las2/LAS2_H_mixed.onnx')).hexdigest() == model['onnx_sha256']
-          report = json.loads(Path('release-input/output/windows-smoke.json').read_text())
-          assert report['status'] == 'passed' and report['mixed_model_bundled']
-          print('Verified exact 1.0 ZIP, model hashes and successful packaged EXE report.')
-      - name: Update 1.0 with the verified mixed-precision package
+      - name: Rename the verified existing asset without rebuilding or reuploading
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const owner = context.repo.owner, repo = context.repo.repo;
-            const target = process.env.RELEASE_COMMIT;
-            const expected = 'sha256:' + process.env.RELEASE_SHA256;
-            const size = Number(process.env.RELEASE_BYTES);
-            const oldTarget = '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa';
-            const oldDigest = 'sha256:3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036';
-            const tag = 'v1.0', name = 'Wigglinde_1.0_Windows.zip';
-            const pendingName = 'Wigglinde_1.0_Windows_pending.zip';
-            const run = await github.rest.actions.getWorkflowRun({owner, repo, run_id: 39041230523});
-            if (run.data.conclusion !== 'success' || run.data.head_sha !== target) throw new Error('Unexpected build result or source.');
-            const release = await github.rest.repos.getReleaseByTag({owner, repo, tag});
-            if (release.data.draft || release.data.prerelease) throw new Error('Expected the existing stable 1.0 release.');
-            let ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
-            const oldAsset = release.data.assets.find(a => a.name === name);
-            if (ref.data.object.sha === target && oldAsset?.digest === expected) {
-              core.notice('The identical mixed-precision 1.0 package is already published.');
-              return;
+            const owner = context.repo.owner, repo = context.repo.repo, tag = 'v1.0';
+            const oldName = 'Wigglinde_1.0_Windows.zip';
+            const newName = 'Wigglinde_1.0_Windows_x64.zip';
+            const expectedDigest = 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea';
+            const expectedSize = 185371902, expectedId = 650707400;
+            const release = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
+            const ref = (await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag})).data;
+            if (ref.object.sha !== '642773fd642d28e30959a4df554829e4d56493da') throw new Error('Release tag differs.');
+            const old = release.assets.find(a => a.name === oldName);
+            const renamed = release.assets.find(a => a.name === newName);
+            if (old && renamed) throw new Error('Both archive names exist.');
+            const asset = renamed || old;
+            if (!asset || asset.id !== expectedId || asset.digest !== expectedDigest || asset.size !== expectedSize) throw new Error('Existing Windows asset identity differs.');
+            if (old) await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: asset.id, name: newName});
+            const checked = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
+            const final = checked.assets.find(a => a.name === newName);
+            if (!final || final.id !== expectedId || final.digest !== expectedDigest || final.size !== expectedSize || checked.assets.some(a => a.name === oldName)) throw new Error('Rename verification failed.');
+            for (const before of release.assets.filter(a => a.id !== expectedId)) {
+              const after = checked.assets.find(a => a.id === before.id);
+              if (!after || after.name !== before.name || after.digest !== before.digest || after.size !== before.size) throw new Error('Another release asset changed.');
             }
-            if (![oldTarget, target].includes(ref.data.object.sha)) throw new Error('The release tag has changed unexpectedly.');
-            if (oldAsset && ![oldDigest, expected].includes(oldAsset.digest)) throw new Error('The existing ZIP has changed unexpectedly.');
-            let staged = release.data.assets.find(a => a.name === pendingName);
-            if (!staged) {
-              const data = fs.readFileSync('release-input/dist/' + name);
-              staged = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.data.id,
-                name: pendingName, data, headers: {'content-type': 'application/zip', 'content-length': data.length}})).data;
-            }
-            if (staged.size !== size || staged.state !== 'uploaded' || staged.digest !== expected) throw new Error('Staged release ZIP identity differs.');
-            ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
-            if (ref.data.object.sha === oldTarget) {
-              await github.rest.git.updateRef({owner, repo, ref: 'tags/' + tag, sha: target, force: true});
-            } else if (ref.data.object.sha !== target) throw new Error('Release tag changed during upload.');
-            if (oldAsset) await github.rest.repos.deleteReleaseAsset({owner, repo, asset_id: oldAsset.id});
-            await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: staged.id, name});
-            const body = [
-              'Wigglinde creates wiggle animations from already aligned Full-SBS stereo photographs.',
-              '',
-              '- MP4, animated GIF and PNG-sequence output.',
-              '- LAS2-H depth estimation: Float32 on CPU, mixed Float16/Float32 on compatible GPUs via DirectML.',
-              '- Parallel RVS rendering on CPU, with Precision 1 and Multispectral blending.',
-              '- Optional left/right 16-bit PNG depth maps with shared normalization and scale metadata.',
-              '- German/English interface, folder processing without subfolders, cancellation and remembered settings.',
-              '- Default on first launch: MP4, 720p, 30 fps, two-second cycle and CPU.',
-              '',
-              '**Windows 10/11 x64, portable.** Extract the complete ZIP and start `Wigglinde.exe`. Both model variants and runtimes are included; processing works offline.',
-              '',
-              'High resolutions can still exceed available graphics memory; mixed precision does not guarantee 2160p GPU operation. Fine structures, occlusions and reflections can produce transition artifacts.',
-              '',
-              'Application source, English/German instructions, build notes and third-party license notices are included.'
-            ].join('\n');
-            await github.rest.repos.updateRelease({owner, repo, release_id: release.data.id, target_commitish: target,
-              name: 'Wigglinde 1.0', body, draft: false, prerelease: false, make_latest: 'true'});
-            const checked = await github.rest.repos.getReleaseByTag({owner, repo, tag});
-            const finalAsset = checked.data.assets.find(a => a.name === name);
-            if (finalAsset?.digest !== expected || finalAsset.size !== size) throw new Error('Published ZIP verification failed.');
-            core.notice('Updated ' + checked.data.html_url);
+            core.notice('Renamed the existing verified ZIP: ' + final.browser_download_url);
