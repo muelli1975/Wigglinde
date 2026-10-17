@@ -44,7 +44,7 @@ jobs:
   runtime:
     runs-on: windows-2022
     concurrency:
-      group: wigglinde-ort-dml-no-telemetry-v2
+      group: wigglinde-ort-dml-no-telemetry-v3
       cancel-in-progress: false
     timeout-minutes: 45
     steps:
@@ -55,7 +55,7 @@ jobs:
         id: ort-cache
         with:
           path: runtime-wheel
-          key: ort-dml-1.24.4-no-telemetry-py312-v2-vs2022
+          key: ort-dml-1.24.4-no-telemetry-py312-v3-vs2022
       - uses: ilammy/msvc-dev-cmd@v1
         if: steps.ort-cache.outputs.cache-hit != 'true'
       - name: Build DirectML runtime without telemetry
@@ -65,7 +65,7 @@ jobs:
           git clone --depth 1 --branch v1.24.4 https://github.com/microsoft/onnxruntime.git onnxruntime-reference
           if ((git -C onnxruntime-reference rev-parse HEAD) -ne '2d924974ef147392ced8409d36bd6d2e7fcc8a74') { throw 'Unexpected ONNX Runtime revision' }
           python -m pip install numpy packaging setuptools wheel ninja
-          python onnxruntime-reference/tools/ci_build/build.py --build_dir "$pwd/build/ort" --config Release --build_wheel --wheel_name_suffix directml --skip_tests --parallel 4 --use_dml --cmake_generator Ninja --cmake_extra_defines onnxruntime_USE_TELEMETRY=OFF onnxruntime_BUILD_UNIT_TESTS=OFF
+          python onnxruntime-reference/tools/ci_build/build.py --build_dir "$pwd/build/ort" --config Release --build_wheel --skip_tests --parallel 4 --use_dml --cmake_generator Ninja --cmake_extra_defines onnxruntime_USE_TELEMETRY=OFF onnxruntime_BUILD_UNIT_TESTS=OFF
           if ($LASTEXITCODE -ne 0) { throw 'ONNX Runtime build failed' }
           if (-not (Select-String -Quiet -Path build/ort/Release/CMakeCache.txt -Pattern '^onnxruntime_USE_TELEMETRY:BOOL=OFF$')) { throw 'Telemetry must be disabled at compile time' }
           New-Item -ItemType Directory -Force runtime-wheel | Out-Null
