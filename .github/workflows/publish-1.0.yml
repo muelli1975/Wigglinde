@@ -14,6 +14,11 @@ concurrency:
   group: publish-wigglinde-1.0
   cancel-in-progress: false
 
+env:
+  RELEASE_COMMIT: '642773fd642d28e30959a4df554829e4d56493da'
+  RELEASE_SHA256: 'f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea'
+  RELEASE_BYTES: '185371902'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -23,75 +28,86 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Wigglinde-1.0-Windows
-          run-id: 39039085146
+          run-id: 39041230523
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: release-input
       - name: Verify exact package identity
         shell: python
         run: |
           from pathlib import Path
-          import hashlib, json, zipfile
+          import hashlib, json, os, zipfile
           path = Path('release-input/dist/Wigglinde_1.0_Windows.zip')
-          expected = '3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036'
-          assert path.stat().st_size == 163894574
-          assert hashlib.sha256(path.read_bytes()).hexdigest() == expected
+          assert path.stat().st_size == int(os.environ['RELEASE_BYTES'])
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == os.environ['RELEASE_SHA256']
           with zipfile.ZipFile(path) as archive:
               assert archive.testzip() is None
               build = json.loads(archive.read('Wigglinde/build-info.json'))
               assert build['version'] == '1.0'
-              assert build['commit'] == '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa'
+              assert build['commit'] == os.environ['RELEASE_COMMIT']
+              assert build['model_precision'] == {'CPU': 'float32', 'GPU': 'mixed_float16_float32'}
+              model = json.loads(archive.read('Wigglinde/models/las2/LAS2_H_mixed.json'))
+              assert model['precision'] == 'mixed_float16_float32'
+              assert hashlib.sha256(archive.read('Wigglinde/models/las2/LAS2_H_mixed.onnx')).hexdigest() == model['onnx_sha256']
           report = json.loads(Path('release-input/output/windows-smoke.json').read_text())
-          assert report['status'] == 'passed'
-          print('Verified original 1.0 ZIP and successful packaged EXE report.')
-      - name: Publish 1.0 with the original ZIP
+          assert report['status'] == 'passed' and report['mixed_model_bundled']
+          print('Verified exact 1.0 ZIP, model hashes and successful packaged EXE report.')
+      - name: Update 1.0 with the verified mixed-precision package
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const owner = context.repo.owner, repo = context.repo.repo;
-            const target = '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa';
-            const tag = 'v1.0';
-            const name = 'Wigglinde_1.0_Windows.zip';
-            const expected = 'sha256:3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036';
-            const releases = await github.rest.repos.listReleases({owner, repo, per_page: 100});
-            const existing = releases.data.find(r => r.tag_name === tag);
-            if (existing) {
-              const asset = existing.assets.find(a => a.name === name);
-              const ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
-              if (!existing.draft && !existing.prerelease && ref.data.object.sha === target && asset?.digest === expected) {
-                core.notice('The identical 1.0 release is already published: ' + existing.html_url);
-                return;
-              }
-              throw new Error('An existing 1.0 release differs or is incomplete; refusing to overwrite it.');
+            const target = process.env.RELEASE_COMMIT;
+            const expected = 'sha256:' + process.env.RELEASE_SHA256;
+            const size = Number(process.env.RELEASE_BYTES);
+            const oldTarget = '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa';
+            const oldDigest = 'sha256:3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036';
+            const tag = 'v1.0', name = 'Wigglinde_1.0_Windows.zip';
+            const pendingName = 'Wigglinde_1.0_Windows_pending.zip';
+            const run = await github.rest.actions.getWorkflowRun({owner, repo, run_id: 39041230523});
+            if (run.data.conclusion !== 'success' || run.data.head_sha !== target) throw new Error('Unexpected build result or source.');
+            const release = await github.rest.repos.getReleaseByTag({owner, repo, tag});
+            if (release.data.draft || release.data.prerelease) throw new Error('Expected the existing stable 1.0 release.');
+            let ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
+            const oldAsset = release.data.assets.find(a => a.name === name);
+            if (ref.data.object.sha === target && oldAsset?.digest === expected) {
+              core.notice('The identical mixed-precision 1.0 package is already published.');
+              return;
             }
-            try {
-              const ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
-              if (ref.data.object.sha !== target) throw new Error('Existing 1.0 tag points to a different commit.');
-            } catch (error) {
-              if (error.status !== 404) throw error;
+            if (![oldTarget, target].includes(ref.data.object.sha)) throw new Error('The release tag has changed unexpectedly.');
+            if (oldAsset && ![oldDigest, expected].includes(oldAsset.digest)) throw new Error('The existing ZIP has changed unexpectedly.');
+            let staged = release.data.assets.find(a => a.name === pendingName);
+            if (!staged) {
+              const data = fs.readFileSync('release-input/dist/' + name);
+              staged = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.data.id,
+                name: pendingName, data, headers: {'content-type': 'application/zip', 'content-length': data.length}})).data;
             }
+            if (staged.size !== size || staged.state !== 'uploaded' || staged.digest !== expected) throw new Error('Staged release ZIP identity differs.');
+            ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
+            if (ref.data.object.sha === oldTarget) {
+              await github.rest.git.updateRef({owner, repo, ref: 'tags/' + tag, sha: target, force: true});
+            } else if (ref.data.object.sha !== target) throw new Error('Release tag changed during upload.');
+            if (oldAsset) await github.rest.repos.deleteReleaseAsset({owner, repo, asset_id: oldAsset.id});
+            await github.rest.repos.updateReleaseAsset({owner, repo, asset_id: staged.id, name});
             const body = [
               'Wigglinde creates wiggle animations from already aligned Full-SBS stereo photographs.',
               '',
               '- MP4, animated GIF and PNG-sequence output.',
-              '- LAS2-H depth estimation on CPU or compatible GPUs via DirectML; parallel RVS rendering on CPU.',
+              '- LAS2-H depth estimation: Float32 on CPU, mixed Float16/Float32 on compatible GPUs via DirectML.',
+              '- Parallel RVS rendering on CPU, with Precision 1 and Multispectral blending.',
               '- Optional left/right 16-bit PNG depth maps with shared normalization and scale metadata.',
               '- German/English interface, folder processing without subfolders, cancellation and remembered settings.',
               '- Default on first launch: MP4, 720p, 30 fps, two-second cycle and CPU.',
               '',
-              '**Windows 10/11 x64, portable.** Extract the complete ZIP and start `Wigglinde.exe`. The model and runtimes are included; processing works offline.',
+              '**Windows 10/11 x64, portable.** Extract the complete ZIP and start `Wigglinde.exe`. Both model variants and runtimes are included; processing works offline.',
               '',
-              'High-resolution GPU depth estimation can exceed available graphics memory. Use CPU for 2160p if necessary. Fine structures, occlusions and reflections can still produce transition artifacts.',
+              'High resolutions can still exceed available graphics memory; mixed precision does not guarantee 2160p GPU operation. Fine structures, occlusions and reflections can produce transition artifacts.',
               '',
-              'Application source and third-party license notices are included in the package.'
+              'Application source, English/German instructions, build notes and third-party license notices are included.'
             ].join('\n');
-            const release = await github.rest.repos.createRelease({owner, repo, tag_name: tag, target_commitish: target,
-              name: 'Wigglinde 1.0', body, draft: true, prerelease: false});
-            const data = fs.readFileSync('release-input/dist/' + name);
-            const asset = await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.data.id, name,
-              data, headers: {'content-type': 'application/zip', 'content-length': data.length}});
-            if (asset.data.size !== 163894574 || asset.data.state !== 'uploaded') throw new Error('Release asset upload incomplete.');
-            if (asset.data.digest && asset.data.digest !== expected) throw new Error('Release asset checksum differs.');
-            const published = await github.rest.repos.updateRelease({owner, repo, release_id: release.data.id,
-              draft: false, prerelease: false, make_latest: 'true'});
-            core.notice('Published ' + published.data.html_url);
+            await github.rest.repos.updateRelease({owner, repo, release_id: release.data.id, target_commitish: target,
+              name: 'Wigglinde 1.0', body, draft: false, prerelease: false, make_latest: 'true'});
+            const checked = await github.rest.repos.getReleaseByTag({owner, repo, tag});
+            const finalAsset = checked.data.assets.find(a => a.name === name);
+            if (finalAsset?.digest !== expected || finalAsset.size !== size) throw new Error('Published ZIP verification failed.');
+            core.notice('Updated ' + checked.data.html_url);

@@ -20,8 +20,28 @@ kein Nachweis physischer GPU-Ausführung oder wahrnehmbarer Gleichheit.
 Modellwahl ausdrücklich durch Gerät; falsche Modellpräzision wird zurückgewiesen.
 Protokolle nennen mixed_float16_float32 bzw. float32. Keine stille Ersatzberechnung.
 Repository-Struktur und EN/DE-README folgen den bestehenden Programmen; Hinweise
-zu Quellcode, langfristiger Nutzung und Fremdlizenzen ergänzt. Prüfung und Paketbau
-dieser Aktualisierung stehen noch aus. Die folgenden Abschnitte betreffen ältere Stände.
+zu Quellcode, langfristiger Nutzung und Fremdlizenzen ergänzt.
+
+Prüfung bestanden: 36 lokale Tests (0,22 s), 36 Windows-Tests (0,53 s),
+serieller/paralleler RVS-Vergleich bitgleich. Tatsächliche EXE mit MP4/GIF/PNG,
+Tiefenkarten, Einstellungswiederherstellung, DE/EN, stabiler Geometrie, Originalassets
+und Prüfung der enthaltenen Mixed-Modelldatei. Hosted-DirectML nicht initialisierbar;
+keine Bestätigung einer physischen GPU oder von 2160p-Grafikspeicherbedarf.
+Konvertierter Graph: 299 Float16- und 20 Float32-Initialisierer, keine Warnungen,
+23820828 Byte, SHA-256 e30ad144e626a61ef316d3943e4f0adc38313e9180e439194dc8dcea2177978d.
+Kleine CPU-Konvertierungsprüfungen 416x128 / 448x160: maximale Differenzen
+0,010935 / 0,013891 Pixel, Mittel 0,002036 / 0,002614, p99 0,006813 / 0,008528.
+Dies sind Konvertierungsprüfungen, keine allgemeine Fotoqualitätsgarantie.
+
+Gebauter Quellstand 642773fd642d28e30959a4df554829e4d56493da.
+Windows-Workflow https://github.com/muelli1975/Wigglinde/actions/runs/39041230523
+Source checks https://github.com/muelli1975/Wigglinde/actions/runs/39041230562
+Artifact 12103952117. Wigglinde_1.0_Windows.zip: 185371902 Byte,
+SHA-256 f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea.
+ZIP CRC-geprüft; beide H-Fassungen mit passenden Hashes, keine Logs/settings/_temp,
+Originalicon/-sound bytegleich. Relative Links der enthaltenen EN/DE-README und
+Build-Anleitung geprüft. Der Quellstand im Paket ist der exakt gebaute Stand;
+dieser spätere Prüfvermerk gehört nicht dazu. Die folgenden Abschnitte betreffen ältere Stände.
 
 
 ## Version 1.0: Umsetzung und Paketprüfung
