@@ -129,3 +129,15 @@ Christophs ausdrückliche Korrektur: nur Bilder direkt im gewählten Eingabeordn
 verarbeiten. Keine Rekursion, keine Unterordnerpfade oder Präfixe im Dateinamen.
 Dies ersetzt die zuvor vorgeschlagene Nachbildung von SplatTricias Pfadpräfixen.
 Lentikular bleibt zurückgestellt. Frühere Abschnitte dokumentieren frühere Schritte.
+
+## Aktualisierung 1.0: GPU Mixed Precision und Repository
+
+Am 17. Oktober um 16:21 freigegeben: vorhandenen Release 1.0 direkt mit einer
+GPU-Mixed-Precision-Fassung aktualisieren. CPU behält Float32; gleicher H-Checkpoint,
+vier Iterationen, Ausgabegröße und Renderer. ONNX-Konvertierung mit FP32-Inseln,
+keine Behauptung exakter CUDA-AMP-Gleichheit oder garantierter GPU-2160p-Fähigkeit.
+Keine zusätzliche Benutzer-Testserie als Voraussetzung. Verfügbare Modell- und
+Paketprüfungen durchführen, Einschränkung des Hosted-GPU-Tests offen benennen.
+Repository an die bestehenden Programme angleichen: README.md auf Englisch,
+README_DE.md auf Deutsch, Download/Bedienung/Anforderungen/Ausgabe/Quellcode und
+langfristige Nutzung/Lizenz; Build- und Fremdkomponentenhinweise separat.

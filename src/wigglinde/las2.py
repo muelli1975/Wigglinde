@@ -16,12 +16,16 @@ class LiteAnyStereo:
             raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.')
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
-        self.model_name=meta.get('model');self.device_id=device_id
+        self.model_name=meta.get('model');self.device_id=device_id;self.precision=meta.get('precision','float32')
+        expected='float32' if device_id is None else 'mixed_float16_float32'
+        if self.precision!=expected:
+            raise ValueError('Falsche Modellpräzision / incorrect model precision: '+self.precision)
         if device_id is None:
             self.session=ort.InferenceSession(str(path),sess_options=settings,providers=['CPUExecutionProvider'])
         else:
             # Official DirectML constraints: sequential execution, no memory pattern.
-            # Keep the same float32 model; no quantization or image-size change.
+            # The selected GPU model mixes FP16/FP32 internally. Public tensors
+            # remain Float32; no image-size change or integer quantization.
             if 'DmlExecutionProvider' not in ort.get_available_providers():
                 raise RuntimeError('GPU_INIT: DirectML is not available in this runtime.')
             settings.enable_mem_pattern=False

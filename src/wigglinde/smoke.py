@@ -195,11 +195,15 @@ def run(app_dir,report_path):
     # Explicit development probe, including WARP on a hosted runner if available.
     # A software adapter does not establish performance on a physical GPU.
     directml=[]
+    mixed_path=model_path(app_dir,DEFAULT_MODEL,device_id=0)
+    mixed_meta=json.loads(mixed_path.with_suffix('.json').read_text(encoding='utf-8'))
+    assert mixed_meta['precision']=='mixed_float16_float32'
+    assert hashlib.sha256(mixed_path.read_bytes()).hexdigest()==mixed_meta['onnx_sha256']
     import onnxruntime as ort
     if 'DmlExecutionProvider' in ort.get_available_providers():
         for label in MODELS:
             try:
-                model=LiteAnyStereo(model_path(app_dir,label),device_id=0)
+                model=LiteAnyStereo(model_path(app_dir,label,device_id=0),device_id=0)
             except Exception as error:
                 directml.append(dict(model=label,status='unavailable',reason=str(error),hardware_speed_not_validated=True))
                 break
@@ -209,7 +213,8 @@ def run(app_dir,report_path):
                 cpu=reference.predict(left,right,24,lambda:False)
                 begin=time.monotonic();gpu=model.predict(left,right,24,lambda:False)
                 diff=np.abs(cpu-gpu)
-                assert float(diff.max())<.05,(label,float(diff.max()))
-                directml.append(dict(model=label,status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
+                assert np.isfinite(gpu).all()
+                np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
+                directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=True,mixed_model_sha256=mixed_meta['onnx_sha256'],directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

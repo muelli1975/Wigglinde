@@ -1,75 +1,115 @@
-# Wigglinde
+# Wigglinde 1.0
 
-Wigglinde creates wiggle animations from already aligned Full-SBS stereo photographs,
-using Lite Any Stereo V2 (LAS2-H) and MPEG-I RVS.
+[Deutsch](README_DE.md)
 
-**Version 1.0 · Windows 10/11 x64 · portable.** Extract the complete folder and start
-`Wigglinde.exe`. Model, renderer, runtimes, icon and completion sound are included.
-Processing works locally and offline, without accounts, telemetry or automatic downloads.
-German instructions: [Liesmich.md](Liesmich.md).
+Wigglinde is a local Windows tool for creating wiggle animations from already
+aligned Full-SBS stereo photographs. It estimates depth from the existing left
+and right views with **Lite Any Stereo V2 H (LAS2-H)** and renders intermediate
+views with **MPEG-I RVS**.
 
-- German/English interface, single-image or image-folder processing, no file list. Image folders are processed without subfolders.
-- Default: **MP4, 720p, 30 fps, two-second cycle, CPU**.
-- LAS2-H, four iterations, float32. CPU or compatible NVIDIA/AMD/Intel GPU via DirectML.
-- RVS CPU renderer: Precision 1, RGB, Multispectral 1/4. Intermediate views run
-  concurrently within CPU and available-memory limits estimated for Precision 1; return views and repeated cycles are reused.
-- Full-SBS only: normal-width left half followed by the right half. No alignment,
-  L/R swap, source crop or convergence adjustment.
-- ICC-managed RGB input, Lanczos scaling before depth estimation, preserved aspect
-  ratio and no upscaling of smaller inputs. Opaque 8-bit RGB/grayscale images.
-- Optional left/right depth maps as **16-bit grayscale PNG**, disabled by default.
-- Cancellation, separate input/output dialog memories and completion sound.
-- Language, device, last input paths, output mode/folder, depth-map option and
-  animation settings are remembered; processing never starts automatically.
+Processing runs locally, without an account, cloud or tracking. The portable
+package includes the model and runtimes; no automatic downloads are required.
+The interface is available in German and English.
+
+[Download Wigglinde 1.0](https://github.com/muelli1975/Wigglinde/releases/tag/v1.0)
+
+## Requirements and installation
+
+- Windows 10 or 11, 64-bit.
+- CPU processing is supported. Compatible NVIDIA, AMD and Intel graphics cards
+  with a DirectX 12 driver can accelerate depth estimation through DirectML.
+- No separate Python installation, CUDA toolkit or build tools are required.
+
+Extract `Wigglinde_1.0_Windows.zip` and start `Wigglinde\Wigglinde.exe`.
+Keep the complete application folder together. Processing works offline.
+
+## Basic use
+
+1. Select a single image or an image folder. Only images directly inside the
+   selected folder are processed; subfolders are ignored.
+2. Use an output folder beside the input or select a custom output folder.
+3. Choose format, size, frame rate and cycle duration.
+4. Optionally enable **Also save depth maps**.
+5. Choose CPU or a graphics adapter and click **Start**.
+
+Input must be Full-SBS: the normal-width left half followed by the right half.
+Wigglinde does not align images, swap views, crop the source or adjust convergence.
+Supported formats are JPEG, PNG, TIFF, BMP and WebP with opaque 8-bit RGB or grayscale
+pixels. EXIF orientation and embedded colour profiles are respected.
+
+First-launch defaults: **MP4, 720p, 30 fps, two-second cycle and CPU**.
+Smaller inputs are not enlarged. Aspect ratio and full image borders are preserved;
+images are reduced with Lanczos before depth estimation.
+
+## Animation output
 
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
-| MP4 | 720 / 1080 / 2160 px height | 30 / 60 fps | Five cycles |
-| GIF | 640 / 800 / 1024 px long side | 10 / 15 / 20 / 25 fps | Infinite loop |
-| PNG sequence | 1080 / 2160 px height | 30 / 60 fps | One cycle |
+| MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Five cycles |
+| GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
+| PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |
 
-Cycle duration: 0.5–30 seconds; sinusoidal motion without a duplicated final endpoint.
-MP4 uses H.264 CRF 18/slow; GIF uses one common palette. Odd MP4 dimensions are
-padded by at most one black pixel row/column, without cropping.
+Cycle duration is adjustable from 0.5 to 30 seconds. Motion is sinusoidal, without
+a duplicated final endpoint. The return path and repeated cycles reuse the same
+rendered views. MP4 uses H.264 CRF 18/slow; GIF uses a shared palette for the whole
+cycle. Odd MP4 dimensions are padded by at most one black row/column, without cropping.
 
-## Output
+LAS2-H uses four iterations. CPU uses Float32; GPU uses a separate mixed Float16/Float32
+model, retaining selected normalization, probability, summation and sampling operations
+in Float32. **RVS renders on CPU in both modes**, using Precision 1, RGB and
+Multispectral 1/4. Independent views run in parallel within CPU and memory limits.
 
-Default destination: `output` in the input folder; a custom destination is optional.
-Animations are stored under `wiggle`, optional depth maps under `depth_maps`.
-Only images directly inside the selected input folder are processed; subfolders are
-ignored. Output filenames retain the original stem, without source-folder prefixes,
-e.g. `Image_wiggle_30fps_720p.mp4`. Suffixes are lowercase.
-PNG sequences have their own `_png` folder. Existing animation outputs are replaced
-only after successful export. Originals remain unchanged.
+Large images require more memory. Mixed precision does not guarantee that 2160p fits
+on every GPU. Memory errors do not silently change the selected device, model,
+resolution or precision. Fine structures, occlusions, glass and reflections can
+still produce doubled contours or transition artifacts.
 
-Depth maps use the selected processing size, one map for each corresponding SBS
-half. Both maps share a linear normalization: white is near, black is far.
-They contain **relative disparity, not distance in metres**. A JSON companion records
-the shared minimum/maximum, map names and decoding formula. Use a map with its
-matching, equally scaled left/right RGB half. No depth-only export or lenticular
-print preparation is included.
+## Output and depth maps
 
-## Devices and diagnostics
+The default destination is `output` beside the selected image or inside the selected
+image folder. A custom destination can be used instead.
 
-CPU is selected on first launch; a saved device choice is retained. DirectML requires
-a compatible DirectX 12 driver. Individual unsupported ONNX operators may execute on
-CPU within the DirectML session. A failed GPU initialization is reported; the whole
-job never silently switches device, model, precision or resolution.
-**RVS rendering uses CPU in both modes.** High resolutions require more time and memory.
+| Folder | Contents |
+| --- | --- |
+| `wiggle` | MP4, GIF or a folder for each PNG sequence |
+| `depth_maps` | Optional left/right 16-bit PNG depth maps and scale metadata |
+| `_temp` | Temporary working files, removed after processing |
 
-**Test depth estimation** runs the same preprocessing and both depth calculations for
-a selected single image, without rendering or writing maps. Choose the resolution first.
-`logs/latest_run.json` is overwritten each run and records stage times, render scheduling,
-sampled RAM/commit and available DXGI process GPU usage/budget. `wigglinde.jsonl` and
-`errors.log` rotate at 5 MiB with three backups each. Temporary PNG compression is unchanged. Temporary files are removed after processing; an empty `_temp` parent is removed as well.
+Names retain the original stem, for example `Image_wiggle_30fps_720p.mp4`, without
+source-folder prefixes. Suffixes are lowercase. Finished animations are replaced
+only after a successful export. **Cancel** stops processing; completed files remain.
+Originals are never changed. An empty `_temp` folder is removed as well.
 
-Extreme disparities, occlusions, glass, reflections and fine structures can cause
-transition artifacts or doubled contours. No artifact-free result is guaranteed.
+**Also save depth maps** uses the already calculated maps, without another model run.
+Each map belongs to its corresponding left/right image half at the processing size.
+Both share a linear scale: white is near, black is far. They contain **relative
+disparity, not distance in metres**. A JSON companion records the scale and decoding
+formula. No lenticular print preparation is included.
 
-Own code is MIT; third-party code, model weights and runtime components retain their
-licenses. See [third-party notices](tools/THIRD_PARTY.md). The package contains the exact
-application source in `source` and notices in `licenses`.
+## Settings and diagnostics
 
-Development: `python -m pip install -e .`; `wigglinde` launches the GUI with the local
-model under `models/las2` and renderer under `backend`. Do not install overlapping
-ONNX Runtime distributions. [Development status](docs/DEVELOPMENT.md).
+Language, device, last input paths, output mode/folder, depth-map option and animation
+settings are saved in `settings.json` beside the program. Keep this file when updating.
+Restored input paths do not start processing automatically.
+
+**Test depth estimation** processes a selected single image without rendering or
+saving maps. Choose the output size first. Logs record timing, precision and sampled
+memory use. `logs/latest_run.json` is overwritten each run. The ongoing logs rotate
+at 5 MiB with three backups each. No full output-decode checks run during normal batches.
+
+## Source code and long-term use
+
+The repository contains the application source and build instructions. See
+[BUILD.md](BUILD.md) for source use and portable builds, and
+[development notes](docs/DEVELOPMENT.md) for validation details. The release includes
+its matching source in `source` and third-party notices in `licenses`.
+
+Wigglinde is intended to remain understandable and usable for future development
+and the stereoscopic community. Active maintenance, support, issue handling or
+pull-request review cannot be guaranteed.
+
+## License
+
+Original Wigglinde code and documentation by Christoph Müller use the
+[MIT License](LICENSE). Third-party software and model weights retain their own
+licenses. See [THIRD_PARTY.md](THIRD_PARTY.md).

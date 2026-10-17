@@ -1,4 +1,4 @@
-"""Wigglinde's development prototype; no release-quality claim."""
+"""Portable Full-SBS to wiggle conversion."""
 
 import os
 

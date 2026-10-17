@@ -1,4 +1,4 @@
-"""Build a portable test archive from explicit local prerequisites."""
+"""Build a portable Windows archive from explicit local prerequisites."""
 from pathlib import Path
 import argparse,glob,importlib.metadata as metadata,json,shutil,subprocess,sys,zipfile,urllib.request
 
@@ -19,9 +19,9 @@ def main():
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     shutil.copytree('assets',target/'assets')
     models=target/'models/las2';models.mkdir(parents=True)
-    for label in ['H']:
+    for stem in ['LAS2_H_dynamic','LAS2_H_mixed']:
         for extension in ['onnx','json']:
-            name=f'LAS2_{label}_dynamic.{extension}';shutil.copy2(Path('models/las2')/name,models)
+            name=f'{stem}.{extension}';shutil.copy2(Path('models/las2')/name,models)
     notices=target/'licenses';notices.mkdir();shutil.copytree('runtime-wheel/licenses',notices/'DirectML-runtime');shutil.copy2('runtime-wheel/provenance.json',notices/'DirectML-build.json');shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
     for name in ['LICENSE.txt','tcl/tcl8.6/license.terms','tcl/tk8.6/license.terms']:
         file=Path(sys.base_prefix)/name
@@ -39,8 +39,13 @@ def main():
                 f=Path(dist.locate_file(item))
                 if f.is_file():
                     dest=notices/name/str(item).replace('../','');dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    shutil.copy2('README.md',target/'README.md');shutil.copy2('Liesmich.md',target/'Liesmich.md')
-    shutil.copy2('tools/THIRD_PARTY.md',notices/'THIRD_PARTY.md')
+    for name in ['README.md','README_DE.md','BUILD.md']:
+        text=Path(name).read_text(encoding='utf-8')
+        text=text.replace('](docs/','](source/docs/').replace('](.github/','](source/.github/')
+        (target/name).write_text(text,encoding='utf-8')
+    for name in ['LICENSE','THIRD_PARTY.md','CHANGELOG.md']:
+        shutil.copy2(name,target/name)
+    shutil.copy2('THIRD_PARTY.md',notices/'THIRD_PARTY.md')
     from imageio_ffmpeg import get_ffmpeg_exe
     (notices/'FFmpeg-build.txt').write_bytes(subprocess.check_output([get_ffmpeg_exe(),'-version']))
     with urllib.request.urlopen('https://raw.githubusercontent.com/FFmpeg/FFmpeg/n7.0.2/COPYING.GPLv3',timeout=60) as response:
@@ -52,7 +57,7 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.0',models=['LAS2-H'],default_model='LAS2-H',devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.0',models=['LAS2-H'],default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=360)
     archive=Path('dist/Wigglinde_1.0_Windows.zip')

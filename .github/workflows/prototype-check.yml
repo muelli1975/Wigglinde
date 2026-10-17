@@ -1,4 +1,4 @@
-name: Prototype checks
+name: Source checks
 
 on:
   push:

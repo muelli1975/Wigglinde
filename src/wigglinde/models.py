@@ -4,6 +4,7 @@ from pathlib import Path
 MODELS=('LAS2-H',)
 DEFAULT_MODEL='LAS2-H'
 
-def model_path(app_dir,name):
+def model_path(app_dir,name,device_id=None):
     if name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(name))
-    return Path(app_dir)/'models/las2'/(name.replace('-','_')+'_dynamic.onnx')
+    suffix='_dynamic.onnx' if device_id is None else '_mixed.onnx'
+    return Path(app_dir)/'models/las2'/(name.replace('-','_')+suffix)

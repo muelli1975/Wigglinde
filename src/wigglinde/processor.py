@@ -70,7 +70,7 @@ class Processor:
 
     def _run(self,path,options,progress,output_root):
         options.validate();check_cancelled(self.event.is_set)
-        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32',layout='Full-SBS',input_order='left_then_right',
+        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32' if self.device_id is None else 'mixed_float16_float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
         trace=RunTrace(self.logs,context,self.device_id,child=lambda:self.renderer.process.pid if self.renderer and self.renderer.process else None)
         self.last_diagnostics=trace.data
@@ -83,7 +83,7 @@ class Processor:
             trace.event('prepared',processing_size=size,matching_offset=offset)
             if self.model is None:
                 progress(self.model_name+' laden',0.)
-                with trace.stage('model_load'):self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name),device_id=self.device_id)
+                with trace.stage('model_load'):self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
             if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
             trace.data['depth_provider']=self.model.session.get_providers()
             dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress,stage=trace.stage)

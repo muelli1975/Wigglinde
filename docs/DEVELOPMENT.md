@@ -1,5 +1,29 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Aktualisierung 1.0: GPU Mixed Precision
+
+Freigegeben am 17. Oktober 2026, 16:21: GPU verwendet separaten ONNX-Graphen mit
+Float16/Float32, CPU weiterhin unveränderten Float32-Graphen. Gleiche H-Gewichte,
+vier Iterationen, Bildgröße und RVS. Ein-/Ausgabe Float32. Konvertierung über
+onnxruntime.transformers.float16 (1.24.4), Standard-Blockliste ergänzt um
+BatchNormalization, InstanceNormalization, Softmax, ReduceSum, GridSample und Resize.
+Dies ist eine dokumentierte ONNX-Mischpräzisionsrichtlinie; keine Zusage identischer
+Operationstypen gegenüber dem CUDA-Autocast des Autoren-Geschwindigkeitstests.
+
+Der ORT-Konverter bewahrt FP32-Initialisierer, wenn diese nur FP32-Knoten versorgen.
+Das ist insbesondere für model.cost_agg.conv5.1.running_var nötig (bis 187539,8),
+außerhalb Float16. Kein Abschneiden auf 10000 oder 65504. Der unveränderte ORT-Konverter erstellt die Mischpräzisionsgrenzen; ORT sortiert
+topologisch, ONNX prüft Typen/Graph vollständig.
+Zwei kleine Konvertierungsvergleiche mit CPU-Provider sind Build-Prüfungen,
+kein Nachweis physischer GPU-Ausführung oder wahrnehmbarer Gleichheit.
+
+Modellwahl ausdrücklich durch Gerät; falsche Modellpräzision wird zurückgewiesen.
+Protokolle nennen mixed_float16_float32 bzw. float32. Keine stille Ersatzberechnung.
+Repository-Struktur und EN/DE-README folgen den bestehenden Programmen; Hinweise
+zu Quellcode, langfristiger Nutzung und Fremdlizenzen ergänzt. Prüfung und Paketbau
+dieser Aktualisierung stehen noch aus. Die folgenden Abschnitte betreffen ältere Stände.
+
+
 ## Version 1.0: Umsetzung und Paketprüfung
 
 Freigegeben am 17. Oktober 2026: MP4-Standard 720p / CPU; H, vier Iterationen,

@@ -2,7 +2,7 @@ name: Portable Windows build
 on:
   push:
     branches: [testversion-0.1]
-    paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'Liesmich.md', 'LICENSE', 'assets/**', '.github/workflows/windows-test-build.yml']
+    paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'README_DE.md', 'THIRD_PARTY.md', 'BUILD.md', 'LICENSE', 'assets/**', '.github/workflows/windows-test-build.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,11 +36,21 @@ jobs:
           model_letter=$(echo '${{ matrix.model }}' | tr '[:lower:]' '[:upper:]')
           curl -fL --retry 3 -o LAS2.pth "https://huggingface.co/tomtomtommi/LiteAnyStereoV2/resolve/17788d91618646fa781a14462e2926a034b9f49d/LAS2_${model_letter}.pth"
           python tools/export_las2.py --model-size '${{ matrix.model }}' --source las2-reference --weights LAS2.pth --output "models/las2/LAS2_${model_letter}_dynamic.onnx"
+      - name: Convert and check the GPU mixed-precision model
+        shell: bash
+        run: |
+          python -m pip install onnx==1.20.1 onnxruntime==1.24.4 numpy
+          python tools/convert_las2_mixed.py --source models/las2/LAS2_H_dynamic.onnx --output models/las2/LAS2_H_mixed.onnx --report output/mixed-model-check.json
       - uses: actions/upload-artifact@v4
         with:
           name: las2-${{ matrix.model }}-onnx
           path: models/las2
           retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mixed-model-check
+          path: output/mixed-model-check.json
+          retention-days: 30
   runtime:
     runs-on: windows-2022
     concurrency:
