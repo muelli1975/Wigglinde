@@ -34,7 +34,26 @@ H 2160p GPU scheitert im linken ORT-Aufruf an UnicodeDecodeError mit Byte 0xfc.
 1080p GPU funktioniert. 2160p CPU gelingt in 14:14 mit erstklassigem Ergebnis.
 Grafikspeichermangel plausibel, ohne Ursprungsmeldung/Hardwaredaten nicht bewiesen.
 
-27 lokale Prüfungen bestanden. Windows-Paketprüfung für Test 3 ausstehend.
+27 lokale Prüfungen bestanden. Zusätzlich echter CPU-Tiefentest mit `bild032_cs.jpg`
+bei 1620×1080 bestanden: 1,00 s Vorbereitung, 1,03 s Modellladen, 8,73/9,51 s
+links/rechts, 20,29 s gesamt; abgetastete RSS-Spitze 6925 MiB. Nur Tiefenberechnung,
+kein Vergleich der gesamten Exportzeit oder anderer Hardware. Lokale 3240×2160-
+Probe im linken Aufruf durch den OOM-Killer beendet (Exit 137, cgroup `oom_kill=1`,
+8-GiB-Grenze). Der letzte Bericht behält `status=running/current_stage=depth_left`;
+ein vom Betriebssystem beendeter Prozess kann keinen Abschlussbericht schreiben.
+Der erfolgreiche 2160p-CPU-Export beim Anwender bleibt davon unabhängig.
+[Windows-Paketprüfung für Test 3](https://github.com/muelli1975/Wigglinde/actions/runs/39022540162)
+bestanden, Quellstand `2a599766bb6a62ed0beb79b73482d1af9743d878`.
+Tatsächliche EXE: H-CPU-Exporte MP4/GIF/PNG, Tiefentest ohne zusätzliche Ausgabe,
+Sitzungswiederverwendung, Originalerhalt, alte Modell-/Layoutwerte entfernt,
+beide Sprachen, gemalte Buttonfarben, stabile Bedienpositionen, 100/125/150 %,
+unveränderte Icon-/Sounddateien. Native Windows-RAM-/Commit- und DXGI-Zähler
+arbeiten; das bestätigt noch keine physische GPU-Inferenz. Microsoft Basic Render
+Driver ist der einzige Adapter; dessen DirectML-Initialisierung scheitert wie zuvor.
+Paket enthält ausschließlich H und keine Testlogs, Einstellungen oder temporären
+Dateien. Archiv CRC-geprüft, 163853096 Bytes, SHA-256:
+`aac87a01768827e393e4476e1170af2449a2578e71a8ddd9e3fb74e3cb1527c9`.
+Die separate Prototype-Prüfung desselben Commits ist ebenfalls bestanden.
 
 
 ## Test 2a: Buttonfarben und Full-SBS
