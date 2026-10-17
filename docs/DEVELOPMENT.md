@@ -1,5 +1,13 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Neuer Fotoversuch: Precision 1 / 2
+
+Drei Motive mit denselben H-Karten verglichen: Precision 1 spart lokal 40–43 %
+Renderzeit und ca. 70 % Renderer-RAM, zeigt jedoch härtere, stärker abgestufte Kanten.
+Vollständige Wiggles und synchrone Detailvergleiche erstellt; alle neun MP4s
+vollständig dekodiert. Produktstandard bleibt Precision 2.
+Vorgehen, Messwerte und Grenzen: [RVS_PRECISION_COMPARISON.md](RVS_PRECISION_COMPARISON.md).
+
 ## Test 4: parallele RVS-Ansichten (17. Oktober 2026)
 
 Freigegeben ist die Beschleunigung der bestehenden Methode. Unabhängige Ansichten
