@@ -78,8 +78,20 @@ def run(app_dir,report_path):
     adapters=list(gui.adapters)
     sound=Path(app_dir)/'assets/ready.wav'
     assert hashlib.sha1(b'blob '+str(sound.stat().st_size).encode()+b'\0'+sound.read_bytes()).hexdigest()=='260fb0d49982873a13dabd750b997448acb675ca'
-    for kind in ['GIF',gui.tr('png'),'MP4']:
-        gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
+    for language in ['English','Deutsch']:
+        gui.language.set(language);gui._language_changed();gui.update()
+        def geometry_snapshot():
+            return [(w.winfo_rootx(),w.winfo_rooty(),w.winfo_width(),w.winfo_height()) for w in gui.controls]
+        baseline=geometry_snapshot();device_before=gui.device.get()
+        for kind in ['GIF',gui.tr('png'),'MP4']:
+            gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
+            for label in MODELS:
+                gui.model_name.set(label)
+                # A long label exercises layout only; it does not probe a device.
+                for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
+                    gui.device.set(device_label);gui.update()
+                    assert geometry_snapshot()==baseline
+        gui.device.set(device_before)
     gui.model_name.set(DEFAULT_MODEL)
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
@@ -109,4 +121,4 @@ def run(app_dir,report_path):
                 assert float(diff.max())<.05,(label,float(diff.max()))
                 directml.append(dict(model=label,status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,adapters=adapters,original_sound=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,adapters=adapters,original_sound=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

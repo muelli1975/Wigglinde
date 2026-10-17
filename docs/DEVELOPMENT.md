@@ -29,7 +29,9 @@ mit rtol/atol 1e-4 verglichen und die tatsächlichen Pixelfehler protokolliert. 
 Sprachwechsel erhält Optionen/Pfade, Busy-Zustand und Eingabe-/Ausgabeabhängigkeiten.
 Layout bei 100/125/150 % und kleinem Fenster bestanden. Texte werden beim Sprachwechsel
 in bestehenden Widgets aktualisiert; das verhindert verwaiste CTk-Menücallbacks
-bei anschließender DPI-Änderung.
+bei anschließender DPI-Änderung. Wiederholte Wechsel von Format, Modell und
+Berechnungsgerät einschließlich sehr langer Gerätebezeichnung verschieben lokal
+keine Bedienelemente; derselbe Positionsvergleich ist Teil des Windows-Pakettests.
 Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen.
 Der erste Runtime-Build scheiterte an MSVC-2026-Warnung C4875 unter /WX im
 unveränderten ORT-Code. Der Build verwendet nun die VS-2022-Umgebung. Physische
