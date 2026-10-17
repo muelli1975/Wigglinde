@@ -4,6 +4,7 @@ import json,os,subprocess,threading
 import numpy as np
 from .render import _linear,_srgb
 from .wiggle_export import ExportCancelled,check_cancelled
+from .resources import render_plan
 
 class RVSRenderer:
     def __init__(self,executable,scene,positions,work,matching_offset=64):
@@ -11,6 +12,7 @@ class RVSRenderer:
         self.work.mkdir(parents=True,exist_ok=True);self.process=None;self.metrics={}
         if not self.executable.is_file():raise FileNotFoundError(f'Der RVS-Renderer fehlt: {self.executable}')
         h,w=scene.left.shape[:2]
+        self.schedule=render_plan(w,h,len(positions))
         bias=max(float(matching_offset),1-float(min(scene.left_disparity.min(),scene.right_disparity.min())))
         self.bias=bias
         for i,(rgb,d) in enumerate(zip((scene.left,scene.right),(scene.left_disparity,scene.right_disparity))):
@@ -34,7 +36,7 @@ class RVSRenderer:
         h,w=self.scene.left.shape[:2];size=h*w*3*4
         flags=getattr(subprocess,'CREATE_NO_WINDOW',0)
         with (self.work/'rvs.log').open('wb') as log:
-            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json'),str(self.work/'metrics.json')],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
+            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json'),str(self.work/'metrics.json'),str(self.schedule['workers']),str(self.schedule['threads_per_view'])],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
             p=self.process
             try:
                 for index in range(len(self.positions)):

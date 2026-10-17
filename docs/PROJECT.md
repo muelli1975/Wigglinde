@@ -43,7 +43,7 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 ## Geometrie und Qualitätsziel
 
 Gewählter Modellansatz: Lite Any Stereo V2. Nach praktischem Vergleich wird für
-Test 3 ausschließlich LAS2-H verwendet, mit vier Iterationen und Float32.
+Test 4 ausschließlich LAS2-H verwendet, mit vier Iterationen und Float32.
 Berechnungsgerät CPU/DirectML bleibt ausdrücklich wählbar, ohne automatische Umschaltung. Die erste Testversion
 verwendet LAS2-M als ONNX und RVS auf der CPU. Der frühere native Forschungsversuch
 und RVS-Vergleich stehen in `RVS_COMPARISON.md`. Der CLI-Adapter für
@@ -84,7 +84,7 @@ Linsenrichtung, Betrachtungsabstand, Grob-/Fein-Pitchtest, Montage-/Schnittmarke
 Phasenlage, Reihenfolge/Spiegelung, TIFF/BigTIFF und ICC-/RIP-Übergabe sowie
 reproduzierbare Material-/Druckprofile sind vor Implementierung zu spezifizieren.
 Keine Behauptung professioneller Druckeignung ohne reale, kalibrierte Testdrucke.
-Diese Funktionen gehören noch nicht zum Test-3-Paket.
+Diese Funktionen gehören noch nicht zum Test-4-Paket.
 
 ## Nächster freigegebener Schritt: Diagnoseversion
 
@@ -95,3 +95,11 @@ Tiefentest mit identischer Berechnung und gewählter Auflösung, ohne Renderer.
 Kein automatischer CPU-/Auflösungswechsel. Zunächst messen, danach Optimierungen
 entscheiden. CUDA, Cache, Tiling und Tiefenkartenexport werden hier nicht ergänzt.
 H liefert die beste Qualität im Anwendervergleich; Übergangsstörungen bleiben offen.
+
+## Freigegebene RVS-Beschleunigung (17. Oktober)
+
+Unabhängige Zwischenansichten parallel auf CPU berechnen. Gleiche RVS-Mathematik:
+Precision 2, RGB, Multispectral 1/4, bestehende Füllung. Parallelität nach CPU und
+verfügbarem RAM/Commit begrenzen; kein zusätzlicher Regler, keine Qualitätsreduktion.
+Lentikularoptionen bleiben vorerst zurückgestellt. Kein Wechsel zu Open3D, Vulkan
+oder einem eigenen Renderer als Teil dieses Schrittes.

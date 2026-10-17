@@ -10,6 +10,12 @@
 #include <iostream>
 #include <cstdio>
 #include <chrono>
+#include <future>
+#include <vector>
+#include <algorithm>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
@@ -17,25 +23,31 @@
 using Clock=std::chrono::steady_clock;
 double seconds(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
 struct Stats {
- std::string path;double input=0,render=0,write=0;size_t views=0;
- void save()const noexcept{try{if(path.empty())return;std::ofstream f(path);f<<"{\"input_seconds\":"<<input<<",\"render_seconds\":"<<render<<",\"stream_write_seconds\":"<<write<<",\"views\":"<<views<<"}";}catch(...){}}
+ std::string path;double input=0,render=0,write=0,pipeline=0;size_t views=0;int workers=1,inner=0,opencv=8;
+ void save()const noexcept{try{if(path.empty())return;std::ofstream f(path);f<<"{\"schema_version\":2,\"input_seconds\":"<<input<<",\"render_work_seconds\":"<<render<<",\"render_pipeline_seconds\":"<<pipeline<<",\"stream_write_seconds\":"<<write<<",\"views\":"<<views<<",\"parallel_workers\":"<<workers<<",\"threads_per_view\":"<<inner<<",\"opencv_threads\":"<<opencv<<"}";}catch(...){}}
 };
 template<class M> M readmat(const std::string&p,cv::Size size){M m(size);std::ifstream f(p,std::ios::binary);f.read((char*)m.data,m.total()*m.elemSize());if(!f)throw std::runtime_error("Datei konnte nicht gelesen werden: "+p);return m;}
 int main(int argc,char**argv){Stats stats;try{
- if(argc!=3)throw std::runtime_error("wigglinde_rvs config.json metrics.json");
+ if(argc!=3 && argc!=5)throw std::runtime_error("wigglinde_rvs config.json metrics.json [workers threads_per_view]");
+ if(argc==5){stats.workers=std::stoi(argv[3]);stats.inner=std::stoi(argv[4]);if(stats.workers<1 || stats.inner<1)throw std::runtime_error("Invalid thread count");}
+ stats.opencv=stats.workers>1?1:(stats.inner?stats.inner:8);
  stats.path=argv[2];auto input_start=Clock::now();
 #ifdef _WIN32
  _setmode(_fileno(stdout),_O_BINARY);
 #endif
  // Upstream diagnostic text must never enter the binary frame stream.
- std::cout.rdbuf(std::cerr.rdbuf());cv::setNumThreads(8);rvs::g_with_opengl=false;
+ std::cout.rdbuf(std::cerr.rdbuf());cv::setNumThreads(stats.opencv);rvs::g_with_opengl=false;
  auto cfg=rvs::Config::loadFromFile(argv[1]);std::vector<rvs::View> inputs;
  for(int i=0;i<2;i++){
   auto size=cfg.params_real[i].getSize();
   inputs.emplace_back(readmat<cv::Mat3f>(cfg.texture_names[i],size),readmat<cv::Mat1f>(cfg.depth_names[i],size),cv::Mat1f(size,1.f),cv::Mat1f(size,1.f));
  }
  stats.input=seconds(input_start);
- for(size_t v=0;v<cfg.params_virtual.size();v++){
+ struct Result {cv::Mat3f color;double elapsed;};
+ auto compute=[&](size_t v){
+#ifdef _OPENMP
+  if(stats.inner)omp_set_num_threads(stats.inner);
+#endif
   auto render_start=Clock::now();
   rvs::BlendedViewMultiSpec blender(1.f,4.f);
   for(int i=0;i<2;i++){
@@ -45,11 +57,33 @@ int main(int argc,char**argv){Stats stats;try{
   auto color=rvs::detail::inpaint(blender.get_color(),blender.get_inpaint_mask(),true);
   cv::resize(color,color,cfg.params_virtual[v].getSize());
   if(!color.isContinuous())color=color.clone();
+  return Result{color,seconds(render_start)};
+ };
+ // A fixed-size rolling window preserves output order and bounds completed
+ // frames as well as active work. Input matrices/configuration remain read-only.
+ stats.workers=std::min(stats.workers,std::max(1,int(cfg.params_virtual.size())));
+ auto pipeline_start=Clock::now();
+ std::vector<std::future<Result>> pending(stats.workers);
+ size_t next=0;
+ auto launch=[&](size_t slot){
+  const size_t index=next++;
+  pending[slot]=std::async(std::launch::async,compute,index);
+ };
+ if(stats.workers>1)for(int slot=0;slot<stats.workers && next<cfg.params_virtual.size();++slot)launch(slot);
+ for(size_t v=0;v<cfg.params_virtual.size();v++){
+  Result result;
+  if(stats.workers==1)result=compute(v);
+  else{
+   const size_t slot=v%stats.workers;
+   result=pending[slot].get();
+   if(next<cfg.params_virtual.size())launch(slot);
+  }
+  const auto& color=result.color;
   size_t bytes=color.total()*color.elemSize();
-  stats.render+=seconds(render_start);auto write_start=Clock::now();
+  stats.render+=result.elapsed;auto write_start=Clock::now();
   if(std::fwrite(color.data,1,bytes,stdout)!=bytes)throw std::runtime_error("Ausgabe abgebrochen");
   std::fflush(stdout);std::cerr<<"view "<<v+1<<"/"<<cfg.params_virtual.size()<<std::endl;
   stats.write+=seconds(write_start);stats.views++;
  }
- stats.save();return 0;
+ stats.pipeline=seconds(pipeline_start);stats.save();return 0;
 }catch(const std::exception&e){stats.save();std::cerr<<e.what()<<std::endl;return 1;}}

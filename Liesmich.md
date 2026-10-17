@@ -1,4 +1,4 @@
-# Wigglinde 0.1 – Testversion 3
+# Wigglinde 0.1 – Testversion 4
 
 Den vollständigen Ordner entpacken und `Wigglinde.exe` starten. Modell, Renderer,
 Laufzeiten und Fertigstellungssound sind enthalten; keine Installation, Anmeldung
@@ -52,7 +52,7 @@ Modellladezeit, Tiefenzeit und gemessene Speicherspitzen. Diese Spitzen sind
 Stichproben im Abstand von 0,25 Sekunden, keine garantierten Maximalwerte.
 
 `logs/latest_run.json` enthält den letzten Lauf einschließlich Berechnungsgröße,
-Stufenzeiten, RAM-/Commit-Werten und verfügbaren DXGI-Prozesswerten für GPU-Speicher.
+Stufenzeiten, Anzahl paralleler Renderaufgaben, RAM-/Commit-Werten und verfügbaren DXGI-Prozesswerten für GPU-Speicher.
 Die GPU-Werte beschreiben den Prozess und sein Budget, nicht die gesamte Belegung
 der Grafikkarte. Vor dem nächsten Test die Datei bei Bedarf separat sichern.
 Die fortlaufenden Protokolle `wigglinde.jsonl` und `errors.log` werden bei 5 MiB
@@ -73,8 +73,10 @@ auf CPU laufen. Ein fehlgeschlagener GPU-Start wird gemeldet; kein stiller Wechs
 des gesamten Auftrags auf CPU. Bei Problemen CPU ausdrücklich auswählen.
 
 **RVS rendert auch im GPU-Modus weiterhin auf CPU**, mit unveränderter zweifacher
-interner Abtastung und Multispectral-Blending 1/4. Die gesamte Laufzeit wird deshalb
-nicht im selben Verhältnis sinken wie die Tiefenberechnung. Modell, Präzision,
+interner Abtastung und Multispectral-Blending 1/4. Zwischenansichten werden parallel
+berechnet, soweit CPU und verfügbarer Speicher es zulassen. Die Anzahl wird pro Bild
+automatisch bestimmt; bei großen Bildern können weniger Ansichten gleichzeitig laufen.
+Modell, Präzision,
 Auflösung und Rendererqualität werden nicht automatisch verändert.
 
 Geschwindigkeit und Bildqualität des GPU-Modus müssen auf echten Grafikkarten

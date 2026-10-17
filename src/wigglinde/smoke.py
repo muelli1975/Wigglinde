@@ -80,7 +80,10 @@ def run(app_dir,report_path):
     for result in results:
         assert result['status']=='passed' and result['model']=='LAS2-H'
         assert result['stage_seconds']['depth_left']>0 and result['stage_seconds']['depth_right']>0
-        assert result['rvs']['render_seconds']>0 and result['rvs']['views']>1
+        assert result['rvs']['render_work_seconds']>0 and result['rvs']['views']>1
+        assert result['rvs']['parallel_workers']==result['rvs_schedule']['workers']
+        if result['rvs']['parallel_workers']>1:assert result['rvs']['opencv_threads']==1
+        else:assert result['rvs']['opencv_threads']>0
         assert result['export_timings']['encode_or_copy_seconds']>0
         assert '_wiggle_' in result['output'] and 'Wiggle' not in Path(result['output']).name
         assert max(s['peak'].get('main_rss_bytes',0) for s in result['memory']['stages'].values())>0

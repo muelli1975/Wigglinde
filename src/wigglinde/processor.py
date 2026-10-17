@@ -86,6 +86,7 @@ class Processor:
                     work=Path(directory);exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
                     with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
+                    trace.data['rvs_schedule']=renderer.schedule
                     def render(position):
                         nonlocal index,wait_seconds
                         check_cancelled(self.event.is_set);begin=time.perf_counter();rgb=next(frames);index+=1

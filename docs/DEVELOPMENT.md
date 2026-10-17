@@ -1,5 +1,49 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Test 4: parallele RVS-Ansichten (17. Oktober 2026)
+
+Freigegeben ist die Beschleunigung der bestehenden Methode. Unabhängige Ansichten
+werden in einem begrenzten Fenster parallel berechnet, in ursprünglicher Reihenfolge
+ausgegeben und wie zuvor für Rückweg/Zyklen wiederverwendet. Beide Eingangsbilder
+werden nur einmal geladen und gemeinsam schreibgeschützt verwendet. RVS-Quellstand
+und Bildmathematik bleiben unverändert: CPU, Precision 2, RGB, Multispectral 1/4,
+bestehende Füllung und Verkleinerung. L/R-Tausch entfällt ebenfalls im Paket.
+
+Automatische Planung pro Bild: höchstens verfügbare CPU-Kapazität, Ansichtsanzahl
+und Speicherbudget. Das Budget verwendet den kleineren verfügbaren RAM-/Commit-Wert
+mit Reserve max(1 GiB, 10 % RAM). Konservative Arbeitsschätzung pro gleichzeitig
+berechneter Ansicht: Breite × Höhe × 1024 Bytes + 64 MiB; keine Allokationsgarantie.
+Bei unbekanntem oder knappem Speicher bleibt eine Ansicht möglich wie zuvor.
+Unter Linux werden cgroup-Grenzen berücksichtigt. OpenCV nutzt bei parallelen
+Ansichten einen Thread; OpenMP erhält je Ansicht floor(CPU/Ansichten) Threads,
+wenigstens einen. So entstehen keine unbeschränkten verschachtelten Threadpools.
+Kein neuer Oberflächenregler, keine Reduktion von Auflösung oder Modellqualität.
+Andere Programme können später Speicher belegen; eine automatische OOM-Reparatur
+oder Qualitäts-/Geräteumschaltung ist weiterhin nicht implementiert.
+
+`rvs_schedule` protokolliert Entscheidung und Ressourcenwerte. Native Messung Schema 2:
+`render_work_seconds` summiert überlappende Berechnungen und ist keine Ablaufzeit;
+`render_pipeline_seconds` misst den parallelen Ablauf einschließlich Streamwartezeit.
+Beide Werte dürfen weder untereinander noch zur Exportzeit addiert werden.
+
+31 schnelle lokale Prüfungen bestanden. Separater nativer Entwicklungstest mit
+320×160 und 323×161, Tiefensprüngen und negativen Disparitäten: alle sieben Ansichten
+mit zwei und vier Arbeitern sowie Wiederholung bitgenau gleich zum alten seriellen
+Aufruf. Reihenfolge und Float32-Werte identisch; Abbruch beendet alle Arbeiter,
+fehlende Konfiguration führt ohne blockierte Pipe zum Fehler. Diese Vergleiche
+laufen ausdrücklich außerhalb der normalen Bildverarbeitung.
+
+Fotoversuch mit `bild032_cs.jpg`, denselben einmal berechneten LAS2-H-Karten,
+1620×1080, sieben Positionen: seriell 29,40 s, drei parallele Ansichten 12,62 s
+(Faktor 2,33), komplette Float32-Ausgabe bitgenau identisch (SHA-256 gleich).
+Renderer-RSS-Spitze 1017,7 / 2860,0 MiB. Linux, OpenCV 4.6, acht CPU-Kapazitäten,
+8 GiB cgroup; jeweils ein Lauf, keine End-to-End- oder Anwender-Hardware-Zusage.
+Die Speicherschätzung von 1772,6 MiB je Arbeiter liegt über diesem beobachteten
+Bedarf. Größere Auflösungen und andere Motive können anders ausfallen.
+
+Windows-Build und Paketprüfung stehen für diesen Stand noch aus. Lentikular,
+Open3D, ein eigener Renderer und Vulkan sind nicht Teil dieser Umsetzung.
+
 ## Rendererprüfung nach Test 3 (17. Oktober 2026)
 
 Die Anwenderprotokolle mit RTX 3060 grenzen den Engpass ein: 1080p bei 1620×1080,
