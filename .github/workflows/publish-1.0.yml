@@ -1,0 +1,97 @@
+name: Publish verified Wigglinde 1.0
+
+on:
+  push:
+    branches: [testversion-0.1]
+    paths: ['.github/workflows/publish-1.0.yml']
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: publish-wigglinde-1.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download the already verified Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: Wigglinde-1.0-Windows
+          run-id: 39039085146
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input
+      - name: Verify exact package identity
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib, json, zipfile
+          path = Path('release-input/dist/Wigglinde_1.0_Windows.zip')
+          expected = '3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036'
+          assert path.stat().st_size == 163894574
+          assert hashlib.sha256(path.read_bytes()).hexdigest() == expected
+          with zipfile.ZipFile(path) as archive:
+              assert archive.testzip() is None
+              build = json.loads(archive.read('Wigglinde/build-info.json'))
+              assert build['version'] == '1.0'
+              assert build['commit'] == '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa'
+          report = json.loads(Path('release-input/output/windows-smoke.json').read_text())
+          assert report['status'] == 'passed'
+          print('Verified original 1.0 ZIP and successful packaged EXE report.')
+      - name: Publish 1.0 with the original ZIP
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner, repo = context.repo.repo;
+            const target = '0c8aefa15f2060b4eb5b4aab806b0cd005c174aa';
+            const tag = 'v1.0';
+            const name = 'Wigglinde_1.0_Windows.zip';
+            const expected = 'sha256:3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036';
+            const releases = await github.rest.repos.listReleases({owner, repo, per_page: 100});
+            const existing = releases.data.find(r => r.tag_name === tag);
+            if (existing) {
+              const asset = existing.assets.find(a => a.name === name);
+              const ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
+              if (!existing.draft && !existing.prerelease && ref.data.object.sha === target && asset?.digest === expected) {
+                core.notice('The identical 1.0 release is already published: ' + existing.html_url);
+                return;
+              }
+              throw new Error('An existing 1.0 release differs or is incomplete; refusing to overwrite it.');
+            }
+            try {
+              const ref = await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag});
+              if (ref.data.object.sha !== target) throw new Error('Existing 1.0 tag points to a different commit.');
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const body = [
+              'Wigglinde creates wiggle animations from already aligned Full-SBS stereo photographs.',
+              '',
+              '- MP4, animated GIF and PNG-sequence output.',
+              '- LAS2-H depth estimation on CPU or compatible GPUs via DirectML; parallel RVS rendering on CPU.',
+              '- Optional left/right 16-bit PNG depth maps with shared normalization and scale metadata.',
+              '- German/English interface, folder processing without subfolders, cancellation and remembered settings.',
+              '- Default on first launch: MP4, 720p, 30 fps, two-second cycle and CPU.',
+              '',
+              '**Windows 10/11 x64, portable.** Extract the complete ZIP and start `Wigglinde.exe`. The model and runtimes are included; processing works offline.',
+              '',
+              'High-resolution GPU depth estimation can exceed available graphics memory. Use CPU for 2160p if necessary. Fine structures, occlusions and reflections can still produce transition artifacts.',
+              '',
+              'Application source and third-party license notices are included in the package.'
+            ].join('\n');
+            const release = await github.rest.repos.createRelease({owner, repo, tag_name: tag, target_commitish: target,
+              name: 'Wigglinde 1.0', body, draft: true, prerelease: false});
+            const data = fs.readFileSync('release-input/dist/' + name);
+            const asset = await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.data.id, name,
+              data, headers: {'content-type': 'application/zip', 'content-length': data.length}});
+            if (asset.data.size !== 163894574 || asset.data.state !== 'uploaded') throw new Error('Release asset upload incomplete.');
+            if (asset.data.digest && asset.data.digest !== expected) throw new Error('Release asset checksum differs.');
+            const published = await github.rest.repos.updateRelease({owner, repo, release_id: release.data.id,
+              draft: false, prerelease: false, make_latest: 'true'});
+            core.notice('Published ' + published.data.html_url);
