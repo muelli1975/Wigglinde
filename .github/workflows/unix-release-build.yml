@@ -60,7 +60,7 @@ jobs:
         id: opencv
         with:
           path: opencv-install
-          key: opencv-static-4.10.0-${{ matrix.label }}-v2
+          key: opencv-static-4.10.0-${{ matrix.label }}-v3
       - name: Build minimal portable OpenCV
         if: steps.opencv.outputs.cache-hit != 'true'
         shell: bash
@@ -71,7 +71,7 @@ jobs:
             -DBUILD_JAVA=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF \
             -DWITH_OPENCL=OFF -DWITH_IPP=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF \
             -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_QT=OFF -DWITH_GTK=OFF \
-            -DWITH_PROTOBUF=OFF -DBUILD_PROTOBUF=OFF \
+            -DWITH_PROTOBUF=OFF -DBUILD_PROTOBUF=OFF -DWITH_ADE=OFF -DWITH_FLATBUFFERS=OFF \
             -DWITH_OPENEXR=OFF -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_JASPER=OFF -DWITH_OPENJPEG=OFF \
             -DWITH_JPEG=OFF -DWITH_PNG=ON -DBUILD_PNG=ON -DBUILD_ZLIB=ON
           cmake --build build/opencv --parallel 4
@@ -80,7 +80,7 @@ jobs:
         if: steps.opencv.outputs.cache-hit != 'true'
         with:
           path: opencv-install
-          key: opencv-static-4.10.0-${{ matrix.label }}-v2
+          key: opencv-static-4.10.0-${{ matrix.label }}-v3
       - name: Build the RVS CPU adapter
         shell: bash
         run: |
