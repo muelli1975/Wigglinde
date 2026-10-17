@@ -22,7 +22,10 @@ verwendet eine andere Bildzusammenführung und ist nicht gleichwertig freigegebe
 Protokoll ergänzt Modell, Tiefenzeit, Wartezeit auf Renderframes und ONNX-Provider.
 Die Wartezeit ist kein isolierter Renderer-Benchmark, weil das Backend parallel rechnet.
 
-21 schnelle Prüfungen lokal bestanden. GUI lokal in beiden Sprachen geprüft,
+21 schnelle Prüfungen lokal bestanden. Exportvergleiche M/L/H sind auf dem
+Buildserver bestanden. Lokal: H maximal 0,000036 px, L maximal 0,001328 px
+Abweichung vom nativen Modell; Float32-Implementierungen werden elementweise
+mit rtol/atol 1e-4 verglichen und die tatsächlichen Pixelfehler protokolliert. GUI lokal in beiden Sprachen geprüft,
 Sprachwechsel erhält Optionen/Pfade, Busy-Zustand und Eingabe-/Ausgabeabhängigkeiten.
 Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen.
 Der erste Runtime-Build scheiterte an MSVC-2026-Warnung C4875 unter /WX im

@@ -53,9 +53,12 @@ class Processor:
         temp_root=output_root/'_temp';temp_root.mkdir(exist_ok=True)
         start=time.monotonic();progress('Bild vorbereiten',0.)
         (left,right),original,size=read_pair(path,layout,swap,options)
+        model_load_seconds=0.
         if self.model is None:
             progress(self.model_name+' laden',0.)
+            model_load_start=time.monotonic()
             self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name),device_id=self.device_id)
+            model_load_seconds=time.monotonic()-model_load_start
         if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
         # Reversible search padding, scaled with the explicitly selected image size.
         # LAS2 has a fixed 192-pixel correspondence range; keep room on both sides.
@@ -84,4 +87,4 @@ class Processor:
             try:export_wiggle(render,size,options,output,work,exporting,self.event.is_set)
             finally:frames.close();self.renderer=None
         progress('Fertig',1.)
-        return dict(output=str(output),source=str(path),source_eye_size=original,processing_size=size,model=self.model_name,depth_provider=self.model.session.get_providers(),depth_device_id=self.device_id,renderer='RVS CPU Precision 2 Multispectral 1/4',matching_offset=offset,elapsed_seconds=time.monotonic()-start,depth_seconds=depth_seconds,render_stream_wait_seconds=render_seconds,options=options.to_settings())
+        return dict(output=str(output),source=str(path),source_eye_size=original,processing_size=size,model=self.model_name,depth_provider=self.model.session.get_providers(),depth_device_id=self.device_id,renderer='RVS CPU Precision 2 Multispectral 1/4',matching_offset=offset,elapsed_seconds=time.monotonic()-start,model_load_seconds=model_load_seconds,depth_seconds=depth_seconds,render_stream_wait_seconds=render_seconds,options=options.to_settings())
