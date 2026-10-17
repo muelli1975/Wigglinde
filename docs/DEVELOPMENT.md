@@ -7,7 +7,9 @@ werden in einem begrenzten Fenster parallel berechnet, in ursprünglicher Reihen
 ausgegeben und wie zuvor für Rückweg/Zyklen wiederverwendet. Beide Eingangsbilder
 werden nur einmal geladen und gemeinsam schreibgeschützt verwendet. RVS-Quellstand
 und Bildmathematik bleiben unverändert: CPU, Precision 2, RGB, Multispectral 1/4,
-bestehende Füllung und Verkleinerung. L/R-Tausch entfällt ebenfalls im Paket.
+bestehende Füllung und Verkleinerung. L/R-Tausch entfällt ebenfalls im Paket. Der äußere `_temp`-Ordner wird nach
+Abschluss, Abbruch oder Fehler entfernt, sofern er leer ist; fremde Inhalte bleiben
+erhalten. Erfolg/Fehler und Erhalt fremder Dateien separat lokal geprüft.
 
 Automatische Planung pro Bild: höchstens verfügbare CPU-Kapazität, Ansichtsanzahl
 und Speicherbudget. Das Budget verwendet den kleineren verfügbaren RAM-/Commit-Wert

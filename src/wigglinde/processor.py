@@ -1,6 +1,7 @@
 """Full-SBS -> LAS2-H -> RVS. Diagnostics use the same depth calculation."""
 from pathlib import Path
 import io,tempfile,time,threading,os
+from contextlib import contextmanager
 import numpy as np
 from PIL import Image,ImageCms,ImageOps
 from .diagnostics import LocalLogs,RunTrace
@@ -12,6 +13,17 @@ from .rvs import RVSRenderer
 from .wiggle_export import export_wiggle,check_cancelled
 
 EXTENSIONS={'.jpg','.jpeg','.png','.tif','.tiff','.bmp','.webp'}
+
+@contextmanager
+def temporary_workspace(root):
+    root.mkdir(parents=True,exist_ok=True)
+    try:
+        with tempfile.TemporaryDirectory(prefix='rvs_',dir=root) as directory:
+            yield Path(directory)
+    finally:
+        # Other processes or retained files may still use this shared parent.
+        try:root.rmdir()
+        except OSError:pass
 
 def read_pair(path,options):
     with Image.open(path) as source:
@@ -77,13 +89,13 @@ class Processor:
             dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress,stage=trace.stage)
             trace.data['depth_seconds']=trace.timings['depth_left']+trace.timings['depth_right']
             if output_root is not None:
-                output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp';temp_root.mkdir(exist_ok=True)
+                output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp'
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
                 output=output_root/(Path(path).stem+suffix+('.'+options.format if options.format!='png' else '_png'))
                 trace.data.update(output=str(output),renderer='RVS CPU Precision 2 Multispectral 1/4')
-                with tempfile.TemporaryDirectory(prefix='rvs_',dir=temp_root) as directory:
-                    work=Path(directory);exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                with temporary_workspace(temp_root) as work:
+                    exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
                     with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule

@@ -36,7 +36,8 @@ Standardziel ist `output` im Eingabeordner. Bei Ordnerverarbeitung werden relati
 Unterordner erhalten. Eigene Ausgabeordner sind möglich. Gleichnamige fertige
 Ausgaben werden erst nach erfolgreicher Verarbeitung ersetzt. Ein Abbruch lässt
 vorherige Ergebnisse bestehen. Protokolle: `logs` im Programmordner; temporäre
-Dateien: `_temp` im jeweiligen Ausgabeordner.
+Dateien: `_temp` im jeweiligen Ausgabeordner. Ein leerer temporärer Ordner wird
+nach der Verarbeitung entfernt.
 
 ## Modelle, GPU-Modus und Teststand
 

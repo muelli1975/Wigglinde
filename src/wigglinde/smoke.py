@@ -59,6 +59,7 @@ def run(app_dir,report_path):
     for kind in ['mp4','gif','png']:
         options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5)
         result=processor.convert(source,work/'Ausgabe_Größe',options)
+        assert not (work/'Ausgabe_Größe'/'_temp').exists()
         if session is None:session=id(processor.model.session)
         assert id(processor.model.session)==session
         output=Path(result['output']);assert output.exists()
