@@ -2,7 +2,7 @@
 import re
 
 TEXT = {
-    'test': ('Testversion 2', 'Test version 2'),
+    'test': ('Testversion 2a', 'Test version 2a'),
     'single': ('Einzelbild', 'Single image'),
     'folder': ('Bildordner', 'Image folder'),
     'choose': ('Auswählen', 'Choose'),

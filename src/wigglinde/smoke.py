@@ -3,11 +3,50 @@ from pathlib import Path
 import json,hashlib,subprocess,sys,threading,time
 import numpy as np
 from PIL import Image
+from . import theme as T
 from .processor import Processor
 from .las2 import LiteAnyStereo
 from .models import MODELS,DEFAULT_MODEL,model_path
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
+
+def check_button_colors(gui):
+    """Development regression: test drawn colors after real Tk hover callbacks."""
+    def drawn(button,background,border,text):
+        for tag,color in [('inner_parts',background),('border_parts',border)]:
+            items=button._canvas.find_withtag(tag)
+            assert items,tag
+            assert {button._canvas.itemcget(item,'fill').lower() for item in items}=={color}
+        assert button._text_label.cget('fg').lower()==text
+    def event(surface,sequence):
+        surface.event_generate(sequence);gui.update()
+    start=gui.start
+    gui._dependencies();gui.update()
+    geometry=(start.winfo_width(),start.winfo_height())
+    drawn(start,T.START_BG,T.START_BORDER,T.START_TEXT)
+    for surface in [start._canvas,start._text_label]:
+        event(surface,'<Enter>')
+        drawn(start,T.START_HOVER_BG,T.START_HOVER_BORDER,T.START_HOVER_TEXT)
+        assert (start.winfo_width(),start.winfo_height())==geometry
+        event(surface,'<Leave>')
+        drawn(start,T.START_BG,T.START_BORDER,T.START_TEXT)
+    # A queued Enter must not restore gold after processing disables the button.
+    start._canvas.event_generate('<Enter>')
+    gui.running=True;gui._set_busy(True);gui.update()
+    drawn(start,T.START_DISABLED_BG,T.START_DISABLED_BORDER,T.START_DISABLED_TEXT)
+    event(start._text_label,'<Leave>');event(start._canvas,'<Enter>')
+    drawn(start,T.START_DISABLED_BG,T.START_DISABLED_BORDER,T.START_DISABLED_TEXT)
+    event(gui.stop._canvas,'<Enter>');drawn(gui.stop,T.BUTTON_HOVER,T.BORDER,T.TEXT)
+    event(gui.stop._canvas,'<Leave>');drawn(gui.stop,T.BUTTON_BG,T.BORDER,T.TEXT)
+    gui.running=False;gui._set_busy(False);gui.update()
+    drawn(start,T.START_BG,T.START_BORDER,T.START_TEXT)
+    # Secondary actions retain the neutral palette, including Cancel while busy.
+    for button in [c for c in gui.controls if isinstance(c,type(start)) and c is not start]+[gui.stop]:
+        assert button.cget('fg_color')==T.BUTTON_BG and button.cget('border_color')==T.BORDER
+        assert button.cget('hover_color')==T.BUTTON_HOVER
+        if button.cget('state')=='normal':
+            event(button._canvas,'<Enter>');drawn(button,T.BUTTON_HOVER,T.BORDER,T.TEXT)
+            event(button._canvas,'<Leave>');drawn(button,T.BUTTON_BG,T.BORDER,T.TEXT)
 
 def run(app_dir,report_path):
     report_path=Path(report_path);report_path.parent.mkdir(parents=True,exist_ok=True)
@@ -56,10 +95,12 @@ def run(app_dir,report_path):
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
     if sys.platform=='win32':assert gui._iconbitmap_method_called
     assert not hasattr(gui,'file_list')
+    assert not hasattr(gui,'layout') and 'layout' not in gui.settings
     assert gui.model_name.get()==DEFAULT_MODEL
     gui.model_name.set('LAS2-H')
     gui.input_file.set(str(source));gui.update()
     assert gui._collect_input()[0]==[source.resolve()]
+    check_button_colors(gui)
     gui.input_folder.set(str(work));gui.update()
     assert not gui.input_file.get()
     gui.own.set(str(work/'Custom output'));gui.standard.set(False);gui._dependencies()
@@ -124,4 +165,4 @@ def run(app_dir,report_path):
                 assert float(diff.max())<.05,(label,float(diff.max()))
                 directml.append(dict(model=label,status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

@@ -3,7 +3,7 @@
 Wigglinde creates interpolated views and wiggle animations from already aligned
 stereo SBS photographs, using Lite Any Stereo V2 (LAS2-M/L/H) and MPEG-I RVS.
 
-**0.1 Test 2** is a portable Windows test version. Extract the complete folder and
+**0.1 Test 2a** is a portable Windows test version. Extract the complete folder and
 start `Wigglinde.exe`. The model, renderer, runtimes and completion sound are included;
 processing works locally and offline. See [Liesmich.md](Liesmich.md) for German instructions.
 
@@ -13,7 +13,7 @@ processing works locally and offline. See [Liesmich.md](Liesmich.md) for German 
 - Explicit CPU or GPU selection for LAS2 depth estimation. DirectML supports
   compatible NVIDIA, AMD and Intel adapters; a DirectX 12 driver is required.
 - RVS retains the tested **CPU, Precision 2, Multispectral 1/4** renderer in both modes.
-- Full-SBS / Half-SBS input and explicit left/right swap.
+- Full-SBS input with normal-width eye images and explicit left/right swap.
 - MP4: 720/1080/2160 maximum height, 30/60 fps, five cycles.
 - GIF: 640/800/1024 maximum long side, 10/15/20/25 fps, infinite loop.
 - PNG sequence: 1080/2160 maximum height, 30/60 fps, one cycle.
@@ -32,7 +32,7 @@ and quality require testing on physical graphics cards; a hosted Windows build t
 cannot establish those. RVS rendering still takes CPU time at high resolution.
 LAS2 has a fixed 192-pixel correspondence range. Extreme disparities, occlusions,
 glass and reflections remain limitations. Fine branches can appear doubled during
-the animation; that reported quality issue is still under investigation. No icon has been supplied yet.
+the animation; that reported quality issue is still under investigation. The supplied Wigglinde icon is included.
 
 Own source is MIT; third-party software and model weights retain their licenses.
 See [third-party notices](tools/THIRD_PARTY.md). The portable package includes the

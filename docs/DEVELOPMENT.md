@@ -1,5 +1,22 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Test 2a: Buttonfarben und Full-SBS
+
+Der Startbutton übernimmt nun die vollständigen Normal-/Hover-/Deaktiviertfarben
+aus SplatTricia `6217bb40629fd2c6f06a4662850e14610919b9b7`, einschließlich Fläche,
+Text und Rahmen nach den internen CustomTkinter-Callbacks. Die vorherige reine
+Textfarbenänderung konnte die Hoverfläche wieder dunkel zeichnen. Die Paketprüfung
+kontrolliert deshalb die tatsächlich gezeichneten Farben nach Mausereignissen
+auf Fläche und Beschriftung sowie beim Wechsel in den Verarbeitungszustand.
+Sekundäre Buttons bleiben in der neutralen Palette; ihre Geometrie bleibt fest.
+
+Die nicht abgesprochene Half-SBS-Erweiterung ist aus dem Konverter entfernt.
+Wie die anderen Programme setzt er Full-SBS mit ungestauchten Einzelansichten
+voraus. Kein Layoutmenü; alte gespeicherte Layoutwerte werden nicht angewendet.
+Die Inputprüfung kontrolliert die unveränderten Full-SBS-Proportionen auch beim
+L/R-Tausch. Modelle, Auflösungen und RVS-Einstellungen bleiben erhalten.
+Windows-Paketprüfung von Test 2a vor Bereitstellung noch ausstehend.
+
 ## Test 2: Rückmeldungen und Änderungen
 
 Christoph bestätigt insgesamt gute Bildqualität und saubere RVS-Kanten; CPU ist zu langsam.

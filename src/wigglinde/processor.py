@@ -12,7 +12,7 @@ from .wiggle_export import export_wiggle,ExportCancelled,check_cancelled
 
 EXTENSIONS={'.jpg','.jpeg','.png','.tif','.tiff','.bmp','.webp'}
 
-def read_pair(path,layout,swap,options):
+def read_pair(path,swap,options):
     with Image.open(path) as source:
         bits=getattr(source,'tag_v2',{}).get(258,(8,));bits=(bits,) if isinstance(bits,int) else bits
         high_depth=any(value>8 for value in bits) or any('16' in str(tile.args) for tile in source.tile)
@@ -25,7 +25,7 @@ def read_pair(path,layout,swap,options):
         w,h=image.size
         if w%2:raise ValueError('Das SBS-Bild muss zwei gleich breite Halbbilder enthalten.')
         eyes=[image.crop((0,0,w//2,h)),image.crop((w//2,0,w,h))]
-        original=(w//2 if layout=='Full-SBS' else w,h)
+        original=(w//2,h)
         size=options.output_size(*original)
         eyes=[e.resize(size,Image.Resampling.LANCZOS) if e.size!=size else e for e in eyes]
         pair=[np.asarray(e).copy() for e in eyes]
@@ -46,13 +46,13 @@ class Processor:
         self.event.set()
         if self.model:self.model.cancel()
         if self.renderer:self.renderer.cancel()
-    def convert(self,path,output_root,options,layout='Full-SBS',swap=False,progress=lambda text,p:None):
+    def convert(self,path,output_root,options,swap=False,progress=lambda text,p:None):
         options.validate();check_cancelled(self.event.is_set)
         output_root=Path(output_root);output_root.mkdir(parents=True,exist_ok=True)
         # Stage beside the destination so final replacement also works on another drive.
         temp_root=output_root/'_temp';temp_root.mkdir(exist_ok=True)
         start=time.monotonic();progress('Bild vorbereiten',0.)
-        (left,right),original,size=read_pair(path,layout,swap,options)
+        (left,right),original,size=read_pair(path,swap,options)
         model_load_seconds=0.
         if self.model is None:
             progress(self.model_name+' laden',0.)

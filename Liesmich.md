@@ -1,12 +1,13 @@
-# Wigglinde 0.1 – Testversion 2
+# Wigglinde 0.1 – Testversion 2a
 
 Den vollständigen Ordner entpacken und `Wigglinde.exe` starten. Modell, Renderer,
 Laufzeiten und Fertigstellungssound sind enthalten; keine Installation, Anmeldung
 oder Internetverbindung erforderlich. Sprache oben rechts: Deutsch oder English.
 
-1. Ein Einzelbild oder einen Bildordner mit fertig justierten SBS-Bildern auswählen.
+1. Ein Einzelbild oder einen Bildordner mit fertig justierten Full-SBS-Bildern auswählen.
    Die andere Eingabe wird dabei geleert. Ordner werden mit Unterordnern verarbeitet.
-2. Full-SBS beziehungsweise Half-SBS passend zur Eingabe wählen. Bei Bedarf L/R tauschen.
+2. Bei Bedarf L/R tauschen. Beide Ansichten werden mit ihren vorhandenen Proportionen
+   eingelesen; eine Formatumschaltung ist nicht erforderlich.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
 4. Modell wählen: LAS2-M, LAS2-L oder LAS2-H. Standard beim ersten Start ist L.
 5. Unter „Berechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.
@@ -59,7 +60,7 @@ Auflösung und Rendererqualität werden nicht automatisch verändert.
 Geschwindigkeit und Bildqualität des GPU-Modus müssen auf echten Grafikkarten
 praktisch verglichen werden. Ein Windows-Buildtest auf einem gehosteten Server
 ersetzt das nicht. Noch keine freigegebene 1.0. Große Auflösungen benötigen mehr
-Zeit und Speicher. Das eigene Programmsymbol wird später ergänzt.
+Zeit und Speicher. Das gelieferte Wigglinde-Icon ist enthalten.
 
 LAS2 hat einen festen Suchbereich von 192 Pixeln in der Berechnungsgröße.
 Sehr große Parallaxen können fehlerhafte Tiefenkarten erzeugen. Die RVS-Endansichten

@@ -41,7 +41,7 @@ class WigglindeApp(ctk.CTk):
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1);self.grid_rowconfigure(4,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
-        self.layout=ctk.StringVar(value=self.settings.get('layout','Full-SBS'));self.swap=ctk.BooleanVar(value=False)
+        self.settings.pop('layout',None);self.swap=ctk.BooleanVar(value=False)
         self.standard=ctk.BooleanVar(value=self.settings.get('standard_output',True));self.own=ctk.StringVar(value=self.settings.get('own_output',''))
         self.input_file=ctk.StringVar();self.input_folder=ctk.StringVar();self.changing_input=False
         self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='1080');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
@@ -66,7 +66,7 @@ class WigglindeApp(ctk.CTk):
     def _label(self,parent,text,**kw):
         return self._localize(ctk.CTkLabel(parent,text=self.tr(text) if text in TEXT else text,text_color=T.TEXT,font=(T.FONT_FAMILY,13),**kw),text)
     def _button(self,parent,text,command,**kw):
-        b=ctk.CTkButton(parent,text=self.tr(text) if text in TEXT else text,command=command,fg_color=T.BUTTON_BG,hover_color=T.BUTTON_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,border_width=1,border_color=T.BORDER,height=30,**kw);self.controls.append(b);return self._localize(b,text)
+        b=ctk.CTkButton(parent,text=self.tr(text) if text in TEXT else text,command=command,fg_color=T.BUTTON_BG,hover_color=T.BUTTON_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,border_width=T.BORDER_WIDTH,border_color=T.BORDER,corner_radius=T.RADIUS_CONTROL,height=30,**kw);b.grid_propagate(False);self.controls.append(b);return self._localize(b,text)
     def _menu(self,parent,variable,values,command=None,width=140):
         b=ctk.CTkOptionMenu(parent,variable=variable,values=values,command=command,width=width,height=30,dynamic_resizing=False,fg_color=T.PANEL,button_color=T.PANEL_HOVER,button_hover_color=T.BORDER,dropdown_fg_color=T.BG_SOFT,dropdown_hover_color=T.PANEL_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,dropdown_text_color=T.TEXT);self.controls.append(b);return b
     def _check(self,parent,text,var,command=None):
@@ -103,7 +103,6 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),width=80);self.fps_menu.grid(row=0,column=7)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,6));bar.grid_columnconfigure(2,weight=1)
         self._label(bar,'duration').grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
-        self._menu(bar,self.layout,['Full-SBS','Half-SBS'],width=125).grid(row=0,column=3,padx=(12,16))
         self._check(bar,'swap',self.swap).grid(row=0,column=4)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
@@ -119,9 +118,19 @@ class WigglindeApp(ctk.CTk):
         self._show_status();self._show_elapsed()
         footer=ctk.CTkFrame(self,fg_color='transparent');footer.grid(row=5,column=0,sticky='ew',padx=18,pady=(0,12));footer.grid_columnconfigure(0,weight=1)
         self.start=self._button(footer,'start',self._start,width=150);self.start.grid(row=0,column=1,padx=(0,8))
-        self.start.bind('<Enter>',lambda event:self.start.configure(text_color=T.START_HOVER_TEXT) if not self.running and self._has_input() else None)
-        self.start.bind('<Leave>',lambda event:self.start.configure(text_color=T.START_TEXT) if not self.running and self._has_input() else None)
-        self.stop=ctk.CTkButton(footer,text=self.tr('cancel'),command=self._cancel,width=120,height=30,fg_color=T.BG_SOFT,hover_color=T.PANEL_HOVER,border_color=T.BORDER,border_width=1,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,state='disabled');self.stop.grid(row=0,column=2)
+        self.start.bind('<Enter>',lambda event:self.after_idle(lambda:self._style_start(hover=True)),add='+')
+        self.start.bind('<Leave>',lambda event:self.after_idle(self._style_start),add='+')
+        self.stop=ctk.CTkButton(footer,text=self.tr('cancel'),command=self._cancel,width=120,height=30,fg_color=T.BUTTON_BG,hover_color=T.BUTTON_HOVER,border_color=T.BORDER,border_width=T.BORDER_WIDTH,corner_radius=T.RADIUS_CONTROL,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,state='disabled');self.stop.grid_propagate(False);self.stop.grid(row=0,column=2)
+
+    def _style_start(self,hover=False):
+        if not self.start.winfo_exists():return
+        enabled=self.start.cget('state')=='normal';hovered=enabled and hover
+        self.start.configure(
+            fg_color=T.START_HOVER_BG if hovered else T.START_BG if enabled else T.START_DISABLED_BG,
+            hover_color=T.START_HOVER_BG if enabled else T.START_DISABLED_BG,
+            text_color=T.START_HOVER_TEXT if hovered else T.START_TEXT if enabled else T.START_DISABLED_TEXT,
+            border_color=T.START_HOVER_BORDER if hovered else T.START_BORDER if enabled else T.START_DISABLED_BORDER,
+        )
 
     def _model_changed(self,*_):self._save_quietly()
     def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF') else 'PNG'
@@ -159,7 +168,7 @@ class WigglindeApp(ctk.CTk):
     def _dependencies(self):
         if self.running:return
         own=not self.standard.get();self.own_entry.configure(state='normal' if own else 'disabled',text_color=T.TEXT if own else T.TEXT_DISABLED);self.own_label.configure(text_color=T.TEXT if own else T.TEXT_DISABLED)
-        enabled=self._has_input();self.start.configure(state='normal' if enabled else 'disabled',fg_color=T.START_BG,hover_color=T.START_HOVER_BG if enabled else T.START_BG,text_color=T.START_TEXT if enabled else T.START_DISABLED_TEXT,border_color=T.START_BORDER if enabled else T.START_DISABLED_BORDER)
+        self.start.configure(state='normal' if self._has_input() else 'disabled');self._style_start()
         if own:target=self.own.get() or self.tr('choose_output')
         elif self.input_folder.get().strip():target=str(Path(self.input_folder.get().strip())/'output')
         elif self.input_file.get().strip():target=str(Path(self.input_file.get().strip()).parent/'output')
@@ -171,7 +180,7 @@ class WigglindeApp(ctk.CTk):
         except ValueError:raise ValueError(self.tr('numbers')) from None
         return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 1080,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration)
     def _save(self):
-        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),layout=self.layout.get(),model=self.model_name.get(),language=self.locale,device_id=self.adapters[self.device.get()])
+        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),model=self.model_name.get(),language=self.locale,device_id=self.adapters[self.device.get()])
         self.settings_path.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
     def _save_quietly(self):
         try:self._save()
@@ -201,14 +210,14 @@ class WigglindeApp(ctk.CTk):
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),self.layout.get(),self.swap.get(),options,self.adapters[self.device.get()],self.model_name.get()),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),self.swap.get(),options,self.adapters[self.device.get()],self.model_name.get()),daemon=True).start()
     def _set_busy(self,busy):
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
             if isinstance(control,ctk.CTkEntry):control.configure(text_color=T.TEXT_DISABLED if busy else T.TEXT)
             if isinstance(control,ctk.CTkCheckBox):control.configure(fg_color=T.CHECKBOX_DISABLED if busy else T.GOLD,hover_color=T.CHECKBOX_DISABLED if busy else T.GOLD_LIGHT)
         self.stop.configure(state='normal' if busy else 'disabled')
-        if busy:self.start.configure(fg_color=T.START_DISABLED_BG,hover_color=T.START_DISABLED_BG,text_color=T.START_DISABLED_TEXT,border_color=T.START_DISABLED_BORDER)
+        if busy:self._style_start()
         else:self._dependencies()
     def _set_status(self,key,**values):self.status_value=(key,values);self._show_status()
     def _show_status(self):
@@ -218,7 +227,7 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,layout,swap,options,device_id,model_name):
+    def _work(self,files,root,standard,own,swap,options,device_id,model_name):
         completed=0;errors=[];cancelled=False
         try:
             (self.app_dir/'logs').mkdir(exist_ok=True)
@@ -230,7 +239,7 @@ class WigglindeApp(ctk.CTk):
                 target=base/path.parent.relative_to(root) if root else base
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
-                    result=self.processor.convert(path,target,options,layout,swap,progress);completed+=1
+                    result=self.processor.convert(path,target,options,swap=swap,progress=progress);completed+=1
                     with (self.app_dir/'logs/wigglinde.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(result,ensure_ascii=False)+'\n')
                 except ExportCancelled:raise
                 except Exception as e:
