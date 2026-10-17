@@ -34,7 +34,7 @@ compares serial/parallel native outputs and tests the actual packaged executable
 
 `tools/package_windows.py` collects the application, both H models, local runtimes,
 original assets, README files, license notices and exact tracked source. It creates
-`dist/Wigglinde_1.0_Windows.zip`, containing a stable `Wigglinde` application folder.
+`dist/Wigglinde_1.0_Windows_x64.zip`, containing a stable `Wigglinde` application folder.
 Settings, logs, temporary files, development outputs and external checkouts are excluded.
 
 Publication uses the already verified workflow artifact and checks its SHA-256;

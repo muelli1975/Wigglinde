@@ -22,7 +22,7 @@ The interface is available in German and English.
   with a DirectX 12 driver can accelerate depth estimation through DirectML.
 - No separate Python installation, CUDA toolkit or build tools are required.
 
-Extract `Wigglinde_1.0_Windows.zip` and start `Wigglinde\Wigglinde.exe`.
+Extract `Wigglinde_1.0_Windows_x64.zip` and start `Wigglinde\Wigglinde.exe`.
 On Linux extract `Wigglinde_1.0_Linux_x64.tar.gz` and start `Wigglinde/Wigglinde`.
 On macOS extract the matching `Wigglinde_1.0_macOS_AppleSilicon.zip` or
 `Wigglinde_1.0_macOS_Intel.zip` and open `Wigglinde/Wigglinde.app`.

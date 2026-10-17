@@ -132,7 +132,7 @@ jobs:
             const owner = context.repo.owner, repo = context.repo.repo, tag = 'v1.0';
             const release = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
             const ref = (await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag})).data;
-            const windows = release.assets.find(a => a.name === 'Wigglinde_1.0_Windows.zip');
+            const windows = release.assets.find(a => a.name === 'Wigglinde_1.0_Windows_x64.zip');
             if (ref.object.sha !== '642773fd642d28e30959a4df554829e4d56493da' || windows?.digest !== 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea') throw new Error('Windows release identity changed.');
             const verified = [];
             for (const label of ['Linux_x64', 'macOS_AppleSilicon', 'macOS_Intel']) {

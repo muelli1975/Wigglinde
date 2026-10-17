@@ -1,5 +1,13 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Einheitlicher Windows-Archivname
+
+Am 17. Oktober 2026 wird das bestehende Windows-Release-Asset in
+`Wigglinde_1.0_Windows_x64.zip` umbenannt. Inhalt, Build-Quellstand und Prüfsumme
+bleiben identisch; es erfolgt kein erneuter Build. Die früheren Build-Vermerke
+unten behalten ihre damaligen Archiv-/Artifact-Namen. Aktuelle Anleitungen und
+zukünftige Windows-Builds verwenden den Namen mit x64.
+
 ## Native Pakete 1.0: Linux und macOS
 
 Am 17. Oktober 2026 gebaut, geprüft und zur vorhandenen Veröffentlichung v1.0

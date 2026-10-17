@@ -143,7 +143,7 @@ jobs:
         with:
           name: Wigglinde-1.0-Windows
           path: |
-            dist/Wigglinde_1.0_Windows.zip
+            dist/Wigglinde_1.0_Windows_x64.zip
             output/windows-smoke.json
             output/gui-build-check.png
             output/rvs-parallel.json

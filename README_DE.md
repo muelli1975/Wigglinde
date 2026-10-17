@@ -22,7 +22,7 @@ Die Oberfläche ist auf Deutsch und Englisch verfügbar.
   mit DirectX-12-Treiber die Tiefenberechnung über DirectML beschleunigen.
 - Keine separate Python-Installation, kein CUDA-Toolkit und keine Build-Werkzeuge nötig.
 
-`Wigglinde_1.0_Windows.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
+`Wigglinde_1.0_Windows_x64.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
 Unter Linux `Wigglinde_1.0_Linux_x64.tar.gz` entpacken und `Wigglinde/Wigglinde` starten.
 Unter macOS das passende `Wigglinde_1.0_macOS_AppleSilicon.zip` oder
 `Wigglinde_1.0_macOS_Intel.zip` entpacken und `Wigglinde/Wigglinde.app` öffnen.
