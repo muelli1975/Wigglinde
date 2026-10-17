@@ -57,12 +57,25 @@ def run(app_dir,report_path):
     source=work/'Bild_Größe.png';Image.fromarray(np.concatenate((texture[:,:320],texture[:,8:328]),axis=1)).save(source)
     before=hashlib.sha256(source.read_bytes()).hexdigest();processor=Processor(app_dir);results=[];session=None
     for kind in ['mp4','gif','png']:
-        options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5)
-        result=processor.convert(source,work/'Ausgabe_Größe',options)
+        options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5,save_depth=kind=='png')
+        result=processor.convert(source,work/'Ausgabe_Größe',options,output_stem='Tag1__Bild_Größe' if kind=='png' else None)
         assert not (work/'Ausgabe_Größe'/'_temp').exists()
         if session is None:session=id(processor.model.session)
         assert id(processor.model.session)==session
         output=Path(result['output']);assert output.exists()
+        assert output.parent==work/'Ausgabe_Größe'/'wiggle'
+        if kind=='png':
+            depth=result['depth_export']
+            assert depth['normalization']=='joint_linear_min_max' and not depth['metric_depth']
+            assert Path(depth['metadata_file']).is_file()
+            for file in depth['files']:
+                assert Path(file).parent==work/'Ausgabe_Größe'/'depth_maps'
+                assert Path(file).name.startswith('Tag1__Bild_Größe_depth_160p_')
+                with Image.open(file) as image:
+                    assert image.size==(320,160) and np.asarray(image).dtype==np.uint16
+        else:
+            assert 'depth_export' not in result
+            assert not (work/'Ausgabe_Größe'/'depth_maps').exists()
         if kind=='mp4':
             data=subprocess.check_output([ffmpeg_path(),'-v','error','-i',str(output),'-f','rawvideo','-pix_fmt','rgb24','-'])
             assert len(data)==320*160*3*options.frame_count*5
@@ -105,6 +118,8 @@ def run(app_dir,report_path):
     from .app import WigglindeApp,screen_work_area
     (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='LAS2-L',layout='Half-SBS')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
+    assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
+    assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
     icon=Path(app_dir)/'assets/wigglinde.ico'
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
     if sys.platform=='win32':assert gui._iconbitmap_method_called
@@ -125,6 +140,7 @@ def run(app_dir,report_path):
         gui.kind.set(gui.tr('png'));gui._format_changed();gui.size.set('2160');gui.fps.set('60')
         gui.language.set(language);gui._language_changed();gui.update()
         assert gui._wiggle_options().png_height==2160 and gui._wiggle_options().png_fps==60
+        assert gui.depth_check.cget('text')==gui.tr('save_depth')
         assert not hasattr(gui,'model_name')
         assert gui.input_folder.get()==str(work) and gui.own.get()==str(work/'Custom output')
         assert gui.output_label.cget('text').endswith(str(work/'Custom output'))
@@ -136,6 +152,10 @@ def run(app_dir,report_path):
     assert gui.stop.cget('state')=='normal' and gui.start.cget('border_color')=='#333333'
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
+    gui.save_depth.set(True);gui._save();gui.destroy()
+    gui=WigglindeApp(app_dir);gui.update()
+    assert gui.save_depth.get() and gui._wiggle_options().save_depth
+    gui.input_file.set(str(source));gui.update()
     adapters=list(gui.adapters)
     sound=Path(app_dir)/'assets/ready.wav'
     assert hashlib.sha1(b'blob '+str(sound.stat().st_size).encode()+b'\0'+sound.read_bytes()).hexdigest()=='260fb0d49982873a13dabd750b997448acb675ca'

@@ -1,96 +1,90 @@
-# Wigglinde 0.1 – Testversion 5
+# Wigglinde 1.0
 
+Wigglinde erzeugt Wiggle-Animationen aus fertig justierten Full-SBS-Stereofotos.
 Den vollständigen Ordner entpacken und `Wigglinde.exe` starten. Modell, Renderer,
-Laufzeiten und Fertigstellungssound sind enthalten; keine Installation, Anmeldung
-oder Internetverbindung erforderlich. Sprache oben rechts: Deutsch oder English.
+Laufzeiten, Icon und Fertigstellungssound sind enthalten. Windows 10/11 x64;
+keine Installation, Anmeldung oder Internetverbindung für die Verarbeitung erforderlich.
+Sprache oben rechts: Deutsch oder English.
 
-1. Ein Einzelbild oder einen Bildordner mit fertig justierten Full-SBS-Bildern auswählen.
-   Die andere Eingabe wird dabei geleert. Ordner werden mit Unterordnern verarbeitet.
-2. Die linke Ansicht steht links, die rechte rechts. Beide Ansichten werden mit ihren
-   vorhandenen Proportionen eingelesen.
+1. Einzelbild oder Bildordner auswählen. Die andere Eingabe wird dabei geleert.
+   Bildordner werden einschließlich ihrer Unterordner verarbeitet.
+2. Die linke Ansicht muss links und die rechte rechts stehen, mit ungestauchten Halbbildern.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
-4. LAS2-H ist fest eingestellt: vier veröffentlichte Iterationen, Float32.
-5. Unter „Berechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.
+4. Bei Bedarf „Tiefenkarten zusätzlich speichern“ einschalten.
+5. CPU oder Grafikkarte unter „Berechnung“ wählen und Start drücken.
 
-Die Oberfläche zeigt Pfadfelder statt einer Dateiliste. Die aktuelle Datei erscheint
-während der Verarbeitung im Statusbereich. Sprache, Gerätewahl und Ausgabeordner
-bleiben gespeichert; Bilder werden beim nächsten Start nicht automatisch geladen.
+Standard: **MP4, maximal 720 Pixel Höhe, 30 fps, zwei Sekunden pro Pendelzyklus, CPU**.
+LAS2-H bleibt fest eingestellt: vier Iterationen, Float32. Sprache, Gerätewahl,
+Tiefenkartenoption und Ausgabeordner bleiben gespeichert. Bilder werden beim
+nächsten Start nicht automatisch geladen. Die Oberfläche verwendet keine Dateiliste.
 
-| Format | Größe | Bildrate | Ablauf |
+| Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
-| MP4 | maximal 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | fünf Pendelzyklen |
-| GIF | maximal 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
-| PNG-Bildfolge | maximal 1080 / 2160 Pixel Höhe | 30 / 60 fps | ein Pendelzyklus |
+| MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Fünf Pendelzyklen |
+| GIF | 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
+| PNG-Bildfolge | 1080 / 2160 Pixel Höhe | 30 / 60 fps | Ein Pendelzyklus |
 
-Standard: MP4, maximal 1080 Pixel Höhe, 30 fps, zwei Sekunden pro Pendelzyklus.
-Seitenverhältnis und vollständige Bildränder bleiben erhalten. Kleine Eingaben werden
-nicht vergrößert. Die gewählte Größe bestimmt auch die Berechnung; bei Speichermangel
-wird nichts automatisch heruntergesetzt. MP4 ergänzt bei ungeraden Maßen höchstens
-eine schwarze Pixelzeile/-spalte für den Videocodec.
+Zyklusdauer 0,5 bis 30 Sekunden, sinusförmige Bewegung ohne doppeltes Schlussbild.
+Rückweg und Wiederholungen verwenden dieselben berechneten Ansichten.
+MP4: H.264 CRF 18/slow; GIF: gemeinsame Palette für den gesamten Zyklus.
 
-Keine Justage, kein Beschnitt und keine Änderung der vorhandenen Scheinfensterlage.
-Eingebettete Farbprofile werden nach sRGB umgerechnet. Unterstützt werden deckende
-Bilder mit 8 Bit pro Kanal.
+Die gewählte Größe bestimmt die Berechnung bereits vor LAS2. Verkleinerung mit
+Lanczos, Seitenverhältnis und vollständige Bildränder bleiben erhalten. Kleine
+Eingaben werden nicht vergrößert. MP4 ergänzt bei ungeraden Maßen höchstens eine
+schwarze Pixelzeile/-spalte. Unterstützt werden deckende RGB-/Graustufenbilder mit
+8 Bit pro Kanal. Eingebettete Farbprofile werden nach sRGB umgerechnet.
+Keine Justage, kein L/R-Tausch, kein Beschnitt und keine Scheinfensteränderung.
 
-Standardziel ist `output` im Eingabeordner. Bei Ordnerverarbeitung werden relative
-Unterordner erhalten. Eigene Ausgabeordner sind möglich. Gleichnamige fertige
-Ausgaben werden erst nach erfolgreicher Verarbeitung ersetzt. Ein Abbruch lässt
-vorherige Ergebnisse bestehen. Protokolle: `logs` im Programmordner; temporäre
-Dateien: `_temp` im jeweiligen Ausgabeordner. Ein leerer temporärer Ordner wird
-nach der Verarbeitung entfernt.
+## Ausgabe
 
-## Modelle, GPU-Modus und Teststand
+Standardziel ist `output` im gewählten Eingabeordner beziehungsweise neben dem
+Einzelbild. Ein eigener Ausgabeordner ist ebenfalls möglich. Darin liegen:
 
-H bleibt nach dem praktischen Qualitätsvergleich fest eingestellt. Es gibt keine
-Modellauswahl. Die Berechnung erfolgt mit den veröffentlichten vier Iterationen
-und Float32. Große Bilder können besonders viel Speicher benötigen.
+- `wiggle`: MP4, GIF oder Ordner mit PNG-Bildfolgen.
+- `depth_maps`: die optionalen Tiefenkarten, nur bei eingeschalteter Speicheroption.
 
-„Tiefenberechnung testen“ verarbeitet das gewählte Einzelbild mit derselben
-Vorbereitung und denselben beiden Tiefenberechnungen wie ein Export. Der Renderer
-wird dabei nicht gestartet, und es werden keine Bilddateien ausgegeben. Zuerst Format
-und Größe wählen, dann CPU/GPU und den Testbutton. Die Ergebnisanzeige nennt die
-Modellladezeit, Tiefenzeit und gemessene Speicherspitzen. Diese Spitzen sind
-Stichproben im Abstand von 0,25 Sekunden, keine garantierten Maximalwerte.
+Wie bei SplatTricia wird der relative Unterordnerpfad in den Dateinamen übernommen,
+mit `__` als Trenner. Bei Eingabeordner `Urlaub` wird `Urlaub/Tag1/Bild.jpg` zum Beispiel
+zu `output/wiggle/Tag1__Bild_wiggle_30fps_720p.mp4`. Es entsteht kein Unterordner `Tag1`.
+Einzelbilder behalten ihren ursprünglichen Stammnamen. Zusätze sind klein geschrieben:
+`p` für die Bildhöhe, bei GIF `px` für die lange Seite; PNG-Folgen enden auf `_png`.
+Fertige Animationen werden erst nach erfolgreichem Export ersetzt; Originale bleiben erhalten.
 
-`logs/latest_run.json` enthält den letzten Lauf einschließlich Berechnungsgröße,
-Stufenzeiten, Anzahl paralleler Renderaufgaben, RAM-/Commit-Werten und verfügbaren DXGI-Prozesswerten für GPU-Speicher.
-Die GPU-Werte beschreiben den Prozess und sein Budget, nicht die gesamte Belegung
-der Grafikkarte. Vor dem nächsten Test die Datei bei Bedarf separat sichern.
-Die fortlaufenden Protokolle `wigglinde.jsonl` und `errors.log` werden bei 5 MiB
-rotiert; je Typ bleiben drei ältere Dateien erhalten. Vorhandene ältere übergroße
-Logs werden beim nächsten Eintrag rotiert. Nicht lesbare Runtime-Meldungen werden
-zusätzlich als ursprüngliche Bytes gesichert. Ein UTF-8-Fehler beweist für sich
-allein noch keinen Grafikspeichermangel.
+Die Tiefenkarten werden ohne zusätzliche Modellberechnung als 16-Bit-Graustufen-PNG
+in der gewählten Berechnungsgröße gespeichert, je eine für links und rechts.
+Beide verwenden dieselbe lineare Normierung: Weiß ist nah, Schwarz ist fern.
+Es handelt sich um **relative Disparität, nicht um Entfernungen in Metern**.
+Eine JSON-Begleitdatei dokumentiert gemeinsame Minimal-/Maximalwerte und Rückrechnung.
+Eine Karte gehört zum jeweiligen linken/rechten Halbbild mit gleicher Ausrichtung
+und Größe. Die Option ist anfangs ausgeschaltet. Eine reine Tiefenkartenausgabe und
+Lentikular-Druckvorbereitung sind nicht Bestandteil dieser Version.
 
-Ausgabenamen behalten ihre Angaben, nun klein geschrieben und mit `p` für die
-Bildhöhe: beispielsweise `Original_wiggle_30fps_1080p.mp4`. GIF verwendet `px` für
-die lange Seite, PNG-Folgen enden auf `_png`.
+## Berechnung und Protokolle
 
-Der GPU-Modus beschleunigt die LAS2-Tiefenberechnung über DirectML. Er benötigt eine
-DirectX-12-fähige Grafikkarte und passende Treiber; kompatible NVIDIA-, AMD- und
-Intel-Grafik wird unterstützt. CPU bleibt beim ersten Start vorausgewählt. Einzelne
-von DirectML nicht unterstützte ONNX-Operationen können innerhalb der Modellsitzung
-auf CPU laufen. Ein fehlgeschlagener GPU-Start wird gemeldet; kein stiller Wechsel
-des gesamten Auftrags auf CPU. Bei Problemen CPU ausdrücklich auswählen.
+Der GPU-Modus beschleunigt LAS2 über DirectML und benötigt eine kompatible
+DirectX-12-Grafikkarte samt Treiber. NVIDIA, AMD und Intel werden unterstützt.
+CPU ist beim ersten Start vorausgewählt; eine gespeicherte Gerätewahl bleibt erhalten.
+Einzelne nicht unterstützte ONNX-Operationen können innerhalb der DirectML-Sitzung
+auf CPU laufen. Ein fehlgeschlagener GPU-Start wird gemeldet. Modell, Gerät,
+Präzision und Auflösung werden niemals automatisch heruntergesetzt oder gewechselt.
 
-**RVS rendert auch im GPU-Modus weiterhin auf CPU**, in der gewählten
-Ausgabeauflösung (Precision 1), mit Multispectral-Blending 1/4. Zwischenansichten werden parallel
-berechnet, soweit CPU und verfügbarer Speicher es zulassen. Die Anzahl wird pro Bild
-automatisch bestimmt; bei großen Bildern können weniger Ansichten gleichzeitig laufen.
-Modell, Präzision,
-Auflösung und Rendererqualität werden nicht automatisch verändert.
+**RVS rendert auch im GPU-Modus auf CPU**, mit Precision 1, RGB und Multispectral 1/4.
+Zwischenansichten werden innerhalb der CPU- und Speichergrenzen parallel berechnet.
+Hohe Auflösungen benötigen entsprechend mehr Zeit und Speicher.
 
-Geschwindigkeit und Bildqualität des GPU-Modus müssen auf echten Grafikkarten
-praktisch verglichen werden. Ein Windows-Buildtest auf einem gehosteten Server
-ersetzt das nicht. Noch keine freigegebene 1.0. Große Auflösungen benötigen mehr
-Zeit und Speicher. Das gelieferte Wigglinde-Icon ist enthalten.
+„Tiefenberechnung testen“ verarbeitet das gewählte Einzelbild mit derselben Vorbereitung
+und beiden Tiefenberechnungen, ohne Renderer und ohne Bildausgabe. Zuerst Größe wählen.
+Protokolle liegen unter `logs` im Programmordner. `latest_run.json` wird bei jedem Lauf
+überschrieben. Es enthält Stufenzeiten, Renderparallelität sowie stichprobenartige
+RAM-/Commit- und verfügbare DXGI-Prozesswerte für GPU-Speicher. Die GPU-Werte sind
+Prozesswerte samt Budget, keine gesamte Grafikkartenbelegung. `wigglinde.jsonl` und
+`errors.log` rotieren bei 5 MiB; je Typ bleiben drei ältere Dateien erhalten.
+Temporäre Dateien unter `_temp` im Ausgabeziel werden nach der Verarbeitung entfernt;
+ein leerer `_temp`-Ordner wird ebenfalls entfernt.
 
-LAS2 hat einen festen Suchbereich von 192 Pixeln in der Berechnungsgröße.
-Sehr große Parallaxen können fehlerhafte Tiefenkarten erzeugen. Die RVS-Endansichten
-sind gerenderte Bilder, keine eingesetzten Originale. Glas, Spiegelungen und
-Verdeckungen können weiterhin Fehler zeigen. H liefert im praktischen Vergleich die beste Qualität. An einzelnen Stellen bleiben
-aber Störungen während der Übergänge und gedoppelte feine Äste offen. Die Diagnoseversion
-verändert die Bildberechnung nicht und behauptet keine Behebung dieser Fehler.
+Extreme Parallaxen, Verdeckungen, Glas, Spiegelungen und feine Strukturen können
+Übergangsstörungen oder Doppelkonturen verursachen. Fehlerfreie Ergebnisse für jedes
+Motiv sind nicht garantiert.
 
-Quellstand: `source`. Lizenzen: `licenses`. Keine automatischen Aktualisierungen
-und keine Telemetrie.
+Quellstand: `source`. Lizenzen: `licenses`. Eigener Code unter MIT; Fremdkomponenten
+und Modellgewichte behalten ihre jeweiligen Lizenzen. Keine Telemetrie oder automatischen Downloads.

@@ -1,4 +1,4 @@
-name: Portable Windows test build
+name: Portable Windows build
 on:
   push:
     branches: [testversion-0.1]
@@ -131,9 +131,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Wigglinde-0.1-Test5-Windows
+          name: Wigglinde-1.0-Windows
           path: |
-            dist/Wigglinde_0.1_Test5_Windows.zip
+            dist/Wigglinde_1.0_Windows.zip
             output/windows-smoke.json
             output/gui-build-check.png
             output/rvs-parallel.json

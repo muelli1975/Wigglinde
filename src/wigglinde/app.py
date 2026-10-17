@@ -35,17 +35,18 @@ class WigglindeApp(ctk.CTk):
         self.locale=self.settings.get('language','de');self.locale='en' if self.locale=='en' else 'de'
         left,top,right,bottom=screen_work_area(self);scale=self._get_window_scaling()
         width=min(820,max(780,int((right-left-32)/scale)))
-        height=min(620,max(570,int((bottom-top-72)/scale)))
+        height=min(650,max(600,int((bottom-top-72)/scale)))
         x=left+max(0,(right-left-round(width*scale))//2)
         y=top+max(0,(bottom-top-round(height*scale)-40)//2)
-        self.minsize(780,570);self.geometry(f'{width}x{height}+{x}+{y}')
+        self.minsize(780,600);self.geometry(f'{width}x{height}+{x}+{y}')
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1);self.grid_rowconfigure(4,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
         self.settings.pop('layout',None)
         self.standard=ctk.BooleanVar(value=self.settings.get('standard_output',True));self.own=ctk.StringVar(value=self.settings.get('own_output',''))
         self.input_file=ctk.StringVar();self.input_folder=ctk.StringVar();self.changing_input=False
-        self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='1080');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
+        self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='720');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
+        self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
         self.settings.pop('model',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
         self.adapters={'CPU':None,**{f'GPU {i}: {name}':i for i,name in graphics_adapters()}}
@@ -82,10 +83,10 @@ class WigglindeApp(ctk.CTk):
         self._button(bar,'choose',command,width=110).grid(row=0,column=2)
         return entry
     def _build(self):
-        self.title(f'Wigglinde – {__version__} · {self.tr("test")}')
+        self.title(f'Wigglinde – {__version__}')
         head=ctk.CTkFrame(self,fg_color='transparent');head.grid(row=0,column=0,sticky='ew',padx=22,pady=(12,9));head.grid_columnconfigure(0,weight=1)
         ctk.CTkLabel(head,text='Wigglinde',font=(T.FONT_FAMILY,25,'bold'),text_color=T.GOLD_LIGHT).grid(row=0,column=0,sticky='w')
-        self._label(head,'test').grid(row=0,column=1,padx=(8,20))
+        self._label(head,'version').grid(row=0,column=1,padx=(8,20))
         self._menu(head,self.language,['Deutsch','English'],self._language_changed,120).grid(row=0,column=2)
         f=self._panel(1)
         self.file_entry=self._path_row(f,0,'single',self.input_file,self._choose_file)
@@ -109,6 +110,8 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
         self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
+        self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
+        self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -136,7 +139,7 @@ class WigglindeApp(ctk.CTk):
     def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
-        self.size_menu.configure(values=self._sizes());self.size.set('800' if self._kind()=='GIF' else '1080')
+        self.size_menu.configure(values=self._sizes());self.size.set({'GIF':'800','MP4':'720','PNG':'1080'}[self._kind()])
         self.fps_menu.configure(values=self._rates());self.fps.set('15' if self._kind()=='GIF' else '30');self.unit_label.configure(text=self.tr('long_side' if self._kind()=='GIF' else 'height'))
     def _language_changed(self,*_):
         kind=self._kind();self.locale='en' if self.language.get()=='English' else 'de'
@@ -145,7 +148,7 @@ class WigglindeApp(ctk.CTk):
         if kind=='PNG':self.kind.set(self.tr('png'))
         self.unit_label.configure(text=self.tr('long_side' if kind=='GIF' else 'height'))
         self.stop.configure(text=self.tr('cancel'))
-        self.title(f'Wigglinde – {__version__} · {self.tr("test")}')
+        self.title(f'Wigglinde – {__version__}')
         self._show_status();self._show_elapsed();self._dependencies();self._save_quietly()
     def _has_input(self):return bool(self.input_file.get().strip() or self.input_folder.get().strip())
     def _input_changed(self,active,other):
@@ -178,9 +181,9 @@ class WigglindeApp(ctk.CTk):
         kind=self._kind().lower()
         try:size=int(self.size.get());fps=int(self.fps.get());duration=float(self.duration.get().replace(',','.'))
         except ValueError:raise ValueError(self.tr('numbers')) from None
-        return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 1080,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration)
+        return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration,save_depth=self.save_depth.get())
     def _save(self):
-        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()])
+        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get())
         self.settings_path.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
     def _save_quietly(self):
         try:self._save()
@@ -236,11 +239,11 @@ class WigglindeApp(ctk.CTk):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))
                 base=(root/'output' if root else path.parent/'output') if standard else own
-                target=base/path.parent.relative_to(root) if root else base
+                stem='__'.join(path.relative_to(root).with_suffix('').parts) if root else path.stem
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
                     if depth_only:diagnosis=self.processor.diagnose(path,options,progress=progress)
-                    else:self.processor.convert(path,target,options,progress=progress)
+                    else:self.processor.convert(path,base,options,progress=progress,output_stem=stem)
                     completed+=1
                 except ExportCancelled:raise
                 except Exception as e:

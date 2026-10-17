@@ -30,9 +30,13 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Code, model weights and runtime dependencies can have different licenses.
   Retain the exact notices applicable to each distributed component. Never copy
   the research-only FoundationStereo source into the application.
-- Current milestone: portable test version (0.1 Test 5), LAS2-H (four iterations, float32), CPU/DirectML + RVS CPU.
+- Current milestone: version 1.0, LAS2-H (four iterations, float32), CPU/DirectML + RVS CPU.
+  Precision 1, RGB, Multispectral 1/4, normalized encoded sRGB without extra gamma
+  conversions. Default MP4 720p / CPU. Optional jointly normalized 16-bit depth maps.
+  Output folders wiggle/depth_maps; flatten relative source paths into filename
+  prefixes separated by __, matching SplatTricia. Lenticular options remain postponed.
   A passing packaged smoke test does not establish full real-photo quality,
-  Windows 10/11 desktop validation, or parity with SplatTricia. Not a 1.0 release.
+  Windows 10/11 desktop validation, or parity with SplatTricia.
 - Changes stay in this repository. Do not edit other Stereo-Tools repositories
   as a side effect. A change to the shared standard requires explicit coordination.
 - Test geometry and output behavior with meaningful examples. Do not create

@@ -11,10 +11,11 @@ class WiggleOptions:
     video_fps: int = 30
     gif_fps: int = 15
     png_fps: int = 30
-    video_height: int = 1080
+    video_height: int = 720
     gif_long_side: int = 800
     png_height: int = 1080
     cycle_seconds: float = 2.0
+    save_depth: bool = False
 
     @property
     def fps(self) -> int:
@@ -25,6 +26,8 @@ class WiggleOptions:
         return round(self.cycle_seconds * self.fps)
 
     def validate(self) -> None:
+        if type(self.save_depth) is not bool:
+            raise ValueError('Ungültige Tiefenkartenoption / invalid depth export option')
         if self.format not in {"mp4", "gif", "png"}:
             raise ValueError("Ungültiges Wiggle-Format / invalid wiggle format.")
         for value in (self.video_fps, self.png_fps):

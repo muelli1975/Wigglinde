@@ -13,7 +13,7 @@ class LiteAnyStereo:
         if not path.is_file():raise FileNotFoundError(f"Die Modelldatei fehlt: {path}")
         meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
         if hashlib.sha256(path.read_bytes()).hexdigest()!=meta['onnx_sha256']:
-            raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Testpaket erneut entpacken.')
+            raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.')
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
         self.model_name=meta.get('model');self.device_id=device_id

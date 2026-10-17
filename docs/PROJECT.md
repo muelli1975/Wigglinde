@@ -38,7 +38,7 @@ Zyklusdauer 0,5 bis 30 s, Standard 2 s. Ganze Bildanzahl, sinusförmige Bewegung
 identische Ansichten auf dem Rückweg, kein doppeltes Schlussbild. Seitenverhältnis
 erhalten; kleine Quellen nicht hochskalieren. MP4: H.264 CRF 18/slow mit derselben
 sRGB/Rec.709-Behandlung. GIF: gemeinsame Palette für den gesamten Zyklus.
-Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
+Standards: MP4, 720 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 
 ## Geometrie und Qualitätsziel
 
@@ -111,3 +111,17 @@ H, vier Iterationen, Float32, Multispectral 1/4, bisherige Linearisierung und
 Suchversatz bleiben für diese Version erhalten. Kein neues Menü und keine weiteren
 Fotovergleiche vor diesem Paket. Die bisherige konservative Speicherplanung bleibt
 unverändert; deren Schätzbasis Precision 2 ist kein aktiver Renderparameter.
+
+## Freigegebene Version 1.0 (17. Oktober)
+
+LAS2-H, vier Iterationen, Float32, Precision 1, RGB und Multispectral 1/4 bleiben.
+Standard MP4 720p / CPU; höhere Größen und DirectML bleiben wählbar. Zusätzliche
+sRGB-Linearisierung und Rückwandlung entfallen, ICC-Umrechnung nach sRGB bleibt.
+Suchversatz und konservative Parallelitäts-/Speicherplanung bleiben unverändert.
+
+Wiggles unter wiggle, optionale linke/rechte 16-Bit-PNG-Tiefenkarten unter depth_maps.
+Gemeinsame lineare Min/Max-Normierung, Weiß nah / Schwarz fern, relative Disparität
+statt Meter; JSON mit Skala und Rückrechnung. Speicheroption anfangs aus.
+SplatTricias tatsächliche Ordnerlogik ist maßgeblich: relative Unterordner werden
+mit __ in den Dateinamen übernommen, nicht als Ausgabeunterordner gespiegelt.
+Lentikular bleibt zurückgestellt. Frühere Abschnitte dokumentieren frühere Schritte.

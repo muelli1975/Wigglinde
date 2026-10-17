@@ -47,3 +47,12 @@ class ConverterInputTests(unittest.TestCase):
             self.assertNotIn('\\',raw)
             config=json.loads(raw);self.assertIn('Größe',config['InputCameraParameterFile'])
             self.assertEqual(config['Precision'],1)
+            self.assertEqual(config['BlendingMethod'],'Multispectral')
+
+    def test_rvs_input_uses_encoded_rgb_without_gamma_linearization(self):
+        with TemporaryDirectory() as folder:
+            root=Path(folder);exe=root/'renderer';exe.touch()
+            rgb=np.full((4,8,3),128,np.uint8);d=np.ones((4,8),np.float32)
+            renderer=RVSRenderer(exe,StereoScene(rgb,rgb,d,d),[.5],root/'work')
+            stored=np.fromfile(renderer.work/'color0.rgb',dtype=np.float32)
+            self.assertTrue(np.allclose(stored,128/255))

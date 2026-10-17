@@ -1,5 +1,35 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Version 1.0: Umsetzung und Paketprüfung
+
+Freigegeben am 17. Oktober 2026: MP4-Standard 720p / CPU; H, vier Iterationen,
+Float32, Precision 1, RGB, Multispectral 1/4. Wegfall der zusätzlichen Gamma-
+Linearisierung vor RVS und ihrer Rückwandlung danach; normalisiertes codiertes
+sRGB entsprechend dem ursprünglichen RGB-Lader. ICC nach sRGB bleibt erhalten.
+
+Suchversatz unverändert: min(128, max(1, round(64 * Breite / 960))). Dies ist
+Wigglindes Heuristik für signierte Disparitäten, keine LAS2-Autorenempfehlung.
+Temporärer Versatz wird nach der Inferenz abgezogen. Keine Änderung der Geometrie.
+Die Speicherplanung bleibt auf der konservativen Precision-2-Schätzbasis, während
+RVS tatsächlich mit Precision 1 arbeitet; keine neue Parallelitätsbegrenzung.
+
+Wiggle-Ausgabe unter wiggle, optional beide vorhandenen Disparitätskarten unter
+depth_maps; 16-Bit-PNG, gemeinsame lineare Min/Max-Normierung über beide Karten,
+keine Perzentilbeschneidung. Weiß nah / Schwarz fern. JSON dokumentiert die
+ursprünglichen signierten Pixelwerte und Rückrechnung, keine metrische Tiefe.
+Karten entsprechen den jeweiligen vorverarbeiteten Halbbildern, nicht einer
+neuen Mittelansicht. Konstante Karten ergeben Null ohne Division durch Null.
+Keine zusätzliche Inferenz oder Prüfung pro Renderframe. Erst vollständige PNGs
+im temporären Arbeitsordner schreiben, danach fertige Kartendateien ersetzen.
+
+Wie tatsächlich in SplatTricia implementiert: relative Quellpfade werden mit __
+im Dateinamen abgebildet. Keine zusätzlichen relativen Ausgabeunterordner.
+Beispiel Tag1/Bild.jpg -> wiggle/Tag1__Bild_wiggle_30fps_720p.mp4.
+
+Paketprüfung dieses Quellstands steht noch aus. Die folgenden Testversionen sind
+historische Prüfstände und belegen die Änderungen der 1.0 nicht.
+
+
 ## Test 5: Precision 1
 
 Christoph hat den Bau der nächsten Testversion freigegeben. Einzige Änderung

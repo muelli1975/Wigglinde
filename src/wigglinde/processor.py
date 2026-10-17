@@ -10,6 +10,7 @@ from .stereo import StereoScene
 from .las2 import LiteAnyStereo
 from .models import DEFAULT_MODEL,model_path
 from .rvs import RVSRenderer
+from .depth_export import save_depth_maps
 from .wiggle_export import export_wiggle,check_cancelled
 
 EXTENSIONS={'.jpg','.jpeg','.png','.tif','.tiff','.bmp','.webp'}
@@ -30,7 +31,7 @@ def read_pair(path,options):
         bits=getattr(source,'tag_v2',{}).get(258,(8,));bits=(bits,) if isinstance(bits,int) else bits
         high_depth=any(value>8 for value in bits) or any('16' in str(tile.args) for tile in source.tile)
         if source.mode not in ('RGB','L','P','1') or 'transparency' in source.info or high_depth:
-            raise ValueError('Diese Testversion benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.')
+            raise ValueError('Wigglinde benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.')
         image=ImageOps.exif_transpose(source).convert('RGB')
         profile=source.info.get('icc_profile')
         if profile:
@@ -63,13 +64,13 @@ class Processor:
         if self.model:self.model.cancel()
         if self.renderer:self.renderer.cancel()
 
-    def convert(self,path,output_root,options,progress=lambda text,p:None):
-        return self._run(path,options,progress,Path(output_root))
+    def convert(self,path,output_root,options,progress=lambda text,p:None,output_stem=None):
+        return self._run(path,options,progress,Path(output_root),output_stem)
 
     def diagnose(self,path,options,progress=lambda text,p:None):
         return self._run(path,options,progress,None)
 
-    def _run(self,path,options,progress,output_root):
+    def _run(self,path,options,progress,output_root,output_stem=None):
         options.validate();check_cancelled(self.event.is_set)
         context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
@@ -79,7 +80,8 @@ class Processor:
             progress('Bild vorbereiten',0.)
             with trace.stage('prepare'):(left,right),original,size=read_pair(path,options)
             offset=min(128,max(1,round(64*size[0]/960)))
-            trace.data.update(source_eye_size=original,processing_size=size,matching_offset=offset)
+            trace.data.update(source_eye_size=original,processing_size=size,matching_offset=offset,
+                matching_offset_policy='wigglinde_width_scaled_v1',rvs_color_encoding='sRGB_normalized_no_linearization')
             trace.event('prepared',processing_size=size,matching_offset=offset)
             if self.model is None:
                 progress(self.model_name+' laden',0.)
@@ -92,7 +94,9 @@ class Processor:
                 output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp'
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
-                output=output_root/(Path(path).stem+suffix+('.'+options.format if options.format!='png' else '_png'))
+                stem=output_stem or Path(path).stem
+                target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
+                output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
                 trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')
                 with temporary_workspace(temp_root) as work:
                     exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
@@ -111,5 +115,9 @@ class Processor:
                         with trace.stage('view_export'):export_wiggle(render,size,options,output,work,exporting,self.event.is_set,timings=export_times)
                     finally:
                         frames.close();trace.data.update(rvs=renderer.metrics,export_timings=export_times,render_stream_wait_seconds=wait_seconds);self.renderer=None
+                    if options.save_depth:
+                        progress('Tiefenkarten speichern',.99)
+                        with trace.stage('depth_export'):
+                            trace.data['depth_export']=save_depth_maps(dl,dr,path,stem,output_root,work,self.event.is_set)
             progress('Fertig',1.)
         return trace.data

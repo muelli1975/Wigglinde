@@ -2,7 +2,6 @@
 from pathlib import Path
 import json,os,subprocess,threading
 import numpy as np
-from .render import _linear,_srgb
 from .wiggle_export import ExportCancelled,check_cancelled
 from .resources import render_plan
 
@@ -16,7 +15,8 @@ class RVSRenderer:
         bias=max(float(matching_offset),1-float(min(scene.left_disparity.min(),scene.right_disparity.min())))
         self.bias=bias
         for i,(rgb,d) in enumerate(zip((scene.left,scene.right),(scene.left_disparity,scene.right_disparity))):
-            _linear(rgb).tofile(self.work/f'color{i}.rgb')
+            # Match the original RVS RGB loader: normalized encoded sRGB values.
+            (rgb.astype(np.float32)/np.float32(255)).tofile(self.work/f'color{i}.rgb')
             (np.float32(w)/(d+bias)).astype(np.float32).tofile(self.work/f'depth{i}.z')
         def camera(name,t):return dict(Name=name,Position=[0,-float(t),0],Rotation=[0,0,0],Depthmap=1,Background=0,Depth_range=[.01,999],Resolution=[w,h],Projection='Perspective',Focal=[w,w],Principle_point=[w/2+bias*float(t),h/2],BitDepthColor=8,BitDepthDepth=16,ColorSpace='YUV420',DepthColorSpace='YUV400',HasInvalidDepth=False)
         cameras=[camera('left',0),camera('right',1)]+[camera(f'v{i}',t) for i,t in enumerate(positions)]
@@ -48,7 +48,8 @@ class RVSRenderer:
                             check_cancelled(cancel)
                             raise RuntimeError('RVS: '+(self.work/'rvs.log').read_text(errors='replace')[-1500:])
                         received+=n
-                    yield _srgb(np.frombuffer(data,dtype=np.float32).reshape(h,w,3))
+                    rgb=np.frombuffer(data,dtype=np.float32).reshape(h,w,3)
+                    yield np.rint(np.clip(rgb,0,1)*255).astype(np.uint8)
                 if p.wait():raise RuntimeError('RVS: '+(self.work/'rvs.log').read_text(errors='replace')[-1500:])
             finally:
                 self.cancel();p.stdout.close();p.wait();self.process=None

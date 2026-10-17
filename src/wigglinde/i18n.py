@@ -2,7 +2,8 @@
 import re
 
 TEXT = {
-    'test': ('Testversion 5', 'Test version 5'),
+    'version': ('Version 1.0', 'Version 1.0'),
+    'save_depth': ('Tiefenkarten zusätzlich speichern', 'Also save depth maps'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),
     'diagnosis_result': ('Tiefentest: LAS2-H · {device}\nBildgröße: {size}\nModell laden: {load} s\nTiefenberechnung: {depth} s\nGemessene RAM-Spitze (Programm): {ram}\nGemessene lokale GPU-Speicherspitze (Programm): {gpu}\n\nVollständiger Bericht: logs/latest_run.json',
@@ -51,12 +52,13 @@ TEXT = {
 
 # The pipeline also remains usable from development tools without a UI locale.
 MESSAGES = {
+    'Tiefenkarten speichern': 'Saving depth maps',
     'Bild vorbereiten': 'Preparing image',
     'Tiefenkarte links berechnen': 'Estimating left depth map',
     'Tiefenkarte rechts berechnen': 'Estimating right depth map', 'Fertig': 'Finished',
-    'Diese Testversion benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.': 'This test version requires opaque RGB/grayscale images with 8 bits per channel.',
+    'Wigglinde benötigt deckende RGB-/Graustufenbilder mit 8 Bit pro Kanal.': 'Wigglinde requires opaque RGB/grayscale images with 8 bits per channel.',
     'Das SBS-Bild muss zwei gleich breite Halbbilder enthalten.': 'The SBS image must contain two equally wide half images.',
-    'Die LAS2-Modelldatei ist beschädigt. Bitte das Testpaket erneut entpacken.': 'The LAS2 model file is damaged. Please extract the test package again.',
+    'Die LAS2-Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.': 'The LAS2 model file is damaged. Please extract the application package again.',
     'MP4: 720, 1080 oder 2160 Pixel Bildhöhe wählen.': 'MP4: choose a height of 720, 1080 or 2160 pixels.',
     'PNG: 1080 oder 2160 Pixel Bildhöhe wählen.': 'PNG: choose a height of 1080 or 2160 pixels.',
     'GIF: Lange Bildseite von 64 bis 2160 Pixeln wählen.': 'GIF: choose a long side between 64 and 2160 pixels.',
