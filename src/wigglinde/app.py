@@ -13,7 +13,13 @@ from .processor import Processor,collect_files,EXTENSIONS
 from .wiggle_export import ExportCancelled
 
 def app_directory():
-    return Path(sys.executable).resolve().parent if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[2]
+    if getattr(sys,'frozen',False):
+        executable=Path(sys.executable).resolve()
+        # Keep portable settings/models beside the .app, outside its signed contents.
+        if sys.platform=='darwin' and executable.parent.name=='MacOS' and executable.parents[2].suffix=='.app':
+            return executable.parents[3]
+        return executable.parent
+    return Path(__file__).resolve().parents[2]
 
 def screen_work_area(window):
     if sys.platform=='win32':
@@ -30,6 +36,10 @@ class WigglindeApp(ctk.CTk):
         self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
         icon=self.app_dir/'assets/wigglinde.ico'
         if sys.platform=='win32' and icon.is_file():self.iconbitmap(default=str(icon))
+        elif icon.is_file():
+            from PIL import Image,ImageTk
+            with Image.open(icon) as image:self._window_icon=ImageTk.PhotoImage(image.convert('RGBA'),master=self)
+            self.iconphoto(True,self._window_icon)
         try:self.settings=json.loads(self.settings_path.read_text(encoding='utf-8'))
         except (OSError,ValueError):self.settings={}
         self.locale=self.settings.get('language','de');self.locale='en' if self.locale=='en' else 'de'
@@ -274,10 +284,15 @@ class WigglindeApp(ctk.CTk):
         if self.processor:self.processor.cancel()
     def _play_ready_sound(self):
         path=self.app_dir/'assets/ready.wav'
-        if not path.is_file() or sys.platform!='win32':return
+        if not path.is_file():return
         try:
-            import winsound
-            winsound.PlaySound(str(path),winsound.SND_FILENAME|winsound.SND_ASYNC|winsound.SND_NODEFAULT)
+            if sys.platform=='win32':
+                import winsound
+                winsound.PlaySound(str(path),winsound.SND_FILENAME|winsound.SND_ASYNC|winsound.SND_NODEFAULT)
+            else:
+                import shutil,subprocess
+                player=shutil.which('afplay') if sys.platform=='darwin' else (shutil.which('paplay') or shutil.which('aplay'))
+                if player:subprocess.Popen([player,str(path)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         except OSError:pass
     def _poll(self):
         try:

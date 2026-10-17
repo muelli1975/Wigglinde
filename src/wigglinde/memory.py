@@ -50,6 +50,9 @@ class VideoMemory:
 
 def process_memory(pid=None):
     process_id=pid or os.getpid()
+    if sys.platform=='darwin':
+        import psutil
+        return dict(rss_bytes=psutil.Process(process_id).memory_info().rss)
     if sys.platform=='win32':
         class COUNTERS(c.Structure):
             _fields_=[('cb',c.c_ulong),('PageFaultCount',c.c_ulong)]+[(name,c.c_size_t) for name in
@@ -73,6 +76,10 @@ def process_memory(pid=None):
 
 
 def system_memory():
+    if sys.platform=='darwin':
+        import psutil
+        info=psutil.virtual_memory()
+        return dict(system_ram_total_bytes=info.total,system_ram_available_bytes=info.available)
     if sys.platform=='win32':
         class STATUS(c.Structure):
             _fields_=[('length',c.c_ulong),('load',c.c_ulong)]+[(name,c.c_uint64) for name in

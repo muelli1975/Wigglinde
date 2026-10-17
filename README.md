@@ -2,7 +2,7 @@
 
 [Deutsch](README_DE.md)
 
-Wigglinde is a local Windows tool for creating wiggle animations from already
+Wigglinde is a local tool for creating wiggle animations from already
 aligned Full-SBS stereo photographs. It estimates depth from the existing left
 and right views with **Lite Any Stereo V2 H (LAS2-H)** and renders intermediate
 views with **MPEG-I RVS**.
@@ -17,13 +17,20 @@ The interface is available in German and English.
 
 ## Requirements and installation
 
-- Windows 10 or 11, 64-bit.
-- CPU processing is supported. Compatible NVIDIA, AMD and Intel graphics cards
+- Windows 10 or 11, 64-bit; or Linux x64 (Ubuntu 22.04 or newer); or macOS 15 or newer, with separate Apple Silicon and Intel packages.
+- CPU processing is supported on all three systems. On Windows, compatible NVIDIA, AMD and Intel graphics cards
   with a DirectX 12 driver can accelerate depth estimation through DirectML.
 - No separate Python installation, CUDA toolkit or build tools are required.
 
 Extract `Wigglinde_1.0_Windows.zip` and start `Wigglinde\Wigglinde.exe`.
-Keep the complete application folder together. Processing works offline.
+On Linux extract `Wigglinde_1.0_Linux_x64.tar.gz` and start `Wigglinde/Wigglinde`.
+On macOS extract the matching `Wigglinde_1.0_macOS_AppleSilicon.zip` or
+`Wigglinde_1.0_macOS_Intel.zip` and open `Wigglinde/Wigglinde.app`.
+The macOS apps are ad-hoc signed, without Apple notarization; macOS may require
+approval in **System Settings → Privacy & Security → Open Anyway** after first launch.
+Keep the complete application folder together, including models and assets beside
+the macOS app. Processing works offline. Linux completion audio uses `paplay`
+or `aplay` when installed. Linux and macOS use CPU/Float32 only.
 
 ## Basic use
 

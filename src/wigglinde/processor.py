@@ -1,6 +1,6 @@
 """Full-SBS -> LAS2-H -> RVS. Diagnostics use the same depth calculation."""
 from pathlib import Path
-import io,tempfile,time,threading,os
+import io,tempfile,time,threading,os,sys
 from contextlib import contextmanager
 import numpy as np
 from PIL import Image,ImageCms,ImageOps
@@ -98,6 +98,8 @@ class Processor:
                 trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Multispectral 1/4')
                 with temporary_workspace(temp_root) as work:
                     exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                    if not exe.is_file() and getattr(sys,'frozen',False):
+                        exe=Path(sys._MEIPASS)/'backend'/exe.name
                     with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule

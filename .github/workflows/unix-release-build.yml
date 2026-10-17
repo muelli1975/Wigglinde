@@ -1,0 +1,157 @@
+name: Portable Linux and macOS builds
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/unix-release-build.yml', 'tools/package_unix.py']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            label: Linux_x64
+          - runner: macos-15
+            label: macOS_AppleSilicon
+          - runner: macos-15-intel
+            label: macOS_Intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Linux desktop prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb xauth fonts-dejavu-core libgl1 libegl1 libxkbcommon0 libdbus-1-3
+      - name: macOS OpenMP
+        if: runner.os == 'macOS'
+        run: brew install libomp
+      - name: Install application and packaging dependencies
+        run: python -m pip install -e . pyinstaller==6.19.0
+      - name: Reuse the verified Float32 H export
+        uses: actions/download-artifact@v4
+        with:
+          name: las2-h-onnx
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/las2
+      - name: Get pinned native sources
+        shell: bash
+        run: |
+          git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
+          git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
+          git clone --filter=blob:none --no-checkout https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
+          git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
+          git clone --depth 1 --branch 4.10.0 https://github.com/opencv/opencv.git opencv-reference
+          test "$(git -C opencv-reference rev-parse HEAD)" = 71d3237a093b60a27601c20e9ee6c3e52154e8b1
+      - uses: actions/cache@v4
+        id: opencv
+        with:
+          path: opencv-install
+          key: opencv-static-4.10.0-${{ matrix.label }}-v1
+      - name: Build minimal portable OpenCV
+        if: steps.opencv.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cmake -S opencv-reference -B build/opencv -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/opencv-install" \
+            -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_LIST=core,imgproc,photo,imgcodecs \
+            -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_opencv_apps=OFF \
+            -DBUILD_JAVA=OFF -DBUILD_opencv_python2=OFF -DBUILD_opencv_python3=OFF \
+            -DWITH_OPENCL=OFF -DWITH_IPP=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF \
+            -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF -DWITH_QT=OFF -DWITH_GTK=OFF \
+            -DWITH_OPENEXR=OFF -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_JASPER=OFF -DWITH_OPENJPEG=OFF \
+            -DWITH_JPEG=OFF -DWITH_PNG=ON -DBUILD_PNG=ON -DBUILD_ZLIB=ON
+          cmake --build build/opencv --parallel 4
+          cmake --install build/opencv
+      - name: Build the RVS CPU adapter
+        shell: bash
+        run: |
+          extra=()
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            extra+=("-DOpenMP_ROOT=$(brew --prefix libomp)")
+          fi
+          cmake -S tools/rvs/runtime -B build/rvs -DCMAKE_BUILD_TYPE=Release \
+            -DRVS_SOURCE_DIR="$PWD/rvs-reference" -DOpenCV_DIR="$PWD/opencv-install/lib/cmake/opencv4" "${extra[@]}"
+          cmake --build build/rvs --parallel 4
+      - name: Source and serial/parallel RVS checks
+        run: |
+          python -m unittest discover -s tests -v
+          python tools/rvs/check_parallel.py --renderer build/rvs/wigglinde_rvs --output output/rvs-parallel.json
+      - name: Build and check extracted Linux package
+        if: runner.os == 'Linux'
+        run: xvfb-run -a -s '-screen 0 2560x1920x24' python tools/package_unix.py --label '${{ matrix.label }}'
+      - name: Build and check extracted macOS package
+        if: runner.os == 'macOS'
+        run: python tools/package_unix.py --label '${{ matrix.label }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-1.0-${{ matrix.label }}
+          path: |
+            release/Wigglinde_1.0_${{ matrix.label }}.*
+            output/native-smoke.json
+            output/rvs-parallel.json
+            output/package-verification.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  publish:
+    needs: native
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Wigglinde-1.0-*
+          path: packages
+      - name: Verify and append native packages to 1.0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs'), path = require('path'), crypto = require('crypto');
+            const owner = context.repo.owner, repo = context.repo.repo, tag = 'v1.0';
+            const release = (await github.rest.repos.getReleaseByTag({owner, repo, tag})).data;
+            const ref = (await github.rest.git.getRef({owner, repo, ref: 'tags/' + tag})).data;
+            const windows = release.assets.find(a => a.name === 'Wigglinde_1.0_Windows.zip');
+            if (ref.object.sha !== '642773fd642d28e30959a4df554829e4d56493da' || windows?.digest !== 'sha256:f8275d65b5a1691f03e2f0c520afc4276e82180ebdc942dddc6349fc4934c5ea') throw new Error('Windows release identity changed.');
+            const verified = [];
+            for (const label of ['Linux_x64', 'macOS_AppleSilicon', 'macOS_Intel']) {
+              const root = path.join('packages', 'Wigglinde-1.0-' + label);
+              const report = JSON.parse(fs.readFileSync(path.join(root, 'output/package-verification.json')));
+              const smoke = JSON.parse(fs.readFileSync(path.join(root, 'output/native-smoke.json')));
+              const parallel = JSON.parse(fs.readFileSync(path.join(root, 'output/rvs-parallel.json')));
+              if (report.status !== 'passed' || report.platform !== label || report.commit !== context.sha || !report.actual_extracted_package_tested || smoke.status !== 'passed' || smoke.mixed_model_bundled || parallel.status !== 'passed') throw new Error('Native checks failed: ' + label);
+              const data = fs.readFileSync(path.join(root, 'release', report.filename));
+              const digest = 'sha256:' + crypto.createHash('sha256').update(data).digest('hex');
+              if (data.length !== report.bytes || digest !== 'sha256:' + report.sha256) throw new Error('Package identity differs: ' + label);
+              verified.push({name: report.filename, data, digest, size: data.length});
+            }
+            for (const asset of verified) {
+              const existing = release.assets.find(a => a.name === asset.name);
+              if (existing) {
+                if (existing.digest !== asset.digest || existing.size !== asset.size) throw new Error('Existing native asset differs: ' + asset.name);
+                continue;
+              }
+              const uploaded = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id,
+                name: asset.name, data: asset.data, headers: {'content-type': asset.name.endsWith('.zip') ? 'application/zip' : 'application/gzip', 'content-length': asset.size}})).data;
+              if (uploaded.digest !== asset.digest || uploaded.size !== asset.size) throw new Error('Uploaded asset differs.');
+            }
+            const marker = '\n\n### Linux and macOS packages';
+            const base = release.body.split(marker)[0];
+            const notes = marker + '\n\nNative CPU/Float32 packages are also available for Linux x64 (Ubuntu 22.04 or newer) and macOS 15 or newer, separately for Apple Silicon and Intel. Keep the complete `Wigglinde` folder together, including the local model and assets. On Linux start `Wigglinde`; on macOS open `Wigglinde.app`. The macOS apps are ad-hoc signed, not Apple-notarized. Linux completion audio uses `paplay` or `aplay` when installed.\n\nEach extracted native package passed MP4/GIF/PNG output, depth-map, GUI and settings checks on its build host. These packages use CPU only; DirectML GPU processing remains available in the Windows package.\n\nNative package source: [' + context.sha.slice(0, 7) + '](https://github.com/' + owner + '/' + repo + '/tree/' + context.sha + '), included in each package with build information and license notices.';
+            await github.rest.repos.updateRelease({owner, repo, release_id: release.id, body: base + notes});
+            core.notice('Added all three verified native packages without replacing the Windows asset or tag.');

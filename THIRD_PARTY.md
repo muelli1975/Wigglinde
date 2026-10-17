@@ -30,3 +30,12 @@ Git blob `260fb0d49982873a13dabd750b997448acb675ca`, same project owner.
 
 The GPU model is converted from the same H export with ONNX Runtime’s Float16
 converter, retaining Float32 islands. No separate weights or model license is introduced.
+
+## Native Linux and macOS packages
+
+CPU packages use official ONNX Runtime (MIT); Intel macOS uses 1.23.2 because
+1.24.4 publishes macOS wheels only for Apple Silicon. macOS memory accounting uses
+psutil (BSD-3-Clause). OpenCV is built statically with bundled zlib/libpng and its
+third-party notices are included. RVS OpenMP uses LLVM libomp on macOS (Apache-2.0
+with LLVM exceptions) or GCC libgomp on Linux (GPL with GCC Runtime Library
+Exception). The original completion WAV and ICO are included unchanged.

@@ -39,20 +39,35 @@ Publication uses the already verified workflow artifact and checks its SHA-256;
 it does not rebuild the package. Tag/source identity and release-asset digest are
 verified before reporting publication complete.
 
-## Other platforms
+## Native Linux and macOS packages
 
-The current released and packaged target is Windows x64. Native CPU packages for
-Linux x64, macOS Apple Silicon and macOS Intel are feasible, following the separate
-native-build approach used by Freeda. These are not yet built or validated for
-Wigglinde, and no Linux/macOS download is currently provided.
+[The native workflow](.github/workflows/unix-release-build.yml) builds Linux x64 on
+Ubuntu 22.04 and separate Apple Silicon/Intel macOS packages on macOS 15. It reuses
+the verified original Float32 H export; no model conversion or GPU provider is
+needed. Official CPU ONNX Runtime is pinned to 1.24.4 on Linux/Apple Silicon and
+1.23.2 on Intel macOS, for which 1.24.4 does not publish a wheel.
 
-The Python dependencies already select CPU ONNX Runtime outside Windows; the
-Float32 H model can be reused. The C++ RVS adapter and application bundle must be
-built for each target. Before releasing these packages, adapt the Apple linker
-options, platform sound playback, macOS memory counters and packaging of local
-models, libraries and assets, then check the actual native applications. DirectML
-is Windows-specific; another GPU backend would require separate integration and
-validation. It is not enabled merely by building on another operating system.
+It builds pinned RVS against static OpenCV 4.10 (core/imgproc/photo/imgcodecs),
+collecting native runtime dependencies with PyInstaller. OpenMP and independent
+view concurrency remain available. macOS memory counters use psutil. Completion
+sound uses afplay on macOS and paplay/aplay, when installed, on Linux. The icon is
+converted from the supplied ICO for the macOS bundle; the original assets remain
+included unchanged.
+
+`tools/package_unix.py --label Linux_x64` (or `macOS_AppleSilicon` / `macOS_Intel`)
+runs on the respective native host after building `build/rvs/wigglinde_rvs` and
+preparing the pinned prerequisites from the workflow. It includes local models,
+assets, license notices, exact tracked source and platform build information.
+Linux archives use tar.gz to retain executable permissions; macOS uses ditto ZIPs
+to retain framework links and ad-hoc signatures. The complete application folder
+must stay together. Portable settings and logs live outside the signed .app.
+The Mac apps are not Apple-notarized.
+
+Before publication, the extracted archive runs the same packaged MP4/GIF/PNG,
+optional depth-map, GUI, language and settings checks, plus the native
+serial/parallel RVS comparison. The workflow appends only successful packages to
+the existing 1.0 release. It preserves the Windows archive and tag; native package
+source commits are recorded separately in build-info.json and release notes.
 
 ## Validation limits
 

@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-Wigglinde ist ein lokales Windows-Programm, das Wiggle-Animationen aus bereits
+Wigglinde ist ein lokales Programm, das Wiggle-Animationen aus bereits
 justierten Full-SBS-Stereofotos erzeugt. **Lite Any Stereo V2 H (LAS2-H)** berechnet
 aus den vorhandenen linken und rechten Ansichten die Tiefe; **MPEG-I RVS** rendert
 die Zwischenansichten.
@@ -17,13 +17,21 @@ Die Oberfläche ist auf Deutsch und Englisch verfügbar.
 
 ## Voraussetzungen und Installation
 
-- Windows 10 oder 11 mit 64 Bit.
-- CPU-Verarbeitung wird unterstützt. Kompatible NVIDIA-, AMD- und Intel-Grafikkarten
-  mit DirectX-12-Treiber können die Tiefenberechnung über DirectML beschleunigen.
+- Windows 10 oder 11 mit 64 Bit; oder Linux x64 (Ubuntu 22.04 oder neuer); oder macOS ab Version 15, mit getrennten Paketen für Apple Silicon und Intel.
+- CPU-Verarbeitung wird auf allen drei Systemen unterstützt. Unter Windows können kompatible NVIDIA-, AMD- und Intel-Grafikkarten
+  mit DirectX-12-Treiber die Tiefenberechnung über DirectML beschleunigen.
 - Keine separate Python-Installation, kein CUDA-Toolkit und keine Build-Werkzeuge nötig.
 
 `Wigglinde_1.0_Windows.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
-Den vollständigen Programmordner zusammenhalten. Die Verarbeitung funktioniert offline.
+Unter Linux `Wigglinde_1.0_Linux_x64.tar.gz` entpacken und `Wigglinde/Wigglinde` starten.
+Unter macOS das passende `Wigglinde_1.0_macOS_AppleSilicon.zip` oder
+`Wigglinde_1.0_macOS_Intel.zip` entpacken und `Wigglinde/Wigglinde.app` öffnen.
+Die Mac-Apps sind ad hoc signiert, ohne Apple-Notarisierung. macOS kann nach dem
+ersten Start eine Freigabe unter **Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen** verlangen.
+Den vollständigen Programmordner zusammenhalten, einschließlich Modell und Assets
+neben der Mac-App. Die Verarbeitung funktioniert offline. Der Fertigstellungssound
+unter Linux nutzt `paplay` oder `aplay`, sofern installiert. Linux und macOS verwenden
+ausschließlich CPU/Float32.
 
 ## Bedienung
 
