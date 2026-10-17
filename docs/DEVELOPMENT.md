@@ -9,7 +9,17 @@ Die konservative Speicherplanung bleibt numerisch unverändert und verwendet
 weiterhin die Schätzung der bisherigen Precision-2-Konfiguration.
 Kein neuer Schalter und keine weitere Foto-Vergleichsserie. Bestehende schnelle
 Prüfungen und Prüfung der gepackten Windows-EXE laufen im Build.
-Windows-Paketprüfung für diesen Stand noch ausstehend.
+[Windows-Paketprüfung](https://github.com/muelli1975/Wigglinde/actions/runs/39033497358)
+bestanden, Quellstand `563e51e62f0e68f2e52f487d4db26477a51c1314`. Fertige EXE:
+H-CPU-Exporte MP4/GIF/PNG mit Precision 1, paralleler RVS-Ausgabe, Tiefentest,
+Temporärbereinigung und Sitzungswiederverwendung bestätigt. DE/EN, Buttonfarben,
+stabile Geometrie, unverändertes Icon/Sound bestätigt; Screenshot angesehen.
+Native serielle/parallele Ausgaben bitgleich. Physische DirectML-Inferenz bleibt
+auf dem gehosteten Basic Render Driver nicht prüfbar. Separate Prototype-Prüfungen
+bestanden. Keine weitere Foto-Vergleichsserie für diesen Build.
+ZIP CRC-geprüft, nur H, keine Testlogs/Einstellungen/temporären Dateien,
+163888175 Bytes, SHA-256:
+`bb3884dbba1ee66bd2a0750707c3ef5bbd799d51c65eca419c73f69f65949de1`.
 
 ## Neuer Fotoversuch: Precision 1 / 2
 
