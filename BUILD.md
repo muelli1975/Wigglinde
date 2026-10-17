@@ -39,6 +39,21 @@ Publication uses the already verified workflow artifact and checks its SHA-256;
 it does not rebuild the package. Tag/source identity and release-asset digest are
 verified before reporting publication complete.
 
+## Other platforms
+
+The current released and packaged target is Windows x64. Native CPU packages for
+Linux x64, macOS Apple Silicon and macOS Intel are feasible, following the separate
+native-build approach used by Freeda. These are not yet built or validated for
+Wigglinde, and no Linux/macOS download is currently provided.
+
+The Python dependencies already select CPU ONNX Runtime outside Windows; the
+Float32 H model can be reused. The C++ RVS adapter and application bundle must be
+built for each target. Before releasing these packages, adapt the Apple linker
+options, platform sound playback, macOS memory counters and packaging of local
+models, libraries and assets, then check the actual native applications. DirectML
+is Windows-specific; another GPU backend would require separate integration and
+validation. It is not enabled merely by building on another operating system.
+
 ## Validation limits
 
 The hosted Windows runner does not provide a suitable physical DirectML GPU.

@@ -1,5 +1,19 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Praxisrückmeldung 1.0 und Repository-Screenshot
+
+Am 17. Oktober 2026 bestätigt Christoph: 2160p funktioniert mit der aktuellen
+Mixed-Precision-Fassung auf seiner GPU. Dies ergänzt die unten dokumentierten
+Build-Prüfungen um eine erfolgreiche Anwendung auf physischer Hardware.
+Grafikkartenmodell, VRAM-Spitze und Laufzeit wurden für diesen Durchlauf nicht
+genannt; daraus folgt keine allgemeine Speicherzusage für jede Grafikkarte.
+
+Der von Christoph gelieferte Screenshot liegt unverändert unter
+`docs/screenshots/Wigglinde.png` und ist in beiden READMEs eingebunden.
+Linux-/macOS-Pakete sind möglich, bisher aber nicht gebaut oder geprüft;
+Voraussetzungen und noch offene Plattformanpassungen stehen in `BUILD.md`.
+Die bestehende Windows-Veröffentlichung bleibt davon unberührt.
+
 ## Aktualisierung 1.0: GPU Mixed Precision
 
 Freigegeben am 17. Oktober 2026, 16:21: GPU verwendet separaten ONNX-Graphen mit

@@ -13,6 +13,8 @@ The interface is available in German and English.
 
 [Download Wigglinde 1.0](https://github.com/muelli1975/Wigglinde/releases/tag/v1.0)
 
+![Wigglinde 1.0 interface (English)](docs/screenshots/Wigglinde.png)
+
 ## Requirements and installation
 
 - Windows 10 or 11, 64-bit.

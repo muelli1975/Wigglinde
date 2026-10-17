@@ -13,6 +13,8 @@ Die Oberfläche ist auf Deutsch und Englisch verfügbar.
 
 [Wigglinde 1.0 herunterladen](https://github.com/muelli1975/Wigglinde/releases/tag/v1.0)
 
+![Wigglinde 1.0 – englische Oberfläche](docs/screenshots/Wigglinde.png)
+
 ## Voraussetzungen und Installation
 
 - Windows 10 oder 11 mit 64 Bit.
