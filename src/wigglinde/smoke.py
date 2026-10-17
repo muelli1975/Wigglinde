@@ -68,6 +68,8 @@ def run(app_dir,report_path):
         assert gui.input_folder.get()==str(work) and gui.own.get()==str(work/'Custom output')
         assert gui.output_label.cget('text').endswith(str(work/'Custom output'))
         assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
+    import customtkinter as ctk
+    ctk.set_widget_scaling(1.0);gui.update()
     gui.running=True;gui._set_busy(True);gui.update()
     assert all(c.cget('state')=='disabled' for c in gui.controls)
     assert gui.stop.cget('state')=='normal' and gui.start.cget('border_color')=='#333333'

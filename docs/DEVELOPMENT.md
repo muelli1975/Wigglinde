@@ -27,6 +27,9 @@ Buildserver bestanden. Lokal: H maximal 0,000036 px, L maximal 0,001328 px
 Abweichung vom nativen Modell; Float32-Implementierungen werden elementweise
 mit rtol/atol 1e-4 verglichen und die tatsächlichen Pixelfehler protokolliert. GUI lokal in beiden Sprachen geprüft,
 Sprachwechsel erhält Optionen/Pfade, Busy-Zustand und Eingabe-/Ausgabeabhängigkeiten.
+Layout bei 100/125/150 % und kleinem Fenster bestanden. Texte werden beim Sprachwechsel
+in bestehenden Widgets aktualisiert; das verhindert verwaiste CTk-Menücallbacks
+bei anschließender DPI-Änderung.
 Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen.
 Der erste Runtime-Build scheiterte an MSVC-2026-Warnung C4875 unter /WX im
 unveränderten ORT-Code. Der Build verwendet nun die VS-2022-Umgebung. Physische

@@ -6,7 +6,7 @@ import customtkinter as ctk
 from . import __version__,theme as T
 from .devices import graphics_adapters
 from .models import MODELS,DEFAULT_MODEL
-from .i18n import tr,message
+from .i18n import tr,message,TEXT
 from .export_options import WiggleOptions
 from .processor import Processor,collect_files,EXTENSIONS
 from .wiggle_export import ExportCancelled
@@ -51,60 +51,64 @@ class WigglindeApp(ctk.CTk):
         if saved is not None and saved not in self.adapters.values():self.adapters[f'GPU {saved} ({self.tr("unavailable")})']=saved
         label=next(label for label,ident in self.adapters.items() if ident==saved)
         self.device=ctk.StringVar(value=label);self.status_value=('ready',{});self.last_file='';self.elapsed_seconds=None;self.error_count=0
-        self._build();self._dependencies()
+        self.localized=[];self._build();self._dependencies()
         self.input_file.trace_add('write',lambda *_:self._input_changed(self.input_file,self.input_folder))
         self.input_folder.trace_add('write',lambda *_:self._input_changed(self.input_folder,self.input_file))
         self.own.trace_add('write',lambda *_:self._dependencies())
         self.protocol('WM_DELETE_WINDOW',self._close);self.after(100,self._poll)
 
     def tr(self,key,**values):return tr(self.locale,key,**values)
-    def _label(self,parent,text,**kw):return ctk.CTkLabel(parent,text=text,text_color=T.TEXT,font=(T.FONT_FAMILY,13),**kw)
+    def _localize(self,widget,key):
+        if key in TEXT:self.localized.append((widget,key))
+        return widget
+    def _label(self,parent,text,**kw):
+        return self._localize(ctk.CTkLabel(parent,text=self.tr(text) if text in TEXT else text,text_color=T.TEXT,font=(T.FONT_FAMILY,13),**kw),text)
     def _button(self,parent,text,command,**kw):
-        b=ctk.CTkButton(parent,text=text,command=command,fg_color=T.BUTTON_BG,hover_color=T.BUTTON_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,border_width=1,border_color=T.BORDER,height=30,**kw);self.controls.append(b);return b
+        b=ctk.CTkButton(parent,text=self.tr(text) if text in TEXT else text,command=command,fg_color=T.BUTTON_BG,hover_color=T.BUTTON_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,border_width=1,border_color=T.BORDER,height=30,**kw);self.controls.append(b);return self._localize(b,text)
     def _menu(self,parent,variable,values,command=None,width=140):
         b=ctk.CTkOptionMenu(parent,variable=variable,values=values,command=command,width=width,height=30,dynamic_resizing=False,fg_color=T.PANEL,button_color=T.PANEL_HOVER,button_hover_color=T.BORDER,dropdown_fg_color=T.BG_SOFT,dropdown_hover_color=T.PANEL_HOVER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,dropdown_text_color=T.TEXT);self.controls.append(b);return b
     def _check(self,parent,text,var,command=None):
-        b=ctk.CTkCheckBox(parent,text=text,variable=var,command=command,fg_color=T.GOLD,hover_color=T.GOLD_LIGHT,border_color=T.BORDER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,height=24);self.controls.append(b);return b
+        b=ctk.CTkCheckBox(parent,text=self.tr(text) if text in TEXT else text,variable=var,command=command,fg_color=T.GOLD,hover_color=T.GOLD_LIGHT,border_color=T.BORDER,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,height=24);self.controls.append(b);return self._localize(b,text)
     def _entry(self,parent,var,width=140):
         b=ctk.CTkEntry(parent,textvariable=var,width=width,height=30,fg_color=T.BG_SOFT,border_color=T.BORDER,text_color=T.TEXT);self.controls.append(b);return b
     def _panel(self,row):
         f=ctk.CTkFrame(self,fg_color=T.PANEL,border_width=1,border_color=T.BORDER,corner_radius=12);f.grid(row=row,column=0,sticky='ew',padx=18,pady=(0,9));f.grid_columnconfigure(0,weight=1);return f
     def _path_row(self,parent,row,key,var,command):
         bar=ctk.CTkFrame(parent,fg_color='transparent');bar.grid(row=row,column=0,sticky='ew',padx=12,pady=(8 if row==0 else 0,8));bar.grid_columnconfigure(1,weight=1)
-        self._label(bar,self.tr(key),width=158,anchor='w').grid(row=0,column=0,sticky='w',padx=(0,8))
+        self._label(bar,key,width=158,anchor='w').grid(row=0,column=0,sticky='w',padx=(0,8))
         entry=self._entry(bar,var);entry.grid(row=0,column=1,sticky='ew',padx=(0,8))
-        self._button(bar,self.tr('choose'),command,width=110).grid(row=0,column=2)
+        self._button(bar,'choose',command,width=110).grid(row=0,column=2)
         return entry
     def _build(self):
         self.title(f'Wigglinde – {__version__} · {self.tr("test")}')
         head=ctk.CTkFrame(self,fg_color='transparent');head.grid(row=0,column=0,sticky='ew',padx=22,pady=(12,9));head.grid_columnconfigure(0,weight=1)
         ctk.CTkLabel(head,text='Wigglinde',font=(T.FONT_FAMILY,25,'bold'),text_color=T.GOLD_LIGHT).grid(row=0,column=0,sticky='w')
-        self._label(head,self.tr('test')).grid(row=0,column=1,padx=(8,20))
+        self._label(head,'test').grid(row=0,column=1,padx=(8,20))
         self._menu(head,self.language,['Deutsch','English'],self._language_changed,120).grid(row=0,column=2)
         f=self._panel(1)
         self.file_entry=self._path_row(f,0,'single',self.input_file,self._choose_file)
         self.folder_entry=self._path_row(f,1,'folder',self.input_folder,self._choose_folder)
-        f=self._panel(2);self._check(f,self.tr('standard'),self.standard,self._dependencies).grid(row=0,column=0,sticky='w',padx=12,pady=(9,5))
+        f=self._panel(2);self._check(f,'standard',self.standard,self._dependencies).grid(row=0,column=0,sticky='w',padx=12,pady=(9,5))
         own=ctk.CTkFrame(f,fg_color='transparent');own.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,5));own.grid_columnconfigure(1,weight=1)
-        self.own_label=self._label(own,self.tr('own'),width=158,anchor='w');self.own_label.grid(row=0,column=0,padx=(0,8))
+        self.own_label=self._label(own,'own',width=158,anchor='w');self.own_label.grid(row=0,column=0,padx=(0,8))
         self.own_entry=self._entry(own,self.own);self.own_entry.grid(row=0,column=1,sticky='ew',padx=(0,8))
-        self._button(own,self.tr('choose'),self._choose_output,width=110).grid(row=0,column=2)
+        self._button(own,'choose',self._choose_output,width=110).grid(row=0,column=2)
         self.output_label=self._label(f,'',anchor='w',wraplength=740,justify='left');self.output_label.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,7))
         f=self._panel(3);bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=0,column=0,sticky='ew',padx=12,pady=(9,6));bar.grid_columnconfigure(5,weight=1)
-        self._label(bar,self.tr('format')).grid(row=0,column=0,padx=(0,8));self._menu(bar,self.kind,['MP4','GIF',self.tr('png')],self._format_changed,150).grid(row=0,column=1,padx=(0,18))
-        self._label(bar,self.tr('size')).grid(row=0,column=2,padx=(0,8));self.size_menu=self._menu(bar,self.size,self._sizes(),width=100);self.size_menu.grid(row=0,column=3)
+        self._label(bar,'format').grid(row=0,column=0,padx=(0,8));self.format_menu=self._menu(bar,self.kind,['MP4','GIF',self.tr('png')],self._format_changed,150);self.format_menu.grid(row=0,column=1,padx=(0,18))
+        self._label(bar,'size').grid(row=0,column=2,padx=(0,8));self.size_menu=self._menu(bar,self.size,self._sizes(),width=100);self.size_menu.grid(row=0,column=3)
         self.unit_label=self._label(bar,self.tr('long_side' if self.kind.get()=='GIF' else 'height'));self.unit_label.grid(row=0,column=4,padx=(6,18))
         self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),width=80);self.fps_menu.grid(row=0,column=7)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,6));bar.grid_columnconfigure(2,weight=1)
-        self._label(bar,self.tr('duration')).grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
+        self._label(bar,'duration').grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
         self._menu(bar,self.layout,['Full-SBS','Half-SBS'],width=125).grid(row=0,column=3,padx=(12,16))
-        self._check(bar,self.tr('swap'),self.swap).grid(row=0,column=4)
+        self._check(bar,'swap',self.swap).grid(row=0,column=4)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
-        self._label(bar,self.tr('model')).grid(row=0,column=0,padx=(0,8))
+        self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
         self._menu(bar,self.model_name,list(MODELS),self._model_changed,width=112).grid(row=0,column=1,sticky='w')
-        self._label(bar,self.tr('device')).grid(row=0,column=2,padx=(16,8))
+        self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
-        self._label(bar,self.tr('renderer')).grid(row=0,column=4,padx=(12,0))
+        self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -112,7 +116,7 @@ class WigglindeApp(ctk.CTk):
         self.elapsed=self._label(f,'',anchor='w');self.elapsed.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,5))
         self._show_status();self._show_elapsed()
         footer=ctk.CTkFrame(self,fg_color='transparent');footer.grid(row=5,column=0,sticky='ew',padx=18,pady=(0,12));footer.grid_columnconfigure(0,weight=1)
-        self.start=self._button(footer,self.tr('start'),self._start,width=150);self.start.grid(row=0,column=1,padx=(0,8))
+        self.start=self._button(footer,'start',self._start,width=150);self.start.grid(row=0,column=1,padx=(0,8))
         self.start.bind('<Enter>',lambda event:self.start.configure(text_color=T.START_HOVER_TEXT) if not self.running and self._has_input() else None)
         self.start.bind('<Leave>',lambda event:self.start.configure(text_color=T.START_TEXT) if not self.running and self._has_input() else None)
         self.stop=ctk.CTkButton(footer,text=self.tr('cancel'),command=self._cancel,width=120,height=30,fg_color=T.BG_SOFT,hover_color=T.PANEL_HOVER,border_color=T.BORDER,border_width=1,text_color=T.TEXT,text_color_disabled=T.TEXT_DISABLED,state='disabled');self.stop.grid(row=0,column=2)
@@ -125,10 +129,14 @@ class WigglindeApp(ctk.CTk):
         self.size_menu.configure(values=self._sizes());self.size.set('800' if self._kind()=='GIF' else '1080')
         self.fps_menu.configure(values=self._rates());self.fps.set('15' if self._kind()=='GIF' else '30');self.unit_label.configure(text=self.tr('long_side' if self._kind()=='GIF' else 'height'))
     def _language_changed(self,*_):
-        kind=self._kind();progress=self.progress.get();self.locale='en' if self.language.get()=='English' else 'de'
+        kind=self._kind();self.locale='en' if self.language.get()=='English' else 'de'
+        for widget,key in self.localized:widget.configure(text=self.tr(key))
+        self.format_menu.configure(values=['MP4','GIF',self.tr('png')])
         if kind=='PNG':self.kind.set(self.tr('png'))
-        for child in self.winfo_children():child.destroy()
-        self.controls=[];self._build();self.progress.set(progress);self._dependencies();self._save_quietly()
+        self.unit_label.configure(text=self.tr('long_side' if kind=='GIF' else 'height'))
+        self.stop.configure(text=self.tr('cancel'))
+        self.title(f'Wigglinde – {__version__} · {self.tr("test")}')
+        self._show_status();self._show_elapsed();self._dependencies();self._save_quietly()
     def _has_input(self):return bool(self.input_file.get().strip() or self.input_folder.get().strip())
     def _input_changed(self,active,other):
         if self.changing_input:return
