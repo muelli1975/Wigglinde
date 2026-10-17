@@ -38,8 +38,26 @@ Christophs ausdrückliche Korrektur vor dem fertigen Paket: Ordnerverarbeitung n
 für direkt enthaltene Bilder, ohne Rekursion. Keine Unterordnerpfade im Dateinamen.
 Die zuvor untersuchte SplatTricia-Pfadpräfixregel wird hier nicht übernommen.
 
-Paketprüfung dieses Quellstands steht noch aus. Die folgenden Testversionen sind
-historische Prüfstände und belegen die Änderungen der 1.0 nicht.
+Paketprüfung bestanden: 34 lokale Prüfungen (0,22 s), 34 Windows-Prüfungen (0,53 s),
+serieller/paralleler nativer RVS-Vergleich bitgleich bei zwei Bildgrößen. Tatsächliche
+EXE mit MP4/GIF/PNG, optionalen beidseitigen 16-Bit-Karten, Tiefendiagnose,
+Sitzungswiederverwendung, unveränderter Quelle, Temp-Bereinigung, DE/EN,
+Einstellungswiederherstellung, Ordnerverarbeitung ohne Unterordner, stabiler
+Bediengeometrie bei 100/125/150 %, gezeichneten Buttonfarben und Originalassets.
+GPU auf dem Hosted-Basic-Render-Driver nicht initialisierbar; keine neue Bestätigung
+für physische GPUs. Die vorhandenen Praxisbeobachtungen ersetzen keine GPU-Prüfung
+jedes neuen Builds. Zusätzlich drei echte RVS-Ansichten aus einer vorhandenen
+1620x1080-H-Tiefenberechnung erfolgreich erzeugt; keine neue Inferenz nötig.
+
+Gebauter Quellstand: 0c8aefa15f2060b4eb5b4aab806b0cd005c174aa.
+Windows-Workflow: https://github.com/muelli1975/Wigglinde/actions/runs/39039085146
+Allgemeine Prüfungen: https://github.com/muelli1975/Wigglinde/actions/runs/39039085143
+Artifact 12103840135, Wigglinde-1.0-Windows. Inneres ZIP Wigglinde_1.0_Windows.zip:
+163894574 Byte, SHA-256 3615a7c05892da2e418a052b69cb5e12264e2456f4f2535ffa15f7df8ee5e036.
+ZIP CRC-geprüft, nur H als Anwendungsmodell, keine Logs/Einstellungen/_temp,
+Originalicon/-sound bytegleich, gebündelte Quelloptionen geprüft. Archiv enthält
+den exakt gebauten Quellstand; dieser spätere Dokumentationsnachtrag gehört nicht
+dazu. Die folgenden Testversionen sind historische Prüfstände.
 
 
 ## Test 5: Precision 1
