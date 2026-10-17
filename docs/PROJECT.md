@@ -42,9 +42,9 @@ Standards: MP4, 1080 px Höhe, 30 fps; GIF 800 px, 15 fps; PNG 1080 px, 30 fps.
 
 ## Geometrie und Qualitätsziel
 
-Gewählter Modellansatz: Lite Any Stereo V2. Test 2 bietet LAS2-M, LAS2-L und LAS2-H,
-mit L als Standard beim ersten Start und gespeicherter letzter Modellwahl.
-Modell und Berechnungsgerät sind getrennt wählbar, ohne automatische Umschaltung. Die erste Testversion
+Gewählter Modellansatz: Lite Any Stereo V2. Nach praktischem Vergleich wird für
+Test 3 ausschließlich LAS2-H verwendet, mit vier Iterationen und Float32.
+Berechnungsgerät CPU/DirectML bleibt ausdrücklich wählbar, ohne automatische Umschaltung. Die erste Testversion
 verwendet LAS2-M als ONNX und RVS auf der CPU. Der frühere native Forschungsversuch
 und RVS-Vergleich stehen in `RVS_COMPARISON.md`. Der CLI-Adapter für
 C-FoundationStereo-S bleibt ausschließlich als historischer Entwicklungsvergleich.
@@ -83,4 +83,14 @@ Linsenrichtung, Betrachtungsabstand, Grob-/Fein-Pitchtest, Montage-/Schnittmarke
 Phasenlage, Reihenfolge/Spiegelung, TIFF/BigTIFF und ICC-/RIP-Übergabe sowie
 reproduzierbare Material-/Druckprofile sind vor Implementierung zu spezifizieren.
 Keine Behauptung professioneller Druckeignung ohne reale, kalibrierte Testdrucke.
-Diese Funktionen gehören noch nicht zum Test-2-Paket.
+Diese Funktionen gehören noch nicht zum Test-3-Paket.
+
+## Nächster freigegebener Schritt: Diagnoseversion
+
+Christoph hat am 17. Oktober die Umsetzung gestartet. Begrenzte Logrotation:
+5 MiB, drei ältere Dateien je Typ. Laufzeitstufen und stichprobenartige RAM-/GPU-
+Speicherwerte protokollieren; ursprüngliche Runtime-Fehlerbytes sichern. Einzelbild-
+Tiefentest mit identischer Berechnung und gewählter Auflösung, ohne Renderer.
+Kein automatischer CPU-/Auflösungswechsel. Zunächst messen, danach Optimierungen
+entscheiden. CUDA, Cache, Tiling und Tiefenkartenexport werden hier nicht ergänzt.
+H liefert die beste Qualität im Anwendervergleich; Übergangsstörungen bleiben offen.

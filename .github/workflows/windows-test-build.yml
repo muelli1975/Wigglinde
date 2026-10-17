@@ -12,7 +12,7 @@ jobs:
   model:
     strategy:
       matrix:
-        model: [m, l, h]
+        model: [h]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -125,9 +125,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Wigglinde-0.1-Test2a-Windows
+          name: Wigglinde-0.1-Test3-Windows
           path: |
-            dist/Wigglinde_0.1_Test2a_Windows.zip
+            dist/Wigglinde_0.1_Test3_Windows.zip
             output/windows-smoke.json
             output/gui-build-check.png
           if-no-files-found: warn

@@ -1,11 +1,12 @@
 """Portable converter with the shared Stereo-Tools controls and path selection."""
 from pathlib import Path
-import json,queue,sys,threading,time,traceback
+import json,queue,sys,threading,time
 from tkinter import filedialog,messagebox
 import customtkinter as ctk
 from . import __version__,theme as T
 from .devices import graphics_adapters
-from .models import MODELS,DEFAULT_MODEL
+from .models import DEFAULT_MODEL
+from .diagnostics import error_message,memory_failure
 from .i18n import tr,message,TEXT
 from .export_options import WiggleOptions
 from .processor import Processor,collect_files,EXTENSIONS
@@ -45,9 +46,8 @@ class WigglindeApp(ctk.CTk):
         self.standard=ctk.BooleanVar(value=self.settings.get('standard_output',True));self.own=ctk.StringVar(value=self.settings.get('own_output',''))
         self.input_file=ctk.StringVar();self.input_folder=ctk.StringVar();self.changing_input=False
         self.kind=ctk.StringVar(value='MP4');self.size=ctk.StringVar(value='1080');self.fps=ctk.StringVar(value='30');self.duration=ctk.StringVar(value='2')
-        self.model_name=ctk.StringVar(value=self.settings.get('model',DEFAULT_MODEL))
+        self.settings.pop('model',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
-        if self.model_name.get() not in MODELS:raise ValueError('Unbekanntes gespeichertes Modell / unknown saved model')
         self.adapters={'CPU':None,**{f'GPU {i}: {name}':i for i,name in graphics_adapters()}}
         saved=self.settings.get('device_id')
         if saved is not None and saved not in self.adapters.values():self.adapters[f'GPU {saved} ({self.tr("unavailable")})']=saved
@@ -106,7 +106,7 @@ class WigglindeApp(ctk.CTk):
         self._check(bar,'swap',self.swap).grid(row=0,column=4)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
-        self._menu(bar,self.model_name,list(MODELS),self._model_changed,width=112).grid(row=0,column=1,sticky='w')
+        self._label(bar,DEFAULT_MODEL,width=112,anchor='w').grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
         self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
@@ -117,6 +117,7 @@ class WigglindeApp(ctk.CTk):
         self.elapsed=self._label(f,'',anchor='w');self.elapsed.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,5))
         self._show_status();self._show_elapsed()
         footer=ctk.CTkFrame(self,fg_color='transparent');footer.grid(row=5,column=0,sticky='ew',padx=18,pady=(0,12));footer.grid_columnconfigure(0,weight=1)
+        self.diagnose_button=self._button(footer,'diagnose',lambda:self._start(True),width=220);self.diagnose_button.grid(row=0,column=0,sticky='w',padx=(0,12))
         self.start=self._button(footer,'start',self._start,width=150);self.start.grid(row=0,column=1,padx=(0,8))
         self.start.bind('<Enter>',lambda event:self.after_idle(lambda:self._style_start(hover=True)),add='+')
         self.start.bind('<Leave>',lambda event:self.after_idle(self._style_start),add='+')
@@ -132,7 +133,6 @@ class WigglindeApp(ctk.CTk):
             border_color=T.START_HOVER_BORDER if hovered else T.START_BORDER if enabled else T.START_DISABLED_BORDER,
         )
 
-    def _model_changed(self,*_):self._save_quietly()
     def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF') else 'PNG'
     def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
@@ -169,6 +169,7 @@ class WigglindeApp(ctk.CTk):
         if self.running:return
         own=not self.standard.get();self.own_entry.configure(state='normal' if own else 'disabled',text_color=T.TEXT if own else T.TEXT_DISABLED);self.own_label.configure(text_color=T.TEXT if own else T.TEXT_DISABLED)
         self.start.configure(state='normal' if self._has_input() else 'disabled');self._style_start()
+        self.diagnose_button.configure(state='normal' if self.input_file.get().strip() else 'disabled')
         if own:target=self.own.get() or self.tr('choose_output')
         elif self.input_folder.get().strip():target=str(Path(self.input_folder.get().strip())/'output')
         elif self.input_file.get().strip():target=str(Path(self.input_file.get().strip()).parent/'output')
@@ -180,7 +181,7 @@ class WigglindeApp(ctk.CTk):
         except ValueError:raise ValueError(self.tr('numbers')) from None
         return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 1080,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration)
     def _save(self):
-        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),model=self.model_name.get(),language=self.locale,device_id=self.adapters[self.device.get()])
+        self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()])
         self.settings_path.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
     def _save_quietly(self):
         try:self._save()
@@ -200,17 +201,18 @@ class WigglindeApp(ctk.CTk):
             if not files:raise ValueError(self.tr('empty'))
             return files,root
         raise ValueError(self.tr('choose_input'))
-    def _start(self):
+    def _start(self,depth_only=False):
         if self.running or not self._has_input():return
+        if depth_only and not self.input_file.get().strip():return
         try:
             options=self._wiggle_options();options.validate()
-            if not self.standard.get() and not self.own.get().strip():raise ValueError(self.tr('choose_output'))
+            if not depth_only and not self.standard.get() and not self.own.get().strip():raise ValueError(self.tr('choose_output'))
             self.files,self.source_root=self._collect_input();self._save()
         except (ValueError,OSError) as e:messagebox.showerror('Wigglinde',message(self.locale,str(e)),parent=self);return
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
-        self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
+        self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),self.swap.get(),options,self.adapters[self.device.get()],self.model_name.get()),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),self.swap.get(),options,self.adapters[self.device.get()],self.device.get(),depth_only),daemon=True).start()
     def _set_busy(self,busy):
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
@@ -227,11 +229,10 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,swap,options,device_id,model_name):
-        completed=0;errors=[];cancelled=False
+    def _work(self,files,root,standard,own,swap,options,device_id,device_name,depth_only=False):
+        completed=0;errors=[];cancelled=False;diagnosis=None
         try:
-            (self.app_dir/'logs').mkdir(exist_ok=True)
-            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,model_name=model_name)
+            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name)
             for i,path in enumerate(files):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))
@@ -239,19 +240,20 @@ class WigglindeApp(ctk.CTk):
                 target=base/path.parent.relative_to(root) if root else base
                 def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
                 try:
-                    result=self.processor.convert(path,target,options,swap=swap,progress=progress);completed+=1
-                    with (self.app_dir/'logs/wigglinde.jsonl').open('a',encoding='utf-8') as f:f.write(json.dumps(result,ensure_ascii=False)+'\n')
+                    if depth_only:diagnosis=self.processor.diagnose(path,options,swap=swap,progress=progress)
+                    else:self.processor.convert(path,target,options,swap=swap,progress=progress)
+                    completed+=1
                 except ExportCancelled:raise
                 except Exception as e:
-                    message=str(e)
-                    if isinstance(e,MemoryError) or any(s in message.lower() for s in ['bad_alloc','out of memory','failed to allocate','not enough memory','0x8007000e']):
-                        message=self.tr('memory')
-                    errors.append(f'{path.name}: {self._error_message(message)}')
-                    with (self.app_dir/'logs/errors.log').open('a',encoding='utf-8') as f:f.write(traceback.format_exc()+'\n')
+                    details=error_message(e)
+                    if memory_failure(e):details=self.tr('memory')+'\n'+details
+                    errors.append(f'{path.name}: {self._error_message(details[:1800])}')
                     if str(e).startswith('GPU_INIT: '):break
         except ExportCancelled:cancelled=True
         except Exception as e:errors.append(self._error_message(str(e)))
-        finally:self.processor=None;self.events.put(('done',(completed,errors,cancelled)))
+        finally:
+            if self.processor:self.processor.close()
+            self.processor=None;self.events.put(('done',(completed,errors,cancelled,diagnosis)))
     def _error_message(self,text):
         if text.startswith('GPU_INIT: '):return self.tr('gpu_failed',error=text[10:])
         return message(self.locale,text)
@@ -272,11 +274,20 @@ class WigglindeApp(ctk.CTk):
                 if kind=='file':self.last_file=payload[:105];self.current.configure(text=self.last_file)
                 elif kind=='progress':self._set_status('pipeline',text=payload[0]);self.progress.set(payload[1])
                 elif kind=='done':
-                    completed,errors,cancelled=payload;self.running=False;self.error_count=len(errors);self._set_busy(False)
-                    self._set_status('cancelled' if cancelled else 'finished',count=completed)
+                    completed,errors,cancelled,diagnosis=payload;self.running=False;self.error_count=len(errors);self._set_busy(False)
+                    self._set_status('cancelled' if cancelled else 'diagnosed' if diagnosis else 'finished',count=completed)
                     if not cancelled:self.progress.set(1)
                     if completed and not cancelled:self._play_ready_sound()
                     if errors:messagebox.showerror('Wigglinde','\n\n'.join(errors[:4])+'\n\n'+self.tr('details'),parent=self)
+                    elif diagnosis:
+                        peaks=[s['peak'] for s in diagnosis['memory']['stages'].values()]
+                        def peak(name):
+                            values=[p[name] for p in peaks if name in p]
+                            return f'{max(values)/1024**2:.0f} MiB' if values else '—'
+                        messagebox.showinfo('Wigglinde',self.tr('diagnosis_result',size=' × '.join(map(str,diagnosis['processing_size'])),
+                            device=diagnosis['device'],depth=f"{diagnosis['depth_seconds']:.2f}",
+                            load=f"{diagnosis['stage_seconds'].get('model_load',0):.2f}",
+                            ram=peak('main_rss_bytes'),gpu=peak('gpu_process_local_usage_bytes')),parent=self)
         except queue.Empty:pass
         if self.running:self.elapsed_seconds=int(time.monotonic()-self.started);self._show_elapsed()
         self.after(100,self._poll)

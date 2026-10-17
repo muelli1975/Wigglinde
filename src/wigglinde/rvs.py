@@ -8,7 +8,7 @@ from .wiggle_export import ExportCancelled,check_cancelled
 class RVSRenderer:
     def __init__(self,executable,scene,positions,work,matching_offset=64):
         self.executable=Path(executable);self.scene=scene;self.positions=positions;self.work=Path(work)
-        self.work.mkdir(parents=True,exist_ok=True);self.process=None
+        self.work.mkdir(parents=True,exist_ok=True);self.process=None;self.metrics={}
         if not self.executable.is_file():raise FileNotFoundError(f'Der RVS-Renderer fehlt: {self.executable}')
         h,w=scene.left.shape[:2]
         bias=max(float(matching_offset),1-float(min(scene.left_disparity.min(),scene.right_disparity.min())))
@@ -34,7 +34,7 @@ class RVSRenderer:
         h,w=self.scene.left.shape[:2];size=h*w*3*4
         flags=getattr(subprocess,'CREATE_NO_WINDOW',0)
         with (self.work/'rvs.log').open('wb') as log:
-            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json')],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
+            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json'),str(self.work/'metrics.json')],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
             p=self.process
             try:
                 for index in range(len(self.positions)):
@@ -50,3 +50,5 @@ class RVSRenderer:
                 if p.wait():raise RuntimeError('RVS: '+(self.work/'rvs.log').read_text(errors='replace')[-1500:])
             finally:
                 self.cancel();p.stdout.close();p.wait();self.process=None
+                try:self.metrics=json.loads((self.work/'metrics.json').read_text(encoding='utf-8'))
+                except (OSError,ValueError):self.metrics={'status':'unavailable'}

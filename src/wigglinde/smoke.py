@@ -7,6 +7,7 @@ from . import theme as T
 from .processor import Processor
 from .las2 import LiteAnyStereo
 from .models import MODELS,DEFAULT_MODEL,model_path
+from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
 
@@ -76,39 +77,49 @@ def run(app_dir,report_path):
             assert frames[1].read_bytes()==frames[-1].read_bytes()
         results.append(result)
     assert results[0]['model']==DEFAULT_MODEL
-    other_models=[]
-    for label in MODELS:
-        if label==DEFAULT_MODEL:continue
-        candidate=Processor(app_dir,model_name=label)
-        result=candidate.convert(source,work/label,WiggleOptions(format='png',cycle_seconds=.5))
-        assert result['model']==label
-        assert len(list(Path(result['output']).glob('*.png')))==15
-        other_models.append(result)
-        del candidate
+    for result in results:
+        assert result['status']=='passed' and result['model']=='LAS2-H'
+        assert result['stage_seconds']['depth_left']>0 and result['stage_seconds']['depth_right']>0
+        assert result['rvs']['render_seconds']>0 and result['rvs']['views']>1
+        assert result['export_timings']['encode_or_copy_seconds']>0
+        assert '_wiggle_' in result['output'] and 'Wiggle' not in Path(result['output']).name
+        assert max(s['peak'].get('main_rss_bytes',0) for s in result['memory']['stages'].values())>0
+    existing={p.relative_to(work) for p in work.rglob('*')}
+    diagnosis=processor.diagnose(source,WiggleOptions())
+    assert diagnosis['status']=='passed' and diagnosis['mode']=='depth_only'
+    assert 'output' not in diagnosis and 'rvs' not in diagnosis
+    assert existing=={p.relative_to(work) for p in work.rglob('*')}
+    assert id(processor.model.session)==session
+    latest=json.loads((Path(app_dir)/'logs/latest_run.json').read_text(encoding='utf-8'))
+    assert latest['run_id']==diagnosis['run_id'] and latest['status']=='passed'
+    processor.close()
     assert hashlib.sha256(source.read_bytes()).hexdigest()==before
     for height in (720,1080,2160):assert WiggleOptions(video_height=height).output_size(3840,2160)==(round(height*16/9),height)
     for side in (640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
+    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='LAS2-L',layout='Half-SBS')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
     icon=Path(app_dir)/'assets/wigglinde.ico'
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
     if sys.platform=='win32':assert gui._iconbitmap_method_called
     assert not hasattr(gui,'file_list')
     assert not hasattr(gui,'layout') and 'layout' not in gui.settings
-    assert gui.model_name.get()==DEFAULT_MODEL
-    gui.model_name.set('LAS2-H')
+    assert not hasattr(gui,'model_name') and 'model' not in gui.settings
+    assert gui.diagnose_button.cget('state')=='disabled'
     gui.input_file.set(str(source));gui.update()
+    assert gui.diagnose_button.cget('state')=='normal'
     assert gui._collect_input()[0]==[source.resolve()]
     check_button_colors(gui)
     gui.input_folder.set(str(work));gui.update()
     assert not gui.input_file.get()
+    assert gui.diagnose_button.cget('state')=='disabled'
     gui.own.set(str(work/'Custom output'));gui.standard.set(False);gui._dependencies()
     for language in ['English','Deutsch']:
         gui.kind.set(gui.tr('png'));gui._format_changed();gui.size.set('2160');gui.fps.set('60')
         gui.language.set(language);gui._language_changed();gui.update()
         assert gui._wiggle_options().png_height==2160 and gui._wiggle_options().png_fps==60
-        assert gui.model_name.get()=='LAS2-H'
+        assert not hasattr(gui,'model_name')
         assert gui.input_folder.get()==str(work) and gui.own.get()==str(work/'Custom output')
         assert gui.output_label.cget('text').endswith(str(work/'Custom output'))
         assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
@@ -129,14 +140,18 @@ def run(app_dir,report_path):
         baseline=geometry_snapshot();device_before=gui.device.get()
         for kind in ['GIF',gui.tr('png'),'MP4']:
             gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
-            for label in MODELS:
-                gui.model_name.set(label)
-                # A long label exercises layout only; it does not probe a device.
-                for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
-                    gui.device.set(device_label);gui.update()
-                    assert geometry_snapshot()==baseline
+            # A long label exercises layout only; it does not probe a device.
+            for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
+                gui.device.set(device_label);gui.update()
+                assert geometry_snapshot()==baseline
         gui.device.set(device_before)
-    gui.model_name.set(DEFAULT_MODEL)
+    for scaling in (1.,1.25,1.5):
+        ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling);gui.update()
+        for control in gui.controls+[gui.stop]:
+            assert control.winfo_rootx()>=gui.winfo_rootx()
+            assert control.winfo_rootx()+control.winfo_width()<=gui.winfo_rootx()+gui.winfo_width()
+            assert control.winfo_rooty()+control.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
+    ctk.set_widget_scaling(1.);ctk.set_window_scaling(1.)
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
@@ -145,6 +160,8 @@ def run(app_dir,report_path):
         ImageGrab.grab().save(report_path.parent/'gui-build-check.png')
     except OSError:pass
     gui.destroy()
+    with MemorySampler(0) as counters:counters.sample('native_counter_probe')
+    memory_probe=counters.report()
     # Explicit development probe, including WARP on a hosted runner if available.
     # A software adapter does not establish performance on a physical GPU.
     directml=[]
@@ -165,4 +182,4 @@ def run(app_dir,report_path):
                 assert float(diff.max())<.05,(label,float(diff.max()))
                 directml.append(dict(model=label,status='passed',providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,other_models=other_models,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

@@ -1,5 +1,42 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Test 3: H und Ressourcenmessung
+
+LAS2-H fest, vier Iterationen, Float32; M/L und Modellmenü entfallen.
+Full-SBS bleibt Voraussetzung. Ausgabesuffixe klein, Höhe mit `p` statt `h`.
+5-MiB-Logrotation mit drei Backups je Typ, letzte Diagnose separat als
+`logs/latest_run.json`. UTF-8-Fehler sichern ihre ursprünglichen Bytes samt als
+Kandidat gekennzeichneter Windows-Codepage-Dekodierung. Kein behaupteter OOM-Fix.
+
+Tiefentest für ein Einzelbild verwendet die Exportvorbereitung und beide Inferenzen,
+startet RVS nicht und schreibt keine Bilder. Reguläre Exporte messen Vorbereitung,
+Modellladen, links/rechts, RVS-Vorbereitung und Ausgabe. Der native RVS-Adapter
+misst Eingabeladen, Rendering und Streamschreiben getrennt. Streamwartezeit und
+Ansichtsmaterialisierung überlappen mit dem Renderprozess und dürfen nicht mit
+der nativen Renderzeit addiert werden. Exportkodierung/Kopieren separat gemessen.
+
+RAM/Commit und DXGI-Prozessspeicher/-budget werden alle 0,25 s und an Stufengrenzen
+abgetastet. Peaks können kurze Spitzen verpassen. DXGI misst weder die gesamte
+Adapterbelegung noch garantiert es die maximal mögliche Allokation. Fehlende
+Zähler verhindern keine Bildberechnung. Keine neuen teuren Bildprüfungen.
+
+### Rückmeldungen vom 17. Oktober
+
+| Modell / FullHD | GPU | CPU |
+| --- | --- | --- |
+| H | 3:11 | 3:34 |
+| M | 3:12, erneut 3:10 | 3:19 |
+
+L zeigt auf GPU und CPU Fehler in Wolken und feinen Ästen; M besser als L,
+H beste Qualität. H zeigt dennoch örtliche Störungen bei Übergängen. Ursache
+zwischen Tiefenkarte und Rendering noch offen; GPU ist keine Qualitätskorrektur.
+H 2160p GPU scheitert im linken ORT-Aufruf an UnicodeDecodeError mit Byte 0xfc.
+1080p GPU funktioniert. 2160p CPU gelingt in 14:14 mit erstklassigem Ergebnis.
+Grafikspeichermangel plausibel, ohne Ursprungsmeldung/Hardwaredaten nicht bewiesen.
+
+27 lokale Prüfungen bestanden. Windows-Paketprüfung für Test 3 ausstehend.
+
+
 ## Test 2a: Buttonfarben und Full-SBS
 
 Der Startbutton übernimmt nun die vollständigen Normal-/Hover-/Deaktiviertfarben
@@ -15,7 +52,7 @@ Wie die anderen Programme setzt er Full-SBS mit ungestauchten Einzelansichten
 voraus. Kein Layoutmenü; alte gespeicherte Layoutwerte werden nicht angewendet.
 Die Inputprüfung kontrolliert die unveränderten Full-SBS-Proportionen auch beim
 L/R-Tausch. Modelle, Auflösungen und RVS-Einstellungen bleiben erhalten.
-Windows-Paketprüfung von Test 2a vor Bereitstellung noch ausstehend.
+Windows-Paketprüfung von Test 2a bestanden (Run 39014737698); nicht separat bereitgestellt.
 
 ## Test 2: Rückmeldungen und Änderungen
 

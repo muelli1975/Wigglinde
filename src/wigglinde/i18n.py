@@ -2,7 +2,11 @@
 import re
 
 TEXT = {
-    'test': ('Testversion 2a', 'Test version 2a'),
+    'test': ('Testversion 3', 'Test version 3'),
+    'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
+    'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),
+    'diagnosis_result': ('Tiefentest: LAS2-H · {device}\nBildgröße: {size}\nModell laden: {load} s\nTiefenberechnung: {depth} s\nGemessene RAM-Spitze (Programm): {ram}\nGemessene lokale GPU-Speicherspitze (Programm): {gpu}\n\nVollständiger Bericht: logs/latest_run.json',
+                         'Depth test: LAS2-H · {device}\nImage size: {size}\nModel loading: {load} s\nDepth estimation: {depth} s\nSampled peak RAM (application): {ram}\nSampled peak local GPU memory (application): {gpu}\n\nFull report: logs/latest_run.json'),
     'single': ('Einzelbild', 'Single image'),
     'folder': ('Bildordner', 'Image folder'),
     'choose': ('Auswählen', 'Choose'),
@@ -39,7 +43,7 @@ TEXT = {
     'finished': ('Fertig: {count} Ausgaben', 'Finished: {count} outputs'),
     'cancelled': ('Abgebrochen: {count} Ausgaben', 'Cancelled: {count} outputs'),
     'errors': (' · {count} Fehler', ' · {count} errors'),
-    'details': ('Details: logs/errors.log', 'Details: logs/errors.log'),
+    'details': ('Details: logs/latest_run.json und logs/errors.log', 'Details: logs/latest_run.json and logs/errors.log'),
     'elapsed': ('Verstrichen: {minutes:02d}:{seconds:02d}', 'Elapsed: {minutes:02d}:{seconds:02d}'),
     'numbers': ('Bitte gültige Zahlen für Größe, Bildrate und Zyklusdauer eingeben.', 'Please enter valid numbers for size, frame rate and cycle duration.'),
     'memory': ('Der Arbeitsspeicher oder Grafikspeicher reicht für diese Berechnungsgröße nicht aus. Bitte eine kleinere Größe wählen.', 'There is not enough RAM or GPU memory for this processing size. Please choose a smaller size.'),

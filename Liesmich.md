@@ -1,4 +1,4 @@
-# Wigglinde 0.1 – Testversion 2a
+# Wigglinde 0.1 – Testversion 3
 
 Den vollständigen Ordner entpacken und `Wigglinde.exe` starten. Modell, Renderer,
 Laufzeiten und Fertigstellungssound sind enthalten; keine Installation, Anmeldung
@@ -9,11 +9,11 @@ oder Internetverbindung erforderlich. Sprache oben rechts: Deutsch oder English.
 2. Bei Bedarf L/R tauschen. Beide Ansichten werden mit ihren vorhandenen Proportionen
    eingelesen; eine Formatumschaltung ist nicht erforderlich.
 3. Ausgabeziel, Format, Größe, Bildrate und Zyklusdauer wählen.
-4. Modell wählen: LAS2-M, LAS2-L oder LAS2-H. Standard beim ersten Start ist L.
+4. LAS2-H ist fest eingestellt: vier veröffentlichte Iterationen, Float32.
 5. Unter „Berechnung“ CPU oder eine gefundene Grafikkarte wählen. Mit Start verarbeiten.
 
 Die Oberfläche zeigt Pfadfelder statt einer Dateiliste. Die aktuelle Datei erscheint
-während der Verarbeitung im Statusbereich. Sprache, Modell, Gerätewahl und Ausgabeordner
+während der Verarbeitung im Statusbereich. Sprache, Gerätewahl und Ausgabeordner
 bleiben gespeichert; Bilder werden beim nächsten Start nicht automatisch geladen.
 
 | Format | Größe | Bildrate | Ablauf |
@@ -40,10 +40,30 @@ Dateien: `_temp` im jeweiligen Ausgabeordner.
 
 ## Modelle, GPU-Modus und Teststand
 
-M benötigt weniger Rechenaufwand, L ist unser Standard, H verfeinert die Tiefenkarte
-iterativ mit den veröffentlichten vier Durchläufen. H kann bei großen Fotos
-besonders viel Speicher benötigen. Die Wahl ändert weder Auflösung noch Renderer.
-Alle drei Modelle sind enthalten. Es gibt keine automatische Modellumschaltung.
+H bleibt nach dem praktischen Qualitätsvergleich fest eingestellt. Es gibt keine
+Modellauswahl. Die Berechnung erfolgt mit den veröffentlichten vier Iterationen
+und Float32. Große Bilder können besonders viel Speicher benötigen.
+
+„Tiefenberechnung testen“ verarbeitet das gewählte Einzelbild mit derselben
+Vorbereitung und denselben beiden Tiefenberechnungen wie ein Export. Der Renderer
+wird dabei nicht gestartet, und es werden keine Bilddateien ausgegeben. Zuerst Format
+und Größe wählen, dann CPU/GPU und den Testbutton. Die Ergebnisanzeige nennt die
+Modellladezeit, Tiefenzeit und gemessene Speicherspitzen. Diese Spitzen sind
+Stichproben im Abstand von 0,25 Sekunden, keine garantierten Maximalwerte.
+
+`logs/latest_run.json` enthält den letzten Lauf einschließlich Berechnungsgröße,
+Stufenzeiten, RAM-/Commit-Werten und verfügbaren DXGI-Prozesswerten für GPU-Speicher.
+Die GPU-Werte beschreiben den Prozess und sein Budget, nicht die gesamte Belegung
+der Grafikkarte. Vor dem nächsten Test die Datei bei Bedarf separat sichern.
+Die fortlaufenden Protokolle `wigglinde.jsonl` und `errors.log` werden bei 5 MiB
+rotiert; je Typ bleiben drei ältere Dateien erhalten. Vorhandene ältere übergroße
+Logs werden beim nächsten Eintrag rotiert. Nicht lesbare Runtime-Meldungen werden
+zusätzlich als ursprüngliche Bytes gesichert. Ein UTF-8-Fehler beweist für sich
+allein noch keinen Grafikspeichermangel.
+
+Ausgabenamen behalten ihre Angaben, nun klein geschrieben und mit `p` für die
+Bildhöhe: beispielsweise `Original_wiggle_30fps_1080p.mp4`. GIF verwendet `px` für
+die lange Seite, PNG-Folgen enden auf `_png`.
 
 Der GPU-Modus beschleunigt die LAS2-Tiefenberechnung über DirectML. Er benötigt eine
 DirectX-12-fähige Grafikkarte und passende Treiber; kompatible NVIDIA-, AMD- und
@@ -65,8 +85,9 @@ Zeit und Speicher. Das gelieferte Wigglinde-Icon ist enthalten.
 LAS2 hat einen festen Suchbereich von 192 Pixeln in der Berechnungsgröße.
 Sehr große Parallaxen können fehlerhafte Tiefenkarten erzeugen. Die RVS-Endansichten
 sind gerenderte Bilder, keine eingesetzten Originale. Glas, Spiegelungen und
-Verdeckungen können weiterhin Fehler zeigen. Feine Aststrukturen können während
-der Animation gedoppelt erscheinen; dieser gemeldete Qualitätsfehler ist noch offen.
+Verdeckungen können weiterhin Fehler zeigen. H liefert im praktischen Vergleich die beste Qualität. An einzelnen Stellen bleiben
+aber Störungen während der Übergänge und gedoppelte feine Äste offen. Die Diagnoseversion
+verändert die Bildberechnung nicht und behauptet keine Behebung dieser Fehler.
 
 Quellstand: `source`. Lizenzen: `licenses`. Keine automatischen Aktualisierungen
 und keine Telemetrie.

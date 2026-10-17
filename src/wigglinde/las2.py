@@ -1,6 +1,7 @@
 """Local LAS2 M/L/H ONNX inference; explicit CPU/DirectML, signed mounted disparity."""
 from pathlib import Path
 import hashlib,json,threading
+from contextlib import nullcontext
 import numpy as np
 from .wiggle_export import ExportCancelled
 
@@ -60,9 +61,9 @@ class LiteAnyStereo:
             with self.lock:self.active=None
         return (d[pads[0][0]:pads[0][0]+h,pads[1][0]+offset:pads[1][0]+offset+w]-offset).copy()
 
-    def predict_pair(self,left,right,offset,cancel,progress):
+    def predict_pair(self,left,right,offset,cancel,progress,stage=lambda _:nullcontext()):
         progress('Tiefenkarte links berechnen',0.)
-        dl=self.predict(left,right,offset,cancel)
+        with stage('depth_left'):dl=self.predict(left,right,offset,cancel)
         progress('Tiefenkarte rechts berechnen',.18)
-        dr=self.predict(right[:,::-1],left[:,::-1],offset,cancel)[:,::-1].copy()
+        with stage('depth_right'):dr=self.predict(right[:,::-1],left[:,::-1],offset,cancel)[:,::-1].copy()
         return dl,dr

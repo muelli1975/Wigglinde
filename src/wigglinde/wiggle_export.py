@@ -62,13 +62,14 @@ def _run_ffmpeg(arguments: list[str], log: Path, cancel, write=None) -> None:
 
 def export_wiggle(render_view: Callable[[float], np.ndarray], source_size: tuple[int, int],
                   options: WiggleOptions, output: Path, temp_root: Path,
-                  progress: Callable[[float], None] | None = None, cancel=None) -> None:
+                  progress: Callable[[float], None] | None = None, cancel=None, timings=None) -> None:
     """Render each distinct view once, mirror the return path, then encode."""
     options.validate()
     output.parent.mkdir(parents=True, exist_ok=True)
     temp_root.mkdir(parents=True, exist_ok=True)
     size = options.output_size(*source_size)
     count = options.frame_count
+    materialize_start = time.perf_counter()
     with tempfile.TemporaryDirectory(prefix="wiggle_", dir=temp_root) as directory:
         work = Path(directory)
         paths = []
@@ -84,6 +85,8 @@ def export_wiggle(render_view: Callable[[float], np.ndarray], source_size: tuple
             if progress:
                 progress(0.7 * (index + 1) / (count // 2 + 1))
         sequence = [paths[cycle_index(i, count)] for i in range(count)]
+        if timings is not None:timings['view_materialization_seconds']=time.perf_counter()-materialize_start
+        encode_start=time.perf_counter()
         if options.format == "mp4":
             cycle = work / "cycle.mp4"
             # Match TransCora: sRGB -> Rec.709, H.264 CRF18/slow, 8-bit 4:2:0.
@@ -168,3 +171,4 @@ def export_wiggle(render_view: Callable[[float], np.ndarray], source_size: tuple
                     shutil.rmtree(backup)
         if progress:
             progress(1.0)
+        if timings is not None:timings['encode_or_copy_seconds']=time.perf_counter()-encode_start
