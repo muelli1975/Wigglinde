@@ -5,8 +5,10 @@ Wigglinde uses Python 3.12. Install the application dependencies with
 expects local prerequisites and never downloads them at startup:
 
 - `models/las2/LAS2_H_dynamic.onnx` and matching JSON: Float32 CPU model.
-- `models/las2/LAS2_H_mixed.onnx` and matching JSON: GPU mixed-precision model.
+- `models/las2/LAS2_H_mixed.onnx` and matching JSON: Windows GPU mixed-precision model.
 - `backend/wigglinde_rvs.exe` and its OpenCV/OpenMP runtime libraries on Windows.
+  Native source runs use `backend/wigglinde_rvs`; frozen Linux/macOS packages
+  collect the native adapter and its runtime dependencies inside the bundle.
 - Original icon and completion sound under `assets`.
 
 ## Models

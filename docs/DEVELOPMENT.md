@@ -1,5 +1,62 @@
 # Entwicklungsstand und Qualitätsprüfung
 
+## Native Pakete 1.0: Linux und macOS
+
+Am 17. Oktober 2026 gebaut, geprüft und zur vorhandenen Veröffentlichung v1.0
+ergänzt: Linux x64 (Buildhost Ubuntu 22.04), macOS 15 Apple Silicon und macOS 15
+Intel. H mit vier Iterationen und unverändertem Float32-Modell; RVS Precision 1,
+RGB und Multispectral 1/4. Kein weiterer GPU-Provider oder Rendererwechsel.
+
+Quellstand aller drei Pakete: a27d7e527c54e4816faa54a0c06b694705fb0bb3.
+Erfolgreicher Build einschließlich Veröffentlichung:
+https://github.com/muelli1975/Wigglinde/actions/runs/39043747070
+Quellcodeprüfungen unter Windows/Linux:
+https://github.com/muelli1975/Wigglinde/actions/runs/39043747106
+
+Je Zielsystem 38 Quellcodeprüfungen bestanden. Nativer serieller/paralleler
+RVS-Vergleich bitgleich einschließlich Abbruch und Fehlerbehandlung. Die jeweils
+entpackte Anwendung mit enthaltenem H-Modell und FFmpeg erzeugt MP4, GIF und
+PNG-Bildfolgen sowie optionale gemeinsame 16-Bit-Tiefenkarten. Zusätzlich geprüft:
+Deutsch/Englisch, stabile Bediengeometrie, Buttonfarben, Einstellungswiederherstellung,
+Modellsitzungswiederverwendung, Temp-Bereinigung, unveränderte Eingabe und Original-
+Icon/-Sound. Unter macOS ist die Ad-hoc-Signatur vor und nach dem Pakettest gültig;
+portable Einstellungen und Modelle liegen außerhalb des signierten App-Bundles.
+Keine Apple-Notarisierung. Linux-Sound nutzt vorhandenes paplay/aplay.
+
+CPU ONNX Runtime 1.24.4 auf Linux/Apple Silicon; für 1.24.4 gibt es keine
+offiziellen Intel-Mac-Wheels, daher dort 1.23.2. Gleiche ONNX-Datei mit SHA-256
+ba2260dcc0aaff33a9fc1c41f729f727eb58eb034dfaec022713b3848ff5af76.
+OpenCV 4.10 statisch; RVS und dessen OpenMP-Laufzeit nativ paketiert. Unbenutzte
+OpenCV-Protobuf-/ADE-/Flatbuffers-Komponenten werden im Build abgeschaltet.
+macOS-RAM-Messung über psutil; Original-ICO für das Mac-Bundle in ICNS umgewandelt.
+
+| Archiv | Byte | SHA-256 |
+| --- | ---: | --- |
+| Wigglinde_1.0_Linux_x64.tar.gz | 150344875 | 84da918be4efdb67bd7abe42869d6bd116d1730ad1876220f6c7306bccae30b9 |
+| Wigglinde_1.0_macOS_AppleSilicon.zip | 114242530 | e000d95cf1ef6298868b09669dad158b70a7976e2eeea40761f9fe688360cc96 |
+| Wigglinde_1.0_macOS_Intel.zip | 124853788 | dd57e47626cdc26a368ba9c86edc09256bde37a4a667e904e0498fdbc8c39570 |
+
+Die veröffentlichten Asset-Digests stimmen mit den lokal geprüften Archiven
+überein. Das Windows-Archiv und der bestehende Tag v1.0 bleiben unverändert.
+Die nativen Pakete enthalten jeweils ihren exakten Quellstand und Lizenzhinweise.
+Diese Build-Prüfungen belegen keine allgemeine Fotoqualität, Laufzeit oder maximale
+Auflösung auf beliebiger Benutzerhardware; keine zusätzliche Fototestserie.
+
+
+## Kandidat RVS-CUDA: nur geprüft, nicht übernommen
+
+Christoph verweist am 17. Oktober auf https://github.com/EnzoN7/RVS-CUDA.
+README und CUDA-Code geprüft: GPU-Kernels für Projektion, Dreiecksrasterisierung,
+Blending und Lückenfüllung sind vorhanden. Die veröffentlichte Pipeline verarbeitet
+YUV420 und equirektangulare Eingaben; ihr Blender bietet nur Simple. Das passt noch
+nicht zu Wigglindes perspektivischen RGB-Stereopaaren mit Multispectral 1/4.
+Die README nennt 274-fache Beschleunigung auf ClassroomVideo gegenüber RVS 4.0,
+die Repository-Kurzbeschreibung 100-fache; CUDA-Zeit-/Qualitätstabellen enthalten
+noch Platzhalter. Keine entsprechende Beschleunigungs- oder Qualitätszusage für
+Wigglinde. Sinnvoller späterer Schritt: Aufwand für perspektivische Eingaben, RGB
+und Multispectral prüfen; gegebenenfalls Vergleich mit vorhandenen Tiefenkarten.
+Kein Rendererwechsel oder neuer CUDA-Build im Rahmen der nativen 1.0-Pakete.
+
 ## Praxisrückmeldung 1.0 und Repository-Screenshot
 
 Am 17. Oktober 2026 bestätigt Christoph: 2160p funktioniert mit der aktuellen
