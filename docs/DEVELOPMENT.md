@@ -33,10 +33,21 @@ in bestehenden Widgets aktualisiert; das verhindert verwaiste CTk-Menücallbacks
 bei anschließender DPI-Änderung. Wiederholte Wechsel von Format, Modell und
 Berechnungsgerät einschließlich sehr langer Gerätebezeichnung verschieben lokal
 keine Bedienelemente; derselbe Positionsvergleich ist Teil des Windows-Pakettests.
-Windows-Paketprüfung und DirectML-Lauf sind vor Bereitstellung zu prüfen.
-Der erste Runtime-Build scheiterte an MSVC-2026-Warnung C4875 unter /WX im
-unveränderten ORT-Code. Der Build verwendet nun die VS-2022-Umgebung. Physische
-GPU-Leistung und Ergebnisqualität bleiben auf einem echten Desktop zu testen.
+Die [Windows-Paketprüfung mit dem gelieferten Icon](https://github.com/muelli1975/Wigglinde/actions/runs/39012872811)
+ist bestanden: tatsächliche EXE, CPU-Exporte MP4/GIF/PNG mit L sowie zusätzliche
+Exporte mit M/H, Sitzungswiederverwendung, Originalerhalt, beide Sprachen,
+Bedienpositionen und unveränderte Icon-/Sounddateien. Getesteter Quellstand:
+`f2de006db1f1672a4bc3cbb25c3788fc94f54632`.
+Der Server stellt nur den Microsoft Basic Render Driver bereit; die explizite
+DirectML-Probe scheiterte an dessen Initialisierung. GPU-Inferenz und physische
+GPU-Leistung sind damit noch nicht bestätigt und auf einem echten Desktop zu testen.
+Das Archiv ist 302675387 Bytes groß; SHA-256:
+`986f4f0eeec704cac718f6833ef518995f53bd2c0fad956ccf922a1d1c96a9a7`.
+Der ORT-Build verwendet nach einem MSVC-2026-Warnungsfehler die VS-2022-Umgebung;
+ein doppelter Wheel-Suffix wurde vor dem erfolgreichen Lauf entfernt.
+Die Laufzeit ist mit deaktivierter Telemetrie kompiliert und für weitere Builds
+zwischengespeichert. Reale Fotoqualität, 2160er Speichergrenzen und Desktop-GPU
+bleiben getrennte Praxistests; das bekannte Ast-Doppelbild ist nicht als behoben belegt.
 
 Die folgenden Angaben zu Test 1 dokumentieren den bisherigen Prüfstand.
 
