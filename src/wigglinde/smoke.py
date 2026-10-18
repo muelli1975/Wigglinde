@@ -6,7 +6,8 @@ from PIL import Image
 from . import theme as T
 from .processor import Processor
 from .las2 import LiteAnyStereo
-from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations
+from .igev import IGEVMiddlebury
+from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family
 from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
@@ -122,7 +123,7 @@ def run(app_dir,report_path):
         alternate=Processor(app_dir,model_name=label)
         try:
             result=alternate.convert(source,work/label,WiggleOptions(format='png',cycle_seconds=.5))
-            assert result['model']==label and result['iterations'] is None
+            assert result['model']==label and result['iterations']==model_iterations(label)
             assert result['renderer']=='RVS CPU Precision 1 Simple 5'
             frames=sorted(Path(result['output']).glob('*.png'))
             assert len(frames)==15
@@ -175,10 +176,10 @@ def run(app_dir,report_path):
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
     gui.save_depth.set(True);gui.kind.set('MP4');gui._format_changed()
-    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('LAS2-L');gui._save();gui.destroy()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
-    assert gui.model_name.get()=='LAS2-L'
+    assert gui.model_name.get()=='IGEV++ Middlebury'
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     gui.input_file.set(str(source));gui.update()
@@ -241,14 +242,15 @@ def run(app_dir,report_path):
     import onnxruntime as ort
     if 'DmlExecutionProvider' in ort.get_available_providers():
         for label in MODELS:
+            estimator=IGEVMiddlebury if model_family(label)=='igev' else LiteAnyStereo
             try:
-                model=LiteAnyStereo(model_path(app_dir,label,device_id=0),device_id=0)
+                model=estimator(model_path(app_dir,label,device_id=0),device_id=0)
             except Exception as error:
                 directml.append(dict(model=label,status='unavailable',reason=str(error),hardware_speed_not_validated=True))
                 break
             else:
                 left=texture[:,:320];right=texture[:,8:328]
-                reference=LiteAnyStereo(model_path(app_dir,label))
+                reference=estimator(model_path(app_dir,label))
                 cpu=reference.predict(left,right,24,lambda:False)
                 begin=time.monotonic();gpu=model.predict(left,right,24,lambda:False)
                 diff=np.abs(cpu-gpu)

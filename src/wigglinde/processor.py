@@ -8,7 +8,8 @@ from .diagnostics import LocalLogs,RunTrace
 from .export_options import camera_weight
 from .stereo import StereoScene
 from .las2 import LiteAnyStereo
-from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision
+from .igev import IGEVMiddlebury
+from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision,model_family
 from .rvs import RVSRenderer
 from .depth_export import save_depth_maps
 from .wiggle_export import export_wiggle,check_cancelled
@@ -83,7 +84,8 @@ class Processor:
             trace.event('prepared',processing_size=size,matching_offset=offset)
             if self.model is None:
                 progress(self.model_name+' laden',0.)
-                with trace.stage('model_load'):self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
+                estimator=IGEVMiddlebury if model_family(self.model_name)=='igev' else LiteAnyStereo
+                with trace.stage('model_load'):self.model=estimator(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
             if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
             trace.data['depth_provider']=self.model.session.get_providers()
             dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress,stage=trace.stage)

@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse,glob,importlib.metadata as metadata,json,shutil,subprocess,sys,zipfile,urllib.request
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--opencv',type=Path,required=True);p.add_argument('--rvs',type=Path,required=True);p.add_argument('--las2',type=Path,required=True);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--opencv',type=Path,required=True);p.add_argument('--rvs',type=Path,required=True);p.add_argument('--las2',type=Path,required=True);p.add_argument('--igev',type=Path,required=True);a=p.parse_args()
     subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Wigglinde','--icon','assets/wigglinde.ico','--runtime-hook','tools/pyi_offline.py','--collect-all','customtkinter','--collect-all','imageio_ffmpeg','--collect-all','onnxruntime','--hidden-import','PIL.ImageCms','launch.py'],check=True)
     target=Path('dist/Wigglinde');backend=target/'backend';backend.mkdir()
     shutil.copy2('build/rvs/Release/wigglinde_rvs.exe',backend)
@@ -18,17 +18,21 @@ def main():
     omps=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll')
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     shutil.copytree('assets',target/'assets')
-    models=target/'models/las2';models.mkdir(parents=True)
-    from wigglinde.models import MODELS
-    for stem in [name.replace('-','_')+suffix for name in MODELS for suffix in ('_dynamic','_mixed')]:
-        for extension in ['onnx','json']:
-            name=f'{stem}.{extension}';shutil.copy2(Path('models/las2')/name,models)
+    from wigglinde.models import MODELS,model_path
+    for label in MODELS:
+        for device in (None,0):
+            source_model=model_path('.',label,device)
+            destination=target/source_model
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            for extension in ('.onnx','.json'):
+                shutil.copy2(source_model.with_suffix(extension),destination.with_suffix(extension))
     notices=target/'licenses';notices.mkdir();shutil.copytree('runtime-wheel/licenses',notices/'DirectML-runtime');shutil.copy2('runtime-wheel/provenance.json',notices/'DirectML-build.json');shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
     for name in ['LICENSE.txt','tcl/tcl8.6/license.terms','tcl/tk8.6/license.terms']:
         file=Path(sys.base_prefix)/name
         if file.is_file():
             dest=notices/'Python-Tcl-Tk'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,dest)
-    shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt')
+    shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt');shutil.copy2(a.igev/'LICENSE',notices/'IGEV-LICENSE.txt')
+    shutil.copy2('tools/igev/licenses/timm-LICENSE.txt',notices/'IGEV-timm-Apache-2.0.txt')
     for name in ['LICENSE','LICENSE.txt','LICENSE-3RD-PARTY.txt','LICENSE_FFMPEG.txt']:
         for f in a.opencv.rglob(name):
             if f.is_file() and f.stat().st_size<2_000_000:
@@ -58,10 +62,10 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1 Test 3',renderer='RVS CPU Precision 1 Simple 5',models=list(MODELS),default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1 Test 4',renderer='RVS CPU Precision 1 Simple 5',models=list(MODELS),default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=600)
-    archive=Path('dist/Wigglinde_1.1_Test3_Windows_x64.zip')
+    archive=Path('dist/Wigglinde_1.1_Test4_Windows_x64.zip')
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,6) as z:
         for f in target.rglob('*'):
             if f.is_file() and '_temp' not in f.parts and f.relative_to(target).parts[0]!='logs' and f.name!='settings.json':z.write(f,f.relative_to(target.parent))

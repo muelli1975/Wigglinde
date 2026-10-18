@@ -1,3 +1,14 @@
+# Integration update — 18 October 2026
+
+Test4 now integrates Middlebury under its MIT project notice with explicit
+checkpoint provenance. Further primary-source review found no contradictory
+weight rule; absence of an extra LICENSE is not treated as a new prohibition.
+The author's predecessor-project commercial-use reply confirms MIT:
+https://github.com/gangweiX/IGEV/issues/6 . This supports the project-license
+reading; it is not a PTH-specific grant. Actual technical verification and current
+limitations are tracked in DEVELOPMENT.md. The original isolated findings below
+record the earlier investigation, before integration.
+
 # IGEV++: isolierter Qualitäts- und Integrationsversuch
 
 Stand 18. Oktober 2026. Noch kein Bestandteil des Test-3-Pakets.

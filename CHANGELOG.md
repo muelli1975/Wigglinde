@@ -1,3 +1,9 @@
+# 1.1 Test 4 (experimental)
+
+- Add IGEV++ Middlebury to the existing model menu, fixed16 iterations.
+- CPU Float32 and DirectML mixed graphs; no extra application runtime dependencies.
+- Preserve LAS2-H default, all LAS2 variants and CPU RVS Simple5.
+
 # 1.1 Test 3 (experimental)
 
 - Replace the OpenGL/iteration experiment with explicit LAS2-S/M/L/H selection.

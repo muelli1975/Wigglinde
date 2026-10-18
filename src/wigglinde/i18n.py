@@ -2,7 +2,7 @@
 import re
 
 TEXT = {
-    'version': ('1.1 Test 3', '1.1 Test 3'),
+    'version': ('1.1 Test 4', '1.1 Test 4'),
     'save_depth': ('Tiefenkarten zusätzlich speichern', 'Also save depth maps'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),

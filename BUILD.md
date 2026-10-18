@@ -1,3 +1,20 @@
+# 1.1 Test 4 IGEV++ Middlebury build
+
+[Workflow](.github/workflows/igev-test-build.yml) builds only new Middlebury graphs,
+reusing all eight LAS2 graphs from their verified artifacts. Build dependencies:
+Python3.12, CPU torch2.6.0/torchvision0.21.0, isolated timm0.5.4, scipy,
+ONNX1.17.0, ORT1.24.4. Pinned official checkpoint and source; no ImageNet download.
+
+`tools/igev/export.py` exports all16 iterations with equivalent correlation and
+unfold substitutions. `verify.py` compares native/ONNX and small dynamic widths;
+`convert_mixed.py` creates the FP16/FP32 GPU graph, with Float32 correspondence.
+No torch, timm or CUDA toolkit is bundled or required by the application.
+Windows reuses the telemetry-free DirectML runtime, builds CPU RVS, and packages
+all ten ONNX files with metadata and licenses. Package tool additionally accepts
+`--igev igev-reference`. Output: Wigglinde_1.1_Test4_Windows_x64.zip.
+
+The following sections document older test and stable builds.
+
 # 1.1 Test 3 model comparison build
 
 The separate [test workflow](.github/workflows/models-test-build.yml) exports

@@ -1,3 +1,48 @@
+# 1.1 Test 4: IGEV++ Middlebury
+
+Am Problemfoto wurden zusätzlich beide ONNX-Fassungen tatsächlich mit demselben
+CPU-RVS gerendert und visuell mit der nativen Middlebury-Referenz verglichen:
+Geländertrennung bleibt erhalten, keine Aussage pixelgleicher Ergebnisse.
+Float32-Fotovergleich: mittlere Disparitätsabweichung etwa0,007px, 99%-Quantil
+0,029–0,034px; einzelne mehrdeutige Pixel deutlich abweichend (bis44,6px).
+Mischgraph gegen native Referenz: Mittel0,067–0,075px, 99%-Quantil0,72–0,80px,
+im Geländerband99%-Quantil1,67–1,70px; einzelne Ausreißer bis77,4px.
+Kleiner Mischgraph-/Float32-Vergleich maximal0,049/0,055px. Diese Messungen sind
+CPU-Ausführung des Mischgraphen, keine physische DirectML-Prüfung. Peak-RSS des
+Mischgraph-Fotoversuchs bei1024×682 je Auge etwa3,5GiB. Kein 2160p-Speicherversprechen.
+
+Christoph beauftragt am 18. Oktober die Einbindung von Middlebury als zusätzliche
+Modellwahl und die Prüfung benötigter Komponenten. Separate Branch
+`test-igev-middlebury-1.1`. H bleibt Standard; LAS2-S/M/L/H bleiben vollständig
+mit ihren geprüften Graphen aus Test 3 erhalten. IGEV++ verwendet den offiziellen
+Middlebury-Checkpoint, 16 feste Iterationen, CPU-Float32 und GPU-Mischpräzision.
+RVS bleibt CPU/P1/Simple5. Keine neue Iterations-, Renderer- oder Justageauswahl.
+
+Die gemeinsame ONNX-Sitzungs-/Padding-/Abbruchlogik wurde unverändert aus las2.py
+in onnx_stereo.py ausgelagert; dünne Adapter prüfen die Modellfamilie. IGEV++ hat
+eine eigene interne Normalisierung auf −1..1 im exportierten Graphen. Der Adapter
+übergibt weiterhin RGB0..255 und entfernt seinen reversiblen Suchversatz nach der
+Inferenz. Modelle liegen unter models/igev. Keine PyTorch-/timm-/CUDA-Installation
+beim Anwender; nur der Modellbau benötigt torch2.6, torchvision0.21, timm0.5.4,
+scipy und ONNX. Anwendung nutzt vorhandene CPU-/DirectML-ONNX-Laufzeit.
+
+Export erhält alle16 Iterationen, Suchweite768 und vollständige Gewichte.
+Zwei äquivalente Operatorsubstitutionen: nullgepolsterte GWC-Verschiebungen statt
+Slice-Zuweisungen mit leeren Bereichen; Identitätsfaltung statt F.unfold.
+Kleine native Substitutionsabweichung maximal0,0004263px; native/ONNX-Abweichung
+auf416×128 und448×160 maximal0,0001088/0,0009752px. Keine automatische Skalierung.
+Fotovergleich läuft separat; einzelne Ausreißer an mehrdeutigen Pixeln sind kein
+Beweis exakter numerischer Gleichheit. GPU-Mischgraph behält zusätzlich MatMul/
+Einsum in Float32. Physische GPU und große Auflösungen separat beurteilen.
+
+Lizenznachprüfung: MIT-Projektlizenz und offizieller Checkpointvertrieb sind
+belegt; keine abweichende Gewichtsklausel gefunden. Autorenantwort zur kommerziellen
+Nutzung beim Vorgänger bestätigt MIT. Die Anwendung der Projektlizenz auf den
+offiziellen Checkpoint wird als solche Auslegung dokumentiert, nicht als separate
+explizite PTH-Freigabe. Fehlende zusätzliche LICENSE allein wird nicht als neue
+Lizenzsperre behandelt. MIT-Notice, Autoren-/Quellidentität, Checkpoint-SHA und
+timm-Apache-Notice werden mitgeführt. Siehe IGEV_REVIEW.md und THIRD_PARTY.md.
+
 # 1.1 Test 3: LAS2-Modellvergleich
 
 ## Paketprüfung abgeschlossen

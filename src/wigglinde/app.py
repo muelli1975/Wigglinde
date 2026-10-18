@@ -122,7 +122,7 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,'duration').grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
-        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=112);self.model_menu.grid(row=0,column=1,sticky='w')
+        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=180);self.model_menu.grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
         self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))

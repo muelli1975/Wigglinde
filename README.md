@@ -1,4 +1,4 @@
-> **1.1 Test 3 — Windows model comparison.** Choose LAS2-S/M/L/H; H remains the default with four fixed iterations. RVS renders exclusively on CPU. The OpenGL and iteration selectors from Test 2 are removed. All four models use Float32 on CPU and mixed Float16/Float32 on DirectML. All eight local model files are bundled. Model choice is saved. Use separate output folders for comparisons: existing names retain the established replacement behavior. The documentation below describes the published stable 1.0; this test adds the model menu described here.
+> **1.1 Test 4 — IGEV++ Middlebury.** Choose LAS2-S/M/L/H or IGEV++ Middlebury. H remains the default; IGEV++ has sixteen fixed iterations. Every model uses CPU Float32 or GPU mixed Float16/Float32 through DirectML. RVS renders exclusively on CPU. All ten local model files are bundled; no Python, PyTorch, timm or CUDA setup is needed. Model choice is saved. Use separate output folders for comparisons. The documentation below describes stable1.0; the model choices above are test additions.
 
 # Wigglinde 1.0
 

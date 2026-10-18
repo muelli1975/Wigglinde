@@ -61,3 +61,15 @@ S exceeds the H small-shape comparison tolerance and is not claimed equivalent.
 Unchanged CPU RVS Precision 1 Simple 5 and geometry/export behavior. No GL backend
 or eight-iteration graphs in this package. Separately investigate IGEV++ quality,
 code/weight licenses, CPU/ONNX/DirectML; do not bundle an unverified integration.
+
+## Authorized 1.1 Test 4: IGEV++ Middlebury
+
+Christoph requests integrating official Middlebury and assessing requirements.
+Work on test-igev-middlebury-1.1. Add it to existing model menu, preserve H default
+and LAS2 graphs. Fixed16 iterations and maxdisp768; CPU Float32, GPU mixed, CPU RVS.
+No torch/timm/CUDA runtime dependency, no automatic download/fallback. Preserve
+shared ONNX transport math and signed offsets. Verify native/operator/ONNX parity,
+small widths, real-photo render, mixed graph, cancellation and actual Windows EXE.
+Use official MIT project notice for the official linked checkpoint, recording
+that this is the project-license reading and no separate weight statement exists.
+Include provenance and relevant notices; do not invent a new permission gate.

@@ -49,8 +49,8 @@ def convert(source, output):
     output.parent.mkdir(parents=True, exist_ok=True)
     onnx.save(converted, output)
     counts = Counter(onnx.TensorProto.DataType.Name(t.data_type) for t in converted.graph.initializer)
-    if not counts['FLOAT16'] or not counts['FLOAT']:
-        raise ValueError('Expected both Float16 and Float32 initializers.')
+    if not counts['FLOAT16'] or (not counts['FLOAT'] and not any(n.op_type in FP32_OPS for n in converted.graph.node)):
+        raise ValueError('Expected Float16 weights and Float32 computation islands.')
     metadata['source_export_validation']={key:metadata.pop(key) for key in
         ('native_max_errors_px','comparison_tolerance') if key in metadata}
     metadata.update(precision='mixed_float16_float32', source_onnx_sha256=source_hash,

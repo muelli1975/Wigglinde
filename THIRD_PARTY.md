@@ -5,6 +5,8 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 | Component | License and source |
 | --- | --- |
 | LAS2 code and published LAS2-S/M/L/H weights | MIT; https://github.com/TomTomTommi/LiteAnyStereo and https://huggingface.co/tomtomtommi/LiteAnyStereoV2 |
+| IGEV++ Middlebury | MIT project notice; https://github.com/gangweiX/IGEV-plusplus . Official checkpoint linked by its authors; source/weight hashes in models/README.md. No separate contradictory weight terms found. |
+| timm architecture used for IGEV export | Apache-2.0 notice included; build-only, no timm runtime in the app; https://github.com/huggingface/pytorch-image-models/tree/v0.5.4 |
 | RVS | Modified BSD, including its patent/third-party-rights reservation; https://gitlab.com/mpeg-i-visual/rvs |
 | OpenCV 4.10 | Apache-2.0 and third-party notices; https://github.com/opencv/opencv/tree/4.10.0 |
 | ONNX Runtime | MIT; https://github.com/microsoft/onnxruntime |
@@ -39,3 +41,14 @@ psutil (BSD-3-Clause). OpenCV is built statically with bundled zlib/libpng and i
 third-party notices are included. RVS OpenMP uses LLVM libomp on macOS (Apache-2.0
 with LLVM exceptions) or GCC libgomp on Linux (GPL with GCC Runtime Library
 Exception). The original completion WAV and ICO are included unchanged.
+
+## IGEV++ checkpoint provenance
+
+The official MIT repository explicitly links the pretrained checkpoints, including
+Middlebury. We apply that project notice to its official checkpoint distribution;
+this is the recorded project-license reading, not a claim of a separate PTH-specific
+author statement. No added research/noncommercial restriction was found.
+Official download confirmation: https://github.com/gangweiX/IGEV-plusplus/issues/2 .
+The same author confirms MIT when asked about commercial use of the predecessor:
+https://github.com/gangweiX/IGEV/issues/6 . The project notices and SHA provenance
+accompany the converted ONNX weights. LAS2 and RVS notices remain applicable.
