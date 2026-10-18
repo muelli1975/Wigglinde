@@ -1,5 +1,25 @@
 # 1.1 Test 4: IGEV++ Middlebury
 
+## Paketprüfung abgeschlossen
+
+Build: https://github.com/muelli1975/Wigglinde/actions/runs/39124980286
+Paketquellstand: `09827e8e424730904be58f4795b136cb1015b437`.
+43 Quelltests bestanden; Modellbau und Windows-Paketierung erfolgreich.
+Die tatsächlich gepackte Windows-EXE führt alle fünf Modelle aus. MP4/GIF/PNG,
+Tiefenkarten, Sitzungswiederverwendung, gespeicherte Middlebury-Auswahl,
+Deutsch/Englisch, Busy-Anzeige und Geometrie bei 100/125/150 Prozent geprüft.
+Windows-Screenshot visuell kontrolliert. CPU-RVS seriell/parallel bitgleich.
+Hosted DirectML konnte nicht initialisiert werden; keine physische GPU-Prüfung.
+
+`Wigglinde_1.1_Test4_Windows_x64.zip`: 507489351 Byte, SHA-256
+`48436b567863590926935578ce6ab8b326852d783951bf04967ebce37da512d9`.
+Heruntergeladenes Archiv CRC-/hashgeprüft; zehn ONNX-Graphen samt Metadaten und
+Hashes, IGEV-Identität/16 Iterationen, Lizenztexte und Quellidentität bestätigt
+(plattformbedingte Zeilenenden berücksichtigt). Keine Logs, Einstellungen,
+GL-EXE, iter8-Modelle oder PyTorch-/timm-Laufzeitpakete im Archiv.
+Dieser Prüfvermerk entstand nach dem Build und gehört nicht zum Quell-Snapshot
+im ZIP.
+
 Am Problemfoto wurden zusätzlich beide ONNX-Fassungen tatsächlich mit demselben
 CPU-RVS gerendert und visuell mit der nativen Middlebury-Referenz verglichen:
 Geländertrennung bleibt erhalten, keine Aussage pixelgleicher Ergebnisse.
