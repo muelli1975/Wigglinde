@@ -4,7 +4,7 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 
 | Component | License and source |
 | --- | --- |
-| LAS2 code and published LAS2-S/M/L/H weights | MIT; https://github.com/TomTomTommi/LiteAnyStereo and https://huggingface.co/tomtomtommi/LiteAnyStereoV2 |
+| LAS2 code and published LAS2-H weights | MIT; https://github.com/TomTomTommi/LiteAnyStereo and https://huggingface.co/tomtomtommi/LiteAnyStereoV2 |
 | IGEV++ Middlebury | MIT project notice; https://github.com/gangweiX/IGEV-plusplus . Official checkpoint linked by its authors; source/weight hashes in models/README.md. No separate contradictory weight terms found. |
 | timm architecture used for IGEV export | Apache-2.0 notice included; build-only, no timm runtime in the app; https://github.com/huggingface/pytorch-image-models/tree/v0.5.4 |
 | RVS | Modified BSD, including its patent/third-party-rights reservation; https://gitlab.com/mpeg-i-visual/rvs |

@@ -314,7 +314,7 @@ class WigglindeApp(ctk.CTk):
                             values=[p[name] for p in peaks if name in p]
                             return f'{max(values)/1024**2:.0f} MiB' if values else '—'
                         messagebox.showinfo('Wigglinde',self.tr('diagnosis_result',size=' × '.join(map(str,diagnosis['processing_size'])),
-                            device=diagnosis['device'],depth=f"{diagnosis['depth_seconds']:.2f}",
+                            model=diagnosis['model'],device=diagnosis['device'],depth=f"{diagnosis['depth_seconds']:.2f}",
                             load=f"{diagnosis['stage_seconds'].get('model_load',0):.2f}",
                             ram=peak('main_rss_bytes'),gpu=peak('gpu_process_local_usage_bytes')),parent=self)
         except queue.Empty:pass

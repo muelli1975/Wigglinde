@@ -2,12 +2,12 @@
 import re
 
 TEXT = {
-    'version': ('1.1 Test 4', '1.1 Test 4'),
+    'version': ('1.1', '1.1'),
     'save_depth': ('Tiefenkarten zusätzlich speichern', 'Also save depth maps'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),
-    'diagnosis_result': ('Tiefentest: LAS2-H · {device}\nBildgröße: {size}\nModell laden: {load} s\nTiefenberechnung: {depth} s\nGemessene RAM-Spitze (Programm): {ram}\nGemessene lokale GPU-Speicherspitze (Programm): {gpu}\n\nVollständiger Bericht: logs/latest_run.json',
-                         'Depth test: LAS2-H · {device}\nImage size: {size}\nModel loading: {load} s\nDepth estimation: {depth} s\nSampled peak RAM (application): {ram}\nSampled peak local GPU memory (application): {gpu}\n\nFull report: logs/latest_run.json'),
+    'diagnosis_result': ('Tiefentest: {model} · {device}\nBildgröße: {size}\nModell laden: {load} s\nTiefenberechnung: {depth} s\nGemessene RAM-Spitze (Programm): {ram}\nGemessene lokale GPU-Speicherspitze (Programm): {gpu}\n\nVollständiger Bericht: logs/latest_run.json',
+                         'Depth test: {model} · {device}\nImage size: {size}\nModel loading: {load} s\nDepth estimation: {depth} s\nSampled peak RAM (application): {ram}\nSampled peak local GPU memory (application): {gpu}\n\nFull report: logs/latest_run.json'),
     'single': ('Einzelbild', 'Single image'),
     'folder': ('Bildordner', 'Image folder'),
     'choose': ('Auswählen', 'Choose'),

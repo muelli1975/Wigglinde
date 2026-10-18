@@ -73,3 +73,15 @@ small widths, real-photo render, mixed graph, cancellation and actual Windows EX
 Use official MIT project notice for the official linked checkpoint, recording
 that this is the project-license reading and no separate weight statement exists.
 Include provenance and relevant notices; do not invent a new permission gate.
+
+## Authorized final 1.1 (18 October 2026)
+
+Christoph requests finishing and releasing 1.1 after practical testing. Only
+LAS2-H (default, 4 iterations) and IGEV++ Middlebury (16 iterations). No S/M/L,
+ETH3D or Selective/RT variants in the package. Preserve CPU Float32 / Windows
+DirectML mixed, CPU RVS P1/Simple5, geometry and all export settings. Fixed model
+suffixes las2-h / igev-middlebury on animations, sequences and depth maps; include
+model/iterations/precision/device in depth JSON. Preserve bilingual GUI layout.
+User reports successful Middlebury 2160p processing on RTX 3060 12 GB; record as
+one real-hardware success, not a universal memory guarantee. Finish the existing
+four platform packages and release v1.1; do not overwrite historical v1.0.

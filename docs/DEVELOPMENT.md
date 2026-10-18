@@ -1,3 +1,17 @@
+# Finalisierung 1.1 — 18. Oktober 2026
+
+Freigegeben: LAS2-H als Standard (4), IGEV++ Middlebury als Alternative (16),
+720p/CPU-Defaults und RVS P1/Simple5 unverändert. S/M/L aus Produktwahl und Paket
+entfernt; Forschungshistorie bleibt nachvollziehbar. Feste Modellzusätze für alle
+Ausgabearten vermeiden gegenseitiges Überschreiben verschiedener Modelle.
+Tiefenkarten-Schema 2 ergänzt Modell, Iterationen, Präzision und Gerät. Diagnose
+zeigt den tatsächlichen Modellnamen. README, Build- und Releasehinweise auf 1.1.
+
+Anwender bestätigt erfolgreichen Middlebury-2160p-Durchlauf auf RTX 3060 12 GB.
+Dies ist ein Praxisergebnis des Test4-Mischgraphen, kein allgemeines Speicherlimit
+und keine GPU-/CPU-Paritätsbehauptung. Geprüfte H-/Middlebury-Graphen werden
+unverändert wiederverwendet. Finale Paketprüfung läuft über den 1.1-Releaseworkflow.
+
 # Interner Modellvergleich: 18. Oktober 2026
 
 Middlebury 16/32, IGEV++ ETH3D 16/32, RT-IGEV und Selective-IGEV wurden auf

@@ -17,6 +17,7 @@ LABELS = {'Linux_x64': ('Linux', 'x86_64'),
           'macOS_AppleSilicon': ('Darwin', 'arm64'),
           'macOS_Intel': ('Darwin', 'x86_64')}
 MODEL_SHA = 'ba2260dcc0aaff33a9fc1c41f729f727eb58eb034dfaec022713b3848ff5af76'
+IGEV_SHA = '8225d52dc727c02e765d3d49e213f5bfdf5c6cea582082cacaef0c7d2c795641'
 
 
 def run(*command, **kwargs):
@@ -35,9 +36,13 @@ def main():
     args = parser.parse_args()
     if LABELS[args.label] != (platform.system(), platform.machine()):
         raise SystemExit('Package label does not match native build architecture.')
+    from wigglinde import __version__
+    from wigglinde.models import MODELS,DEFAULT_MODEL,model_path
     model = ROOT / 'models/las2/LAS2_H_dynamic.onnx'
     if hashlib.sha256(model.read_bytes()).hexdigest() != MODEL_SHA:
         raise SystemExit('Unexpected Float32 H model.')
+    if hashlib.sha256(model_path(ROOT,'IGEV++ Middlebury').read_bytes()).hexdigest()!=IGEV_SHA:
+        raise SystemExit('Unexpected Float32 Middlebury model.')
     backend = ROOT / 'build/rvs/wigglinde_rvs'
     if not backend.is_file():
         raise SystemExit('Build the pinned RVS backend first.')
@@ -67,15 +72,19 @@ def main():
     else:
         target = ROOT / 'dist/Wigglinde'
     shutil.copytree(ROOT / 'assets', target / 'assets')
-    models = target / 'models/las2'
-    models.mkdir(parents=True)
-    for extension in ('onnx', 'json'):
-        shutil.copy2(ROOT / ('models/las2/LAS2_H_dynamic.' + extension), models)
+    for label in MODELS:
+        source_model=model_path(ROOT,label)
+        destination=target/source_model.relative_to(ROOT)
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        for extension in ('.onnx','.json'):
+            shutil.copy2(source_model.with_suffix(extension),destination.with_suffix(extension))
     notices = target / 'licenses'
     notices.mkdir()
     for source, name in [('LICENSE', 'Wigglinde-MIT.txt'),
                          ('rvs-reference/LICENSE', 'RVS-LICENSE.txt'),
                          ('las2-reference/LICENSE', 'LAS2-LICENSE.txt'),
+                         ('igev-reference/LICENSE', 'IGEV-LICENSE.txt'),
+                         ('tools/igev/licenses/timm-LICENSE.txt', 'IGEV-timm-Apache-2.0.txt'),
                          ('opencv-reference/LICENSE', 'OpenCV-LICENSE.txt')]:
         shutil.copy2(ROOT / source, notices / name)
     # Preserve notices for the exact OpenCV third-party sources, including codecs.
@@ -131,14 +140,14 @@ def main():
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / file, destination)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-    info = dict(version='1.0', renderer='RVS CPU Precision 1 Simple 5', commit=commit, platform=args.label, python=sys.version,
-                models=['LAS2-H'], model_sha256=MODEL_SHA, model_precision={'CPU': 'float32'},
-                devices='CPU (LAS2 and RVS)', tcl_version=tcl_version,
+    info = dict(version=__version__, renderer='RVS CPU Precision 1 Simple 5', commit=commit, platform=args.label, python=sys.version,
+                models=list(MODELS), default_model=DEFAULT_MODEL, model_sha256=MODEL_SHA, igev_sha256=IGEV_SHA, model_precision={'CPU': 'float32'},
+                devices='CPU (stereo and RVS)', tcl_version=tcl_version,
                 packages={name: metadata.version(name) for name in packages})
     (target / 'build-info.json').write_text(json.dumps(info, indent=2) + '\n', encoding='utf-8')
     release = ROOT / 'release'
     release.mkdir(exist_ok=True)
-    archive = release / ('Wigglinde_1.0_' + args.label + ('.zip' if sys.platform == 'darwin' else '.tar.gz'))
+    archive = release / (f'Wigglinde_{__version__}_' + args.label + ('.zip' if sys.platform == 'darwin' else '.tar.gz'))
     if sys.platform == 'darwin':
         run('ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', target, archive)
     else:
@@ -164,7 +173,7 @@ def main():
     report = json.loads((output / 'native-smoke.json').read_text(encoding='utf-8'))
     assert report['status'] == 'passed' and not report['mixed_model_bundled']
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    verification = dict(status='passed', renderer='RVS CPU Precision 1 Simple 5', platform=args.label, commit=commit,
+    verification = dict(status='passed', version=__version__, models=list(MODELS), renderer='RVS CPU Precision 1 Simple 5', platform=args.label, commit=commit,
                         filename=archive.name, bytes=archive.stat().st_size, sha256=digest,
                         model_sha256=MODEL_SHA, actual_extracted_package_tested=True)
     (output / 'package-verification.json').write_text(json.dumps(verification, indent=2) + '\n')

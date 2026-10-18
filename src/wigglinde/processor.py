@@ -9,7 +9,7 @@ from .export_options import camera_weight
 from .stereo import StereoScene
 from .las2 import LiteAnyStereo
 from .igev import IGEVMiddlebury
-from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision,model_family
+from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision,model_family,model_suffix
 from .rvs import RVSRenderer
 from .depth_export import save_depth_maps
 from .wiggle_export import export_wiggle,check_cancelled
@@ -94,6 +94,7 @@ class Processor:
                 output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp'
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
+                suffix+='_'+model_suffix(self.model_name)
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
@@ -120,6 +121,7 @@ class Processor:
                     if options.save_depth:
                         progress('Tiefenkarten speichern',.99)
                         with trace.stage('depth_export'):
-                            trace.data['depth_export']=save_depth_maps(dl,dr,path,stem,output_root,work,self.event.is_set)
+                            trace.data['depth_export']=save_depth_maps(dl,dr,path,stem,output_root,work,self.event.is_set,
+                                model_name=self.model_name,precision=model_precision(self.model_name,self.device_id),device=self.device_name)
             progress('Fertig',1.)
         return trace.data

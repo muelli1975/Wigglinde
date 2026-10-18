@@ -1,17 +1,15 @@
-# 1.1 Test 4 (experimental)
-
-- Add IGEV++ Middlebury to the existing model menu, fixed16 iterations.
-- CPU Float32 and DirectML mixed graphs; no extra application runtime dependencies.
-- Preserve LAS2-H default, all LAS2 variants and CPU RVS Simple5.
-
-# 1.1 Test 3 (experimental)
-
-- Replace the OpenGL/iteration experiment with explicit LAS2-S/M/L/H selection.
-- Keep H as default, four fixed iterations, unchanged H precision and CPU RVS Simple 5.
-- All four models use Float32 on CPU and mixed precision on DirectML; save model choice.
-- Remove GL backend/dependencies and iteration-8 graphs from this test package.
-
 # Changelog
+
+## 1.1 — 2026-10-18
+
+- Add IGEV++ Middlebury with sixteen fixed iterations as an alternative to LAS2-H.
+- Keep LAS2-H as default, with four iterations and 720p on first launch.
+- CPU Float32 and Windows DirectML mixed Float16/Float32 for both models.
+- Include both CPU models on Linux and macOS; preserve CPU RVS Precision 1 / Simple 5.
+- Fixed `las2-h` / `igev-middlebury` suffixes distinguish all animation and depth outputs.
+- Add model, iterations, precision and device to depth-map scale metadata.
+- Save model selection and show the actual model in the bilingual depth-test result.
+- No experimental renderer, iteration selector or LAS2-S/M/L choices in this release.
 
 
 ## 1.0 — updated build, 2026-10-17

@@ -1,21 +1,19 @@
-> **1.1 Test 4 — IGEV++ Middlebury.** LAS2-S/M/L/H oder IGEV++ Middlebury wählen. H bleibt Standard; IGEV++ verwendet16 feste Iterationen. Jedes Modell nutzt CPU-Float32 oder GPU-Mischpräzision mit Float16/Float32 über DirectML. RVS rendert ausschließlich auf CPU. Alle zehn Modelldateien liegen lokal bei; keine Installation von Python, PyTorch, timm oder CUDA nötig. Die Modellwahl wird gespeichert. Für Vergleiche getrennte Ausgabeordner verwenden. Die folgende Dokumentation beschreibt die stabile1.0; die genannten Modelloptionen sind Ergänzungen dieses Tests.
-
-# Wigglinde 1.0
+# Wigglinde 1.1
 
 [English](README.md)
 
 Wigglinde ist ein lokales Programm, das Wiggle-Animationen aus bereits
-justierten Full-SBS-Stereofotos erzeugt. **Lite Any Stereo V2 H (LAS2-H)** berechnet
-aus den vorhandenen linken und rechten Ansichten die Tiefe; **MPEG-I RVS** rendert
+justierten Full-SBS-Stereofotos erzeugt. **Lite Any Stereo V2 H (LAS2-H)** oder
+**IGEV++ Middlebury** berechnet aus den vorhandenen linken und rechten Ansichten die Tiefe; **MPEG-I RVS** rendert
 die Zwischenansichten.
 
 Die Verarbeitung läuft lokal, ohne Konto, Cloud oder Tracking. Das portable Paket
 enthält Modell und Laufzeiten; automatische Downloads sind nicht erforderlich.
 Die Oberfläche ist auf Deutsch und Englisch verfügbar.
 
-[Wigglinde 1.0 herunterladen](https://github.com/muelli1975/Wigglinde/releases/tag/v1.0)
+[Wigglinde 1.1 herunterladen](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1)
 
-![Wigglinde 1.0 – englische Oberfläche](docs/screenshots/Wigglinde.png)
+![Wigglinde 1.1 – englische Oberfläche](docs/screenshots/Wigglinde.png)
 
 ## Voraussetzungen und Installation
 
@@ -24,10 +22,10 @@ Die Oberfläche ist auf Deutsch und Englisch verfügbar.
   mit DirectX-12-Treiber die Tiefenberechnung über DirectML beschleunigen.
 - Keine separate Python-Installation, kein CUDA-Toolkit und keine Build-Werkzeuge nötig.
 
-`Wigglinde_1.0_Windows_x64.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
-Unter Linux `Wigglinde_1.0_Linux_x64.tar.gz` entpacken und `Wigglinde/Wigglinde` starten.
-Unter macOS das passende `Wigglinde_1.0_macOS_AppleSilicon.zip` oder
-`Wigglinde_1.0_macOS_Intel.zip` entpacken und `Wigglinde/Wigglinde.app` öffnen.
+`Wigglinde_1.1_Windows_x64.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
+Unter Linux `Wigglinde_1.1_Linux_x64.tar.gz` entpacken und `Wigglinde/Wigglinde` starten.
+Unter macOS das passende `Wigglinde_1.1_macOS_AppleSilicon.zip` oder
+`Wigglinde_1.1_macOS_Intel.zip` entpacken und `Wigglinde/Wigglinde.app` öffnen.
 Die Mac-Apps sind ad hoc signiert, ohne Apple-Notarisierung. macOS kann nach dem
 ersten Start eine Freigabe unter **Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen** verlangen.
 Den vollständigen Programmordner zusammenhalten, einschließlich Modell und Assets
@@ -41,8 +39,9 @@ ausschließlich CPU/Float32.
    werden verarbeitet; Unterordner bleiben unberücksichtigt.
 2. Den Ausgabeordner neben der Eingabe verwenden oder einen eigenen Ordner auswählen.
 3. Format, Größe, Bildrate und Zyklusdauer wählen.
-4. Bei Bedarf **Tiefenkarten zusätzlich speichern** einschalten.
-5. CPU oder Grafikkarte auswählen und **Start** drücken.
+4. **LAS2-H** (Standard) oder **IGEV++ Middlebury** wählen.
+5. Bei Bedarf **Tiefenkarten zusätzlich speichern** einschalten.
+6. CPU oder Grafikkarte auswählen und **Start** drücken.
 
 Die Eingabe muss Full-SBS sein: das ungestauchte linke Halbbild links, das rechte
 rechts. Wigglinde justiert nicht, tauscht keine Ansichten, beschneidet nicht und
@@ -50,7 +49,7 @@ rechts. Wigglinde justiert nicht, tauscht keine Ansichten, beschneidet nicht und
 mit deckenden RGB-/Graustufenpixeln und 8 Bit pro Kanal. EXIF-Ausrichtung und
 eingebettete Farbprofile werden berücksichtigt.
 
-Beim ersten Start gelten **MP4, 720p, 30 fps, zwei Sekunden pro Zyklus und CPU**.
+Beim ersten Start gelten **LAS2-H, MP4, 720p, 30 fps, zwei Sekunden pro Zyklus und CPU**.
 Kleine Eingaben werden nicht vergrößert. Seitenverhältnis und vollständige Bildränder
 bleiben erhalten. Vor der Tiefenberechnung wird mit Lanczos verkleinert.
 
@@ -68,7 +67,10 @@ Ansichten. MP4 nutzt H.264 CRF 18/slow; GIF eine gemeinsame Palette für den ges
 Zyklus. Ungerade MP4-Maße werden um höchstens eine schwarze Pixelzeile/-spalte ergänzt,
 ohne Bildränder abzuschneiden.
 
-LAS2-H verwendet vier Iterationen. Auf CPU wird Float32 verwendet; auf GPU eine
+LAS2-H bleibt der bewährte Standard und verwendet vier feste Iterationen.
+IGEV++ Middlebury verwendet 16 feste Iterationen und ist eine langsamere Alternative
+für schwierige Strukturen, etwa Geländer. Das Ergebnis hängt vom Motiv ab; keines
+der Modelle ist bei jedem Bild besser. Auf CPU wird Float32 verwendet; auf GPU eine
 separate Mixed-Precision-Fassung mit Float16/Float32. Ausgewählte Normalisierungs-,
 Wahrscheinlichkeits-, Summen- und Abtastoperationen bleiben in Float32.
 **RVS rendert in beiden Modi auf CPU**, mit Precision 1, RGB und Simple-Blending mit Faktor 5.
@@ -90,8 +92,11 @@ Alternativ kann ein eigener Ausgabeordner verwendet werden.
 | `depth_maps` | Optionale linke/rechte 16-Bit-PNG-Tiefenkarten und Angaben zur Skala |
 | `_temp` | Temporäre Arbeitsdateien, die nach der Verarbeitung entfernt werden |
 
-Namen behalten den ursprünglichen Stamm, beispielsweise `Bild_wiggle_30fps_720p.mp4`,
-ohne Quellordnerpräfixe. Zusätze werden klein geschrieben. Fertige Animationen werden
+Namen behalten den ursprünglichen Stamm, beispielsweise `Bild_wiggle_30fps_720p_las2-h.mp4`,
+ohne Quellordnerpräfixe. Zusätze werden klein geschrieben. Der feste Modellzusatz lautet
+`las2-h` oder `igev-middlebury`, auch bei GIFs, PNG-Bildfolgen und Tiefenkarten.
+Dadurch bleiben Ergebnisse beider Modelle nebeneinander erhalten, beispielsweise
+`Bild_depth_720p_igev-middlebury_left.png`. Fertige Animationen werden
 erst nach erfolgreichem Export ersetzt. **Abbrechen** stoppt die Verarbeitung;
 bereits fertige Dateien bleiben erhalten. Originale werden nicht verändert.
 Auch ein leerer `_temp`-Ordner wird entfernt.
@@ -99,12 +104,12 @@ Auch ein leerer `_temp`-Ordner wird entfernt.
 **Tiefenkarten zusätzlich speichern** verwendet die bereits berechneten Karten ohne
 weiteren Modelldurchlauf. Jede gehört zum jeweiligen linken/rechten Halbbild in der
 Berechnungsgröße. Beide teilen eine lineare Skala: Weiß ist nah, Schwarz ist fern.
-Sie enthalten **relative Disparität, keine Entfernung in Metern**. Eine JSON-Datei
-dokumentiert Skala und Rückrechnung. Lentikular-Druckvorbereitung ist nicht enthalten.
+Sie enthalten **relative Disparität, keine Entfernung in Metern**. Eine JSON-Datei dokumentiert Skala, Rückrechnung, Modell, Iterationszahl,
+Rechengenauigkeit und Berechnungsgerät. Lentikular-Druckvorbereitung ist nicht enthalten.
 
 ## Einstellungen und Diagnose
 
-Sprache, Gerät, letzte Eingabepfade, Ausgabemodus/-ordner, Tiefenkartenoption und
+Sprache, Modell, Gerät, letzte Eingabepfade, Ausgabemodus/-ordner, Tiefenkartenoption und
 Animationseinstellungen werden in `settings.json` neben dem Programm gespeichert.
 Diese Datei bei Aktualisierungen behalten. Wiederhergestellte Eingabepfade starten
 keine automatische Verarbeitung.

@@ -7,7 +7,7 @@ from . import theme as T
 from .processor import Processor
 from .las2 import LiteAnyStereo
 from .igev import IGEVMiddlebury
-from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family
+from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family,model_suffix
 from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
@@ -71,7 +71,7 @@ def run(app_dir,report_path):
             assert Path(depth['metadata_file']).is_file()
             for file in depth['files']:
                 assert Path(file).parent==work/'Ausgabe_Größe'/'depth_maps'
-                assert Path(file).name.startswith('Bild_Größe_depth_160p_')
+                assert Path(file).name.startswith('Bild_Größe_depth_160p_las2-h_')
                 with Image.open(file) as image:
                     assert image.size==(320,160) and np.asarray(image).dtype==np.uint16
         else:
@@ -122,8 +122,14 @@ def run(app_dir,report_path):
         if label==DEFAULT_MODEL:continue
         alternate=Processor(app_dir,model_name=label)
         try:
-            result=alternate.convert(source,work/label,WiggleOptions(format='png',cycle_seconds=.5))
+            result=alternate.convert(source,work/'Ausgabe_Größe',WiggleOptions(format='png',cycle_seconds=.5,save_depth=True))
             assert result['model']==label and result['iterations']==model_iterations(label)
+            assert result['output']!=results[2]['output'] and Path(results[2]['output']).exists()
+            assert model_suffix(label) in Path(result['output']).name
+            metadata=json.loads(Path(result['depth_export']['metadata_file']).read_text(encoding='utf-8'))
+            assert metadata['model']==label and metadata['iterations']==model_iterations(label)
+            assert metadata['precision']=='float32' and metadata['device']=='CPU'
+            assert set(metadata['maps'].values()).isdisjoint(Path(p).name for p in results[2]['depth_export']['files'])
             assert result['renderer']=='RVS CPU Precision 1 Simple 5'
             frames=sorted(Path(result['output']).glob('*.png'))
             assert len(frames)==15
@@ -255,7 +261,7 @@ def run(app_dir,report_path):
                 begin=time.monotonic();gpu=model.predict(left,right,24,lambda:False)
                 diff=np.abs(cpu-gpu)
                 assert np.isfinite(gpu).all()
-                if label!='LAS2-S':np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
+                np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),mean_difference_px=float(diff.mean()),within_h_numerical_tolerance=bool(np.all(diff<=.1+.01*np.abs(cpu))),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

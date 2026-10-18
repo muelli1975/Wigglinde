@@ -2,7 +2,7 @@
 from pathlib import Path
 
 IGEV_MODEL='IGEV++ Middlebury'
-LAS2_MODELS=('LAS2-S','LAS2-M','LAS2-L','LAS2-H')
+LAS2_MODELS=('LAS2-H',)
 MODELS=LAS2_MODELS+(IGEV_MODEL,)
 DEFAULT_MODEL='LAS2-H'
 
@@ -23,3 +23,7 @@ def model_path(app_dir,name,device_id=None):
     suffix='_mixed.onnx' if device_id is not None else '_dynamic.onnx'
     stem='IGEV_Middlebury' if family=='igev' else name.replace('-','_')
     return Path(app_dir)/'models'/family/(stem+suffix)
+
+def model_suffix(name):
+    model_family(name)
+    return 'igev-middlebury' if name==IGEV_MODEL else 'las2-h'

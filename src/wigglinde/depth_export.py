@@ -4,16 +4,18 @@ import json
 import numpy as np
 from PIL import Image
 from .wiggle_export import check_cancelled
+from .models import DEFAULT_MODEL,model_suffix,model_iterations
 
 
-def save_depth_maps(left, right, source, output_stem, output_root, work, cancel):
+def save_depth_maps(left, right, source, output_stem, output_root, work, cancel, *,
+                    model_name=DEFAULT_MODEL, precision='float32', device='CPU'):
     maps = (left, right)
     if left.shape != right.shape or not all(np.isfinite(d).all() for d in maps):
         raise ValueError('Ungültige Tiefenkarten / invalid depth maps')
     low = float(min(d.min() for d in maps))
     high = float(max(d.max() for d in maps))
     height, width = left.shape
-    stem = f'{output_stem}_depth_{height}p'
+    stem = f'{output_stem}_depth_{height}p_{model_suffix(model_name)}'
     names = [f'{stem}_{side}.png' for side in ('left', 'right')]
     work = Path(work) / 'depth_export'
     work.mkdir()
@@ -24,7 +26,8 @@ def save_depth_maps(left, right, source, output_stem, output_root, work, cancel)
         else:
             values = np.zeros(disparity.shape, np.uint16)
         Image.fromarray(values).save(work / name)
-    metadata = dict(schema=1, source=Path(source).name, maps=dict(zip(('left', 'right'), names)),
+    metadata = dict(schema=2, model=model_name, iterations=model_iterations(model_name),
+        precision=precision, device=device, source=Path(source).name, maps=dict(zip(('left', 'right'), names)),
         size=[width, height], encoding='uint16_png', white='near', black='far',
         quantity='relative_disparity', units='processing_pixels', metric_depth=False,
         disparity_convention='x_left_minus_x_right_at_corresponding_half_coordinates',

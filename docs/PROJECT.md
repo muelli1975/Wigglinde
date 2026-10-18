@@ -1,3 +1,16 @@
+# Freigegebene Version 1.1 — 18. Oktober 2026
+
+Christoph beauftragt die Fertigstellung nach den praktischen Vergleichen.
+Nur LAS2-H (Standard, vier Iterationen) und IGEV++ Middlebury (16 Iterationen).
+Kein ETH3D, S/M/L, Selective oder RT im Paket. CPU Float32, Windows-GPU-Mischpräzision,
+bisheriger CPU-RVS und sämtliche Geometrie-/Exportstandards erhalten. Feste
+Modellzusätze las2-h / igev-middlebury in allen Ergebnisnamen; Modell, Iterationen,
+Präzision und Gerät zusätzlich in Tiefenkarten-JSON. Vier bisherige Plattformen
+für 1.1 bauen; 1.0 als historischen Release erhalten. Middlebury-2160p auf RTX 3060
+12 GB vom Anwender erfolgreich bestätigt. Keine weitere Foto-Testserie als Freigabeschritt.
+
+Die folgenden Abschnitte dokumentieren frühere Vereinbarungen und Teststände.
+
 # Aktueller Testauftrag 1.1 Test 4
 
 Zusätzlich IGEV++ Middlebury in die Modellwahl integrieren und benötigte Komponenten

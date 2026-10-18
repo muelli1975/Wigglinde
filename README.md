@@ -1,21 +1,19 @@
-> **1.1 Test 4 — IGEV++ Middlebury.** Choose LAS2-S/M/L/H or IGEV++ Middlebury. H remains the default; IGEV++ has sixteen fixed iterations. Every model uses CPU Float32 or GPU mixed Float16/Float32 through DirectML. RVS renders exclusively on CPU. All ten local model files are bundled; no Python, PyTorch, timm or CUDA setup is needed. Model choice is saved. Use separate output folders for comparisons. The documentation below describes stable1.0; the model choices above are test additions.
-
-# Wigglinde 1.0
+# Wigglinde 1.1
 
 [Deutsch](README_DE.md)
 
 Wigglinde is a local tool for creating wiggle animations from already
 aligned Full-SBS stereo photographs. It estimates depth from the existing left
-and right views with **Lite Any Stereo V2 H (LAS2-H)** and renders intermediate
-views with **MPEG-I RVS**.
+and right views with **Lite Any Stereo V2 H (LAS2-H)** or **IGEV++ Middlebury** and renders
+intermediate views with **MPEG-I RVS**.
 
 Processing runs locally, without an account, cloud or tracking. The portable
 package includes the model and runtimes; no automatic downloads are required.
 The interface is available in German and English.
 
-[Download Wigglinde 1.0](https://github.com/muelli1975/Wigglinde/releases/tag/v1.0)
+[Download Wigglinde 1.1](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1)
 
-![Wigglinde 1.0 interface (English)](docs/screenshots/Wigglinde.png)
+![Wigglinde 1.1 interface (English)](docs/screenshots/Wigglinde.png)
 
 ## Requirements and installation
 
@@ -24,10 +22,10 @@ The interface is available in German and English.
   with a DirectX 12 driver can accelerate depth estimation through DirectML.
 - No separate Python installation, CUDA toolkit or build tools are required.
 
-Extract `Wigglinde_1.0_Windows_x64.zip` and start `Wigglinde\Wigglinde.exe`.
-On Linux extract `Wigglinde_1.0_Linux_x64.tar.gz` and start `Wigglinde/Wigglinde`.
-On macOS extract the matching `Wigglinde_1.0_macOS_AppleSilicon.zip` or
-`Wigglinde_1.0_macOS_Intel.zip` and open `Wigglinde/Wigglinde.app`.
+Extract `Wigglinde_1.1_Windows_x64.zip` and start `Wigglinde\Wigglinde.exe`.
+On Linux extract `Wigglinde_1.1_Linux_x64.tar.gz` and start `Wigglinde/Wigglinde`.
+On macOS extract the matching `Wigglinde_1.1_macOS_AppleSilicon.zip` or
+`Wigglinde_1.1_macOS_Intel.zip` and open `Wigglinde/Wigglinde.app`.
 The macOS apps are ad-hoc signed, without Apple notarization; macOS may require
 approval in **System Settings → Privacy & Security → Open Anyway** after first launch.
 Keep the complete application folder together, including models and assets beside
@@ -40,15 +38,16 @@ or `aplay` when installed. Linux and macOS use CPU/Float32 only.
    selected folder are processed; subfolders are ignored.
 2. Use an output folder beside the input or select a custom output folder.
 3. Choose format, size, frame rate and cycle duration.
-4. Optionally enable **Also save depth maps**.
-5. Choose CPU or a graphics adapter and click **Start**.
+4. Choose **LAS2-H** (default) or **IGEV++ Middlebury**.
+5. Optionally enable **Also save depth maps**.
+6. Choose CPU or a graphics adapter and click **Start**.
 
 Input must be Full-SBS: the normal-width left half followed by the right half.
 Wigglinde does not align images, swap views, crop the source or adjust convergence.
 Supported formats are JPEG, PNG, TIFF, BMP and WebP with opaque 8-bit RGB or grayscale
 pixels. EXIF orientation and embedded colour profiles are respected.
 
-First-launch defaults: **MP4, 720p, 30 fps, two-second cycle and CPU**.
+First-launch defaults: **LAS2-H, MP4, 720p, 30 fps, two-second cycle and CPU**.
 Smaller inputs are not enlarged. Aspect ratio and full image borders are preserved;
 images are reduced with Lanczos before depth estimation.
 
@@ -65,7 +64,10 @@ a duplicated final endpoint. The return path and repeated cycles reuse the same
 rendered views. MP4 uses H.264 CRF 18/slow; GIF uses a shared palette for the whole
 cycle. Odd MP4 dimensions are padded by at most one black row/column, without cropping.
 
-LAS2-H uses four iterations. CPU uses Float32; GPU uses a separate mixed Float16/Float32
+LAS2-H is the established default and uses four fixed iterations. IGEV++ Middlebury
+uses sixteen fixed iterations and is a slower alternative for difficult structures,
+such as railings. Results depend on the photograph; neither model is always better.
+CPU uses Float32; GPU uses a separate mixed Float16/Float32
 model, retaining selected normalization, probability, summation and sampling operations
 in Float32. **RVS renders on CPU in both modes**, using Precision 1, RGB and
 Simple blending with factor 5. Independent views run in parallel within CPU and memory limits.
@@ -86,20 +88,23 @@ image folder. A custom destination can be used instead.
 | `depth_maps` | Optional left/right 16-bit PNG depth maps and scale metadata |
 | `_temp` | Temporary working files, removed after processing |
 
-Names retain the original stem, for example `Image_wiggle_30fps_720p.mp4`, without
-source-folder prefixes. Suffixes are lowercase. Finished animations are replaced
+Names retain the original stem, for example `Image_wiggle_30fps_720p_las2-h.mp4`, without
+source-folder prefixes. Suffixes are lowercase. The fixed model suffix is `las2-h` or `igev-middlebury`,
+including GIFs, PNG-sequence folders and depth maps, so both model results can coexist.
+For example: `Image_depth_720p_igev-middlebury_left.png`.
+Finished animations are replaced
 only after a successful export. **Cancel** stops processing; completed files remain.
 Originals are never changed. An empty `_temp` folder is removed as well.
 
 **Also save depth maps** uses the already calculated maps, without another model run.
 Each map belongs to its corresponding left/right image half at the processing size.
 Both share a linear scale: white is near, black is far. They contain **relative
-disparity, not distance in metres**. A JSON companion records the scale and decoding
-formula. No lenticular print preparation is included.
+disparity, not distance in metres**. A JSON companion records the scale, decoding formula, model, iteration count,
+precision and processing device. No lenticular print preparation is included.
 
 ## Settings and diagnostics
 
-Language, device, last input paths, output mode/folder, depth-map option and animation
+Language, model, device, last input paths, output mode/folder, depth-map option and animation
 settings are saved in `settings.json` beside the program. Keep this file when updating.
 Restored input paths do not start processing automatically.
 
