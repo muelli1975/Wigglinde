@@ -5,8 +5,11 @@ This test bundles LAS2-S/M/L/H. H is the default and retains the stable exports:
 - `las2/LAS2_H_dynamic.onnx`: Float32 for CPU.
 - `las2/LAS2_H_mixed.onnx`: mixed Float16/Float32 for GPU via DirectML.
 
-S/M/L each use `LAS2_<size>_dynamic.onnx` in Float32 for both CPU and DirectML.
-No duplicated or reduced-precision S/M/L graphs are bundled.
+S/M/L each use `LAS2_<size>_dynamic.onnx` for Float32 CPU and a separate
+`LAS2_<size>_mixed.onnx` for mixed Float16/Float32 DirectML, just like H.
+S/M/L use the same conversion operation policy; each has its own recorded numeric
+comparison. S has larger deviations on ambiguous random textures; no equivalence
+to Float32 or photographic quality gain is asserted.
 
 Each has matching JSON metadata with its SHA-256 and source provenance. The selected
 model and device determine the file; there is no automatic substitution, download,

@@ -2,7 +2,7 @@
 
 - Replace the OpenGL/iteration experiment with explicit LAS2-S/M/L/H selection.
 - Keep H as default, four fixed iterations, unchanged H precision and CPU RVS Simple 5.
-- S/M/L retain Float32 on CPU and DirectML; save model choice between runs.
+- All four models use Float32 on CPU and mixed precision on DirectML; save model choice.
 - Remove GL backend/dependencies and iteration-8 graphs from this test package.
 
 # Changelog

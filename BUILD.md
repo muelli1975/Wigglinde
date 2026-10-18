@@ -1,11 +1,13 @@
 # 1.1 Test 3 model comparison build
 
 The separate [test workflow](.github/workflows/models-test-build.yml) exports
-LAS2-S/M/L Float32 from the pinned source/weight revisions and compares native
-inference with ONNX on two image shapes. Windows reuses unchanged verified H
+LAS2-S/M/L Float32 from the pinned source/weight revisions, compares native
+inference with ONNX on two image shapes, then generates their mixed graphs. Windows reuses unchanged verified H
 Float32/mixed graphs and the telemetry-free DirectML runtime from run 39041230523.
-The five graphs and matching metadata are local. S/M/L use the same Float32 graph
-on CPU and DirectML; only H uses its existing mixed graph for DirectML.
+All eight graphs and matching metadata are local. Every variant uses its Float32
+graph on CPU and its separate mixed graph on DirectML. H files remain unchanged.
+S exceeds the original H numerical-comparison tolerance on small random textures;
+its differences are explicitly recorded. No photographic equivalence is claimed.
 
 Only the RVS CPU backend is built. No GLFW/GLM/OpenGL prerequisites or iteration-8
 exports are needed. `tools/package_windows.py` creates

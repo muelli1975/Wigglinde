@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 import hashlib,json,types,unittest
 from wigglinde.las2 import LiteAnyStereo
-from wigglinde.models import model_path,DEFAULT_MODEL
+from wigglinde.models import model_path,DEFAULT_MODEL,MODELS
 
 class DeviceSelectionTests(unittest.TestCase):
     def runtime(self,providers):
@@ -52,3 +52,10 @@ class DeviceSelectionTests(unittest.TestCase):
             path.with_suffix('.json').write_text(json.dumps(meta))
             with self.assertRaisesRegex(ValueError,'iteration count'):LiteAnyStereo(path)
             self.assertIsNone(self.request)
+
+    def test_all_selected_models_have_separate_cpu_and_gpu_graphs(self):
+        for label in MODELS:
+            with self.subTest(model=label):
+                stem=label.replace('-','_')
+                self.assertEqual(model_path('/app',label).name,stem+'_dynamic.onnx')
+                self.assertEqual(model_path('/app',label,0).name,stem+'_mixed.onnx')

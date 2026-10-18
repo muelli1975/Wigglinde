@@ -2,8 +2,8 @@
 
 Separate Windows-Testversion: Modellwahl LAS2-S/M/L/H, Standard H mit vier festen
 Iterationen. Ausschließlich RVS CPU, Precision 1, Simple 5. OpenGL und die
-Iterationsauswahl aus Test 2 entfallen. H-Präzision bleibt unverändert; S/M/L
-Float32 auch auf DirectML. Qualität hat Vorrang. IGEV++ zunächst separat prüfen,
+Iterationsauswahl aus Test 2 entfallen. Alle Modelle CPU-Float32 und DirectML-
+Mischpräzision wie H. Qualität hat Vorrang. IGEV++ zunächst separat prüfen,
 eine spätere Einbindung hängt von Qualität, Lizenz und belastbarer Integration ab.
 Kein Lentikular in diesem Test. Die folgenden Abschnitte dokumentieren die stabile 1.0.
 

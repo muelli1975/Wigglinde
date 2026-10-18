@@ -37,13 +37,14 @@ jobs:
             filename=f'LAS2_{label}.pth'
             urllib.request.urlretrieve('https://huggingface.co/tomtomtommi/LiteAnyStereoV2/resolve/17788d91618646fa781a14462e2926a034b9f49d/'+filename,filename)
             assert hashlib.sha256(Path(filename).read_bytes()).hexdigest()==hashes[label.lower()]
-      - name: Export and verify native S M L Float32 models
+      - name: Export and verify S M L Float32 and mixed models
         shell: python
         run: |
           import subprocess,sys
           for label in 'SML':
             model=f'models/las2/LAS2_{label}_dynamic.onnx'
             subprocess.run([sys.executable,'tools/export_las2.py','--model-size',label.lower(),'--source','las2-reference','--weights',f'LAS2_{label}.pth','--output',model],check=True)
+            subprocess.run([sys.executable,'tools/convert_las2_mixed.py','--source',model,'--output',model.replace('_dynamic','_mixed'),'--report',f'output/{label}-mixed.json'],check=True)
       - name: Source checks
         run: python -m unittest discover -s tests -v
       - uses: actions/upload-artifact@v4
@@ -54,6 +55,13 @@ jobs:
             models/las2/LAS2_M_*
             models/las2/LAS2_L_*
           if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: model-conversion-verification
+          path: output/*-mixed.json
+          if-no-files-found: warn
           retention-days: 30
   windows:
     needs: models

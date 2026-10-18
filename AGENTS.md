@@ -55,7 +55,9 @@ Christoph requests removing OpenGL and the iteration selector from the test buil
 cleaning their code/dependencies/models, and comparing LAS2 variants. Work on
 `test-models-1.1`; retain stable main/v1.0 and the historical test branches.
 Explicit S/M/L/H model menu, default H. H has four fixed iterations and its
-existing CPU FP32 / DirectML mixed policy. S/M/L use FP32 on both devices.
+existing CPU FP32 / DirectML mixed policy. S/M/L use the same explicit CPU FP32 /
+DirectML mixed policy at Christoph's request. Numerical differences are recorded;
+S exceeds the H small-shape comparison tolerance and is not claimed equivalent.
 Unchanged CPU RVS Precision 1 Simple 5 and geometry/export behavior. No GL backend
 or eight-iteration graphs in this package. Separately investigate IGEV++ quality,
 code/weight licenses, CPU/ONNX/DirectML; do not bundle an unverified integration.

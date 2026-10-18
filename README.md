@@ -1,4 +1,4 @@
-> **1.1 Test 3 — Windows model comparison.** Choose LAS2-S/M/L/H; H remains the default with four fixed iterations. RVS renders exclusively on CPU. The OpenGL and iteration selectors from Test 2 are removed. S/M/L use Float32 on CPU and DirectML; H retains its established CPU Float32 / GPU mixed precision. All five local model files are bundled. Model choice is saved. Use separate output folders for comparisons: existing names retain the established replacement behavior. The documentation below describes the published stable 1.0; this test adds the model menu described here.
+> **1.1 Test 3 — Windows model comparison.** Choose LAS2-S/M/L/H; H remains the default with four fixed iterations. RVS renders exclusively on CPU. The OpenGL and iteration selectors from Test 2 are removed. All four models use Float32 on CPU and mixed Float16/Float32 on DirectML. All eight local model files are bundled. Model choice is saved. Use separate output folders for comparisons: existing names retain the established replacement behavior. The documentation below describes the published stable 1.0; this test adds the model menu described here.
 
 # Wigglinde 1.0
 

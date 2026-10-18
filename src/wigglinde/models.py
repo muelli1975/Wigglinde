@@ -10,7 +10,7 @@ def model_iterations(name):
 
 def model_precision(name,device_id=None):
     model_iterations(name)
-    return 'mixed_float16_float32' if name=='LAS2-H' and device_id is not None else 'float32'
+    return 'mixed_float16_float32' if device_id is not None else 'float32'
 
 def model_path(app_dir,name,device_id=None):
     if name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(name))

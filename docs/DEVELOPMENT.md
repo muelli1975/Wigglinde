@@ -5,9 +5,12 @@ Iterationsauswahl aus dem Testbuild entfernen und auf den unveränderten
 RVS-CPU-Pfad der stabilen 1.0 zurückgehen. Simple 5, Precision 1, Bildgeometrie,
 Größen, Export und Suchversatz bleiben erhalten. LAS2-S/M/L/H sind ausdrücklich
 wählbar, Standard H. H bleibt bei vier Iterationen und seiner bisherigen
-CPU-Float32-/DirectML-Mischpräzision. S/M/L behalten Float32 auf CPU und GPU.
-S-Mischpräzision fiel im kleinen Konvertierungsvergleich durch (bis 1,3421 px
-Abweichung an verletzten Toleranzen); sie wird nicht ausgeliefert. Kein stilles
+CPU-Float32-/DirectML-Mischpräzision. Auf ausdrücklichen Wunsch verwenden auch
+S/M/L dieselbe CPU-Float32-/DirectML-Mischpräzisionsrichtlinie. S überschreitet die
+kleine numerische H-Vergleichstoleranz (bis 1,3421 px); das wird als Messbefund
+protokolliert, nicht als genereller Beweis sichtbarer Qualitätsverluste gewertet.
+M/L bestehen den kleinen Vergleich; auch das belegt keine allgemeine Fotoparität.
+Kein stilles
 Modell-, Geräte- oder Auflösungs-Fallback. Keine automatische Modellinstallation.
 
 Separate Branch `test-models-1.1`, keine Änderung an main oder Release 1.0.

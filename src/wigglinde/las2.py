@@ -27,7 +27,7 @@ class LiteAnyStereo:
             self.session=ort.InferenceSession(str(path),sess_options=settings,providers=['CPUExecutionProvider'])
         else:
             # Official DirectML constraints: sequential execution, no memory pattern.
-            # H mixes FP16/FP32; S/M/L retain Float32. Public tensors
+            # Every selected GPU model mixes FP16/FP32. Public tensors
             # remain Float32; no image-size change or integer quantization.
             if 'DmlExecutionProvider' not in ort.get_available_providers():
                 raise RuntimeError('GPU_INIT: DirectML is not available in this runtime.')

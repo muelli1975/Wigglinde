@@ -20,7 +20,7 @@ def main():
     shutil.copytree('assets',target/'assets')
     models=target/'models/las2';models.mkdir(parents=True)
     from wigglinde.models import MODELS
-    for stem in [name.replace('-','_')+'_dynamic' for name in MODELS]+['LAS2_H_mixed']:
+    for stem in [name.replace('-','_')+suffix for name in MODELS for suffix in ('_dynamic','_mixed')]:
         for extension in ['onnx','json']:
             name=f'{stem}.{extension}';shutil.copy2(Path('models/las2')/name,models)
     notices=target/'licenses';notices.mkdir();shutil.copytree('runtime-wheel/licenses',notices/'DirectML-runtime');shutil.copy2('runtime-wheel/provenance.json',notices/'DirectML-build.json');shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
@@ -58,7 +58,7 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1 Test 3',renderer='RVS CPU Precision 1 Simple 5',models=list(MODELS),default_model='LAS2-H',model_precision={'CPU':'float32','GPU':{'LAS2-H':'mixed_float16_float32','LAS2-S/M/L':'float32'}},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1 Test 3',renderer='RVS CPU Precision 1 Simple 5',models=list(MODELS),default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=600)
     archive=Path('dist/Wigglinde_1.1_Test3_Windows_x64.zip')
