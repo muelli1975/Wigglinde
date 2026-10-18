@@ -1,7 +1,7 @@
 # Interner Modellvergleich: 18. Oktober 2026
 
-Middlebury 16/32, IGEV++ ETH3D, RT-IGEV und Selective-IGEV werden auf Wunsch
-intern am Problemfoto verglichen. Verfahren, Messwerte, Einschränkungen und
+Middlebury 16/32, IGEV++ ETH3D 16/32, RT-IGEV und Selective-IGEV wurden auf
+Wunsch intern am Problemfoto berechnet und mit CPU-RVS gerendert. Verfahren, Messwerte, Einschränkungen und
 Empfehlung zur Modellwahl: [IGEV_MODEL_STUDY.md](IGEV_MODEL_STUDY.md).
 Keine Änderung am aktuellen Test4-Paket, seiner Modellwahl oder den Defaults.
 

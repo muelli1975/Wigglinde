@@ -1,7 +1,9 @@
 # Internal model study: 18 October 2026
 
 Christoph requests a 16/32-iteration Middlebury comparison, an assessment of the
-LAS2 options, and internal comparisons with other useful IGEV models. This is
+LAS2 options, and internal comparisons with other useful IGEV models. He then
+supports H as the default and slower IGEV for difficult images, asking whether
+ETH3D deserves an additional place or might be better. This is
 research on the existing test branch, not a change to the application defaults,
 model menu, packaged ONNX graphs, or precision policy.
 
@@ -62,13 +64,19 @@ to improve this photo does not predict IGEV's convergence behavior.
 
 ### IGEV++ ETH3D
 
-Same IGEV++ source/configuration, 32 iterations, full RGB input as in upstream
-inference. Official ETH3D checkpoint SHA-256:
+Same IGEV++ source/configuration, 16 and 32 iterations, full RGB input as in
+upstream inference. Official ETH3D checkpoint SHA-256:
 `4595ac1c164b92e9b749907f09248c05abb6485e3121924b2d0bcd3eb3572e97`.
-Left 32.902 s, right 31.647 s, both 64.549 s. Peak process RSS about 2872 MiB.
-Good foreground-bar/background separation on this photograph, with local
-behavior different from Middlebury; no established overall advantage yet.
-Retain as an internal comparison candidate, not an automatic model replacement.
+At 32 iterations: left 32.902 s, right 31.647 s, both 64.549 s. Peak process
+RSS about 2872 MiB. Supplementary 16-iteration comparison: left 22.036 s, right
+21.865 s, both 43.901 s; completed pair and all five RVS views. An isolated repeat
+of the right eye also completed (21.404 s). Small timing differences are not a
+general model speed advantage: ETH3D and Middlebury use the same architecture.
+Good foreground-bar/background separation on this photograph at both iteration
+counts, with local behavior different from Middlebury; no established overall
+advantage in the full middle view or railing crops. Treat this as a viable internal
+alternative, not an automatic replacement or a justified third release choice.
+Different weights, rather than a different or larger IGEV++ architecture.
 
 ### RT-IGEV SceneFlow
 
@@ -89,13 +97,20 @@ Official `middlebury_finetune.pth`, SHA-256
 The author README specifically recommends 80 iterations and max disparity 768
 for Middlebury. Original architecture defaults, CPU Float32. Build-only missing
 `opt_einsum` supplied locally as version 3.4.0; application has no new dependency.
-Initial two-eye process terminated during second-eye inference with
-`fatal library error, lookup self`; first-eye prediction completed in 94.931 s.
-Separate-eye retries with 8 and 1 CPU threads also terminated with the same
-message before a complete pair was produced. The cause is not established.
-Do not label this an inherent model failure or infer its quality from it. There
-is no complete Selective pair/render to compare, and no completed runtime claim
-for 80 iterations. Keep it a research candidate, not a bundled model.
+The complete original 8-thread two-eye run ultimately exited successfully:
+left 94.931 s, right 106.284 s, both 201.215 s, peak process RSS about 2335 MiB.
+All four arrays in the saved scene were loaded and checked finite; all five
+CPU RVS views rendered. Foreground bars and background are separated well;
+the comparison shows no clear overall quality breakthrough over Middlebury
+that establishes a need for another bundled choice at this stage.
+
+Correction to the first investigation note: interim process/log snapshots were
+mistakenly interpreted as completed failures. Final process results and logs show
+success, including the subsequent isolated left-eye runs (8 threads, 111.875 s;
+1 thread, 361.830 s). The extra trials were unnecessary and overlapped, so these
+Selective timings are rough resource observations, not an uncontended benchmark.
+Do not claim Selective-IGEV failed or has an inherent CPU stability problem.
+No ONNX/DirectML export or GPU validation was performed for Selective-IGEV.
 
 ## Product recommendation from this limited study
 
