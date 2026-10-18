@@ -22,7 +22,29 @@ Frames identisch, Abbruch beendet den Backend-Prozess. Dies ist Software-OpenGL,
 kein Beleg für Hardwareleistung. Die GL-Eingabesicht normalisiert Tiefen anhand
 des tatsächlichen Kartenmaximums für den GPU-Tiefenpuffer; die Weltkoordinaten
 werden durch die gepaarte Upstream-Umrechnung unverändert wiederhergestellt.
-Weitere tatsächliche Build-/Paketprüfungen werden nach Abschluss ergänzt.
+## Abgeschlossene Paketprüfung
+
+Build: https://github.com/muelli1975/Wigglinde/actions/runs/39116665350
+Quellstand im Paket: 166d0a5cdf2dc2457329a56577e97b43c0a0b593.
+Linux: 40 Quellcodeprüfungen, seriell/paralleler CPU-Vergleich bitgleich,
+OpenGL-Farben/Geometrie für positive und negative Disparitäten, Wiederholung
+und Abbruch bestanden. Mesa llvmpipe, keine physische GPU.
+Windows: beide nativen Backends gebaut, Quellprüfungen und seriell/paralleler
+CPU-Vergleich bestanden. Tatsächlich gepackte EXE mit MP4/GIF/PNG (vier
+Iterationen) und zusätzlicher PNG-Ausgabe mit acht Iterationen ausgeführt.
+Alle vier Modelldateien samt Metadaten/Hash geprüft. GUI Deutsch/Englisch,
+Busy-Zustand, Buttonfarben, Geometrie und Speicherung/Neustart geprüft;
+Windows-Screenshot visuell kontrolliert. OpenGL und DirectML auf dem Hosted-
+Windows-Treiber ausdrücklich nicht verfügbar; kein physischer GPU-Test.
+Lokal außerdem vollständige Exporte aller vier Kombinationen CPU/OpenGL ×
+4/8 ausgeführt; GUI bei 100/125/150 Prozent geprüft.
+
+Wigglinde_1.1_Test2_Windows_x64.zip: 250103169 Byte, SHA-256
+544397a18a780f2c4afd403ca6bb1033323a0ac793c732f699a85011eda9fd64.
+Heruntergeladenes Archiv CRC- und hashgeprüft; Quellstand und Modelle
+abgeglichen. Keine Logs, Settings oder Temp-Dateien im Paket.
+Dieser Prüfvermerk liegt nach dem Build und ist daher nicht Teil des
+Quell-Snapshots im Archiv. Fotoqualität/Gitter und reale GPU-Leistung offen.
 
 # Entwicklungsstand und Qualitätsprüfung
 
