@@ -1,3 +1,11 @@
+# Aktueller Testauftrag 1.1 Test 2
+
+18. Oktober 2026: separate Windows-Testversion mit RVS OpenGL und wählbaren
+vier/acht LAS2-H-Iterationen. CPU-Renderer bleibt zum direkten Vergleich wählbar.
+Gleicher H-Checkpoint, Simple 5, Precision 1 und unveränderte Bildgeometrie.
+Kein Vulkan, kein Lentikular und keine neuen Blending-Regler in diesem Test.
+Die folgenden Festlegungen dokumentieren den Umfang der stabilen 1.0.
+
 # Wigglinde: vereinbarter Projektumfang
 
 

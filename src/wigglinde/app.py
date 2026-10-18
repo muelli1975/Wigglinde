@@ -45,10 +45,10 @@ class WigglindeApp(ctk.CTk):
         self.locale=self.settings.get('language','de');self.locale='en' if self.locale=='en' else 'de'
         left,top,right,bottom=screen_work_area(self);scale=self._get_window_scaling()
         width=min(820,max(780,int((right-left-32)/scale)))
-        height=min(650,max(600,int((bottom-top-72)/scale)))
+        height=min(686,max(636,int((bottom-top-72)/scale)))
         x=left+max(0,(right-left-round(width*scale))//2)
         y=top+max(0,(bottom-top-round(height*scale)-40)//2)
-        self.minsize(780,600);self.geometry(f'{width}x{height}+{x}+{y}')
+        self.minsize(780,636);self.geometry(f'{width}x{height}+{x}+{y}')
         self.configure(fg_color=T.BG_MAIN);self.grid_columnconfigure(0,weight=1);self.grid_rowconfigure(4,weight=1)
         self.files=[];self.source_root=None;self.controls=[];self.running=False;self.processor=None
         self.events=queue.Queue();self.cancel_event=threading.Event();self.started=0
@@ -61,6 +61,8 @@ class WigglindeApp(ctk.CTk):
         saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height}[saved_options.format]
         self.size=ctk.StringVar(value=str(saved_size));self.fps=ctk.StringVar(value=str(saved_options.fps));self.duration=ctk.StringVar(value=f'{saved_options.cycle_seconds:g}')
         self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
+        self.iterations=ctk.StringVar(value=str(self.settings.get('iterations',4)) if self.settings.get('iterations',4) in (4,8) else '4')
+        self.renderer=ctk.StringVar(value='CPU' if self.settings.get('renderer')=='cpu' else 'OpenGL')
         self.settings.pop('model',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
         self.adapters={'CPU':None,**{f'GPU {i}: {name}':i for i,name in graphics_adapters()}}
@@ -123,9 +125,13 @@ class WigglindeApp(ctk.CTk):
         self._label(bar,DEFAULT_MODEL,width=112,anchor='w').grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
-        self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
+        bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,9))
+        self._label(bar,'renderer').grid(row=0,column=0,padx=(0,8))
+        self.renderer_menu=self._menu(bar,self.renderer,['CPU','OpenGL'],width=112);self.renderer_menu.grid(row=0,column=1)
+        self._label(bar,'iterations').grid(row=0,column=2,padx=(16,8))
+        self.iterations_menu=self._menu(bar,self.iterations,['4','8'],width=75);self.iterations_menu.grid(row=0,column=3)
         self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
-        self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
+        self.depth_check.grid(row=4,column=0,sticky='w',padx=12,pady=(0,9))
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -198,7 +204,7 @@ class WigglindeApp(ctk.CTk):
         return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,cycle_seconds=duration,save_depth=self.save_depth.get())
     def _save(self):
         self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
-            last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get())
+            last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),iterations=int(self.iterations.get()),renderer=self.renderer.get().lower())
         # A partly typed invalid number must not discard the last valid options.
         try:
             options=self._wiggle_options();options.validate();self.settings['wiggle']=options.to_settings()
@@ -235,7 +241,7 @@ class WigglindeApp(ctk.CTk):
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,int(self.iterations.get()),self.renderer.get().lower()),daemon=True).start()
     def _set_busy(self,busy):
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
@@ -252,10 +258,10 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False):
+    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,iterations=4,renderer='opengl'):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
-            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name)
+            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,iterations=iterations,renderer=renderer)
             for i,path in enumerate(files):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))
@@ -270,7 +276,7 @@ class WigglindeApp(ctk.CTk):
                     details=error_message(e)
                     if memory_failure(e):details=self.tr('memory')+'\n'+details
                     errors.append(f'{path.name}: {self._error_message(details[:1800])}')
-                    if str(e).startswith('GPU_INIT: '):break
+                    if str(e).startswith('GPU_INIT: ') or 'OPENGL_INIT:' in str(e):break
         except ExportCancelled:cancelled=True
         except Exception as e:errors.append(self._error_message(str(e)))
         finally:

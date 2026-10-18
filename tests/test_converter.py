@@ -60,3 +60,17 @@ class ConverterInputTests(unittest.TestCase):
             renderer=RVSRenderer(exe,StereoScene(rgb,rgb,d,d),[.5],root/'work')
             stored=np.fromfile(renderer.work/'color0.rgb',dtype=np.float32)
             self.assertTrue(np.allclose(stored,128/255))
+
+    def test_opengl_uses_one_context_and_keeps_geometry(self):
+        import json
+        with TemporaryDirectory() as folder:
+            root=Path(folder);exe=root/'renderer';exe.touch()
+            rgb=np.full((4,8,3),128,np.uint8);d=np.full((4,8),-3,np.float32)
+            scene=StereoScene(rgb,rgb,d,d)
+            cpu=RVSRenderer(exe,scene,[0,.5,1],root/'cpu')
+            gl=RVSRenderer(exe,scene,[0,.5,1],root/'gl',backend='opengl')
+            self.assertEqual(gl.schedule['workers'],1)
+            self.assertEqual(cpu.bias,gl.bias)
+            self.assertEqual((cpu.work/'color0.rgb').read_bytes(),(gl.work/'color0.rgb').read_bytes())
+            self.assertEqual((cpu.work/'depth0.z').read_bytes(),(gl.work/'depth0.z').read_bytes())
+            self.assertEqual(json.loads((cpu.work/'cameras.json').read_text()),json.loads((gl.work/'cameras.json').read_text()))

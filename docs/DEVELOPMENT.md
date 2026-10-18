@@ -1,3 +1,22 @@
+# 1.1 Test 2: OpenGL und vier/acht Iterationen
+
+Auftrag vom 18. Oktober 2026, separate Branch test-opengl-iterations-1.1 auf
+Basis main b0985bc. Zwei unabhängige Auswahlen CPU/OpenGL und 4/8 Iterationen.
+Gleicher H-Checkpoint und gleiche signierte Geometrie; Precision 1, Simple 5,
+RGB und Exportgrößen unverändert. Kein automatischer Rendererwechsel.
+OpenGL läuft in einem getrennten Backend-Prozess mit verborgenem GLFW-Kontext,
+seriellen GPU-Ansichten und bisheriger CPU-Füllung. Treiberadapter/GL-Version
+werden protokolliert; die DirectML-Gerätewahl betrifft nur die Tiefenberechnung.
+Quell-Anpassungen sind unter THIRD_PARTY.md und im reproduzierbaren Skript benannt.
+Acht Iterationen werden in eigene dynamische ONNX-Graphen exportiert, jeweils
+Float32 und die bisherige Float16/Float32-Richtlinie. Modellmetadaten/Hashes
+und die gewählte Iterationszahl werden vor Sitzungsstart geprüft.
+
+Lokaler nativer Acht-Iterationen-/ONNX-Vergleich bei 416x128 und 448x160:
+maximal 0,00003565 / 0,00003219 Pixel Unterschied. 40 schnelle Tests bestanden.
+Dies belegt keine Verbesserung des Problemgitters und keine physische GPU.
+Weitere tatsächliche Build-/Paketprüfungen werden nach Abschluss ergänzt.
+
 # Entwicklungsstand und Qualitätsprüfung
 
 

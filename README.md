@@ -1,3 +1,5 @@
+> **1.1 Test 2 – separate Windows test build.** Choose CPU/OpenGL rendering and four/eight LAS2-H iterations. Test defaults: OpenGL and four iterations. Compute still selects the LAS2 device only; the graphics driver selects the OpenGL adapter, recorded in the run log. OpenGL 4.4 is required; unavailable contexts report an error, and CPU remains an explicit choice. Simple 5, Precision 1, sizes and export behavior are retained. All models are bundled for offline use. The stable 1.0 documentation follows below. Existing same-name outputs are replaced as before; use separate output folders when comparing variants.
+
 # Wigglinde 1.0
 
 [Deutsch](README_DE.md)

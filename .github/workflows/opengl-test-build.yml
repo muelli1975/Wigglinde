@@ -1,0 +1,130 @@
+name: OpenGL and iterations test build
+on:
+  push:
+    branches: [test-opengl-iterations-1.1]
+    paths: ['src/**', 'tools/**', 'tests/**', 'pyproject.toml', 'README*', 'THIRD_PARTY.md', '.github/workflows/opengl-test-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+concurrency:
+  group: wigglinde-opengl-test
+  cancel-in-progress: true
+jobs:
+  models-and-opengl:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Native prerequisites
+        run: sudo apt-get update && sudo apt-get install -y libopencv-dev libglfw3-dev libglm-dev libgl1-mesa-dev xvfb
+      - name: Development dependencies
+        run: |
+          python -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . onnx==1.17.0 timm==1.0.30
+      - name: Pinned upstream sources and checkpoint
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess,urllib.request,hashlib
+          for url,folder,revision in [
+            ('https://gitlab.com/mpeg-i-visual/rvs.git','rvs-reference','d757a353c7f84d228ac30c179d6ff9de356c6101'),
+            ('https://github.com/TomTomTommi/LiteAnyStereo.git','las2-reference','8c97bd4c4da3712c2ac60003a23201dfdb5935f4')]:
+            subprocess.run(['git','clone',url,folder],check=True)
+            subprocess.run(['git','-C',folder,'checkout',revision],check=True)
+          urllib.request.urlretrieve('https://huggingface.co/tomtomtommi/LiteAnyStereoV2/resolve/17788d91618646fa781a14462e2926a034b9f49d/LAS2_H.pth','LAS2_H.pth')
+          assert hashlib.sha256(Path('LAS2_H.pth').read_bytes()).hexdigest()=='758585a25c3a332711f92a28ad1437e08080fb714ad1146de7cf2c01ce8479f4'
+      - name: Export native eight-iteration model and verify mixed precision
+        run: |
+          python tools/export_las2.py --model-size h --iterations 8 --source las2-reference --weights LAS2_H.pth --output models/las2/LAS2_H_iter8_dynamic.onnx
+          python tools/convert_las2_mixed.py --source models/las2/LAS2_H_iter8_dynamic.onnx --output models/las2/LAS2_H_iter8_mixed.onnx --report output/eight-mixed.json
+      - name: Build both renderer backends
+        run: |
+          cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR=$PWD/rvs-reference -DWITH_RVS_OPENGL=ON
+          cmake --build build/rvs --parallel 4
+      - name: Source and native renderer checks
+        run: |
+          python -m unittest discover -s tests -v
+          python tools/rvs/check_parallel.py --renderer build/rvs/wigglinde_rvs --output output/rvs-parallel.json
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a python tools/rvs/check_opengl.py --renderer build/rvs/wigglinde_rvs_gl --output output/opengl-linux.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: las2-h-eight-iterations
+          path: models/las2/LAS2_H_iter8_*
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opengl-linux-verification
+          path: output/*.json
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: models-and-opengl
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: las2-h-onnx
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/las2
+      - uses: actions/download-artifact@v4
+        with:
+          name: directml-no-telemetry
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: runtime-wheel
+      - uses: actions/download-artifact@v4
+        with:
+          name: las2-h-eight-iterations
+          path: models/las2
+      - name: Dependencies and pinned sources
+        shell: pwsh
+        run: |
+          python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
+          python -m pip install -e . pyinstaller
+          git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
+          git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
+          git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
+          git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
+          git clone https://github.com/glfw/glfw.git glfw-reference
+          git -C glfw-reference checkout a74efa0d5628b74adc0426af4c5710e287fa7c2c
+          git clone https://github.com/g-truc/glm.git glm-reference
+          git -C glm-reference checkout bf71a834948186f4097caa076cd2663c69a10e1e
+          curl.exe -fL --retry 3 -o opencv.exe https://github.com/opencv/opencv/releases/download/4.10.0/opencv-4.10.0-windows.exe
+          if ((Get-FileHash opencv.exe -Algorithm SHA256).Hash.ToLower() -ne 'bff38466091c313dac21a0b73eea8278316a89c1d434c6f0b10697e087670168') { throw 'OpenCV checksum mismatch' }
+          7z x opencv.exe -oopencv-sdk -y | Out-Null
+      - name: Build and verify backends
+        shell: pwsh
+        run: |
+          cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR="$pwd/rvs-reference" -DOpenCV_DIR="$pwd/opencv-sdk/opencv/build/x64/vc16/lib" -DWITH_RVS_OPENGL=ON -DGLFW_SOURCE_DIR="$pwd/glfw-reference" -DGLM_INCLUDE_DIR="$pwd/glm-reference"
+          cmake --build build/rvs --config Release --parallel 4
+          $env:PATH = "$pwd/opencv-sdk/opencv/build/x64/vc16/bin;$env:PATH"
+          Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll' | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName build/rvs/Release/ }
+          python -m unittest discover -s tests -v
+          python tools/rvs/check_parallel.py --renderer build/rvs/Release/wigglinde_rvs.exe --output output/rvs-parallel.json
+          python tools/rvs/check_opengl.py --renderer build/rvs/Release/wigglinde_rvs_gl.exe --output output/opengl-windows.json --allow-unavailable
+      - name: Package and test actual application
+        run: python tools/package_windows.py --opencv opencv-sdk/opencv --rvs rvs-reference --las2 las2-reference
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-1.1-Test2-Windows_x64
+          path: |
+            dist/Wigglinde_1.1_Test2_Windows_x64.zip
+            output/*.json
+            output/gui-build-check.png
+          if-no-files-found: warn
+          retention-days: 30

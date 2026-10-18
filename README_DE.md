@@ -1,3 +1,5 @@
+> **1.1 Test 2 – separate Windows-Testversion.** Renderer: CPU oder OpenGL; LAS2-H: vier oder acht Iterationen. Standard in diesem Test: OpenGL und vier Iterationen. Berechnung wählt weiterhin nur das Gerät für LAS2; OpenGL verwendet den vom Grafiktreiber gewählten Adapter, der im Laufprotokoll steht. OpenGL benötigt Version 4.4. Bei fehlender Unterstützung erscheint ein Fehler; CPU kann ausdrücklich gewählt werden. Simple 5, Precision 1, Größen und Exportverhalten bleiben erhalten. Die Modelle liegen vollständig lokal bei. Die folgenden Angaben zur veröffentlichten 1.0 beschreiben die stabile Version. Ergebnisse gleicher Namen werden wie bisher ersetzt; für Vergleiche getrennte Ausgabeordner verwenden.
+
 # Wigglinde 1.0
 
 [English](README.md)

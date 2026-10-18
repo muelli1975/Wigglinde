@@ -50,8 +50,11 @@ def collect_files(folder,excluded=()):
                    and p.resolve() not in excluded),key=lambda p:p.name)
 
 class Processor:
-    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None):
+    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None,iterations=4,renderer='cpu'):
         if model_name!=DEFAULT_MODEL:raise ValueError('Diese Version verwendet LAS2-H / this version uses LAS2-H')
+        if iterations not in (4,8):raise ValueError('Iterationen: 4 oder 8 wählen. / Iterations: choose 4 or 8.')
+        if renderer not in ('cpu','opengl'):raise ValueError('Unbekannter Renderer / unknown renderer')
+        self.iterations=iterations;self.renderer_kind=renderer
         self.model_name=model_name;self.device_id=device_id;self.device_name=device_name or ('CPU' if device_id is None else f'GPU {device_id}')
         self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
         self.logs=LocalLogs(app_dir);self.last_diagnostics=None
@@ -70,7 +73,7 @@ class Processor:
 
     def _run(self,path,options,progress,output_root):
         options.validate();check_cancelled(self.event.is_set)
-        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=4,precision='float32' if self.device_id is None else 'mixed_float16_float32',layout='Full-SBS',input_order='left_then_right',
+        context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=self.iterations,renderer_backend=self.renderer_kind,precision='float32' if self.device_id is None else 'mixed_float16_float32',layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
         trace=RunTrace(self.logs,context,self.device_id,child=lambda:self.renderer.process.pid if self.renderer and self.renderer.process else None)
         self.last_diagnostics=trace.data
@@ -83,7 +86,7 @@ class Processor:
             trace.event('prepared',processing_size=size,matching_offset=offset)
             if self.model is None:
                 progress(self.model_name+' laden',0.)
-                with trace.stage('model_load'):self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
+                with trace.stage('model_load'):self.model=LiteAnyStereo(model_path(self.app_dir,self.model_name,self.device_id,self.iterations),device_id=self.device_id,iterations=self.iterations)
             if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
             trace.data['depth_provider']=self.model.session.get_providers()
             dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress,stage=trace.stage)
@@ -95,12 +98,13 @@ class Processor:
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
+                trace.data.update(output=str(output),renderer=f'RVS {"OpenGL" if self.renderer_kind=="opengl" else "CPU"} Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
                 with temporary_workspace(temp_root) as work:
-                    exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                    backend='wigglinde_rvs_gl' if self.renderer_kind=='opengl' else 'wigglinde_rvs'
+                    exe=self.app_dir/'backend'/(backend+('.exe' if os.name=='nt' else ''))
                     if not exe.is_file() and getattr(sys,'frozen',False):
                         exe=Path(sys._MEIPASS)/'backend'/exe.name
-                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
+                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset,backend=self.renderer_kind)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule
                     def render(position):

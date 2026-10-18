@@ -6,7 +6,8 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--opencv',type=Path,required=True);p.add_argument('--rvs',type=Path,required=True);p.add_argument('--las2',type=Path,required=True);a=p.parse_args()
     subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--name','Wigglinde','--icon','assets/wigglinde.ico','--runtime-hook','tools/pyi_offline.py','--collect-all','customtkinter','--collect-all','imageio_ffmpeg','--collect-all','onnxruntime','--hidden-import','PIL.ImageCms','launch.py'],check=True)
     target=Path('dist/Wigglinde');backend=target/'backend';backend.mkdir()
-    shutil.copy2('build/rvs/Release/wigglinde_rvs.exe',backend)
+    for name in ('wigglinde_rvs','wigglinde_rvs_gl'):
+        shutil.copy2(f'build/rvs/Release/{name}.exe',backend)
     shutil.copy2(a.opencv/'build/x64/vc16/bin/opencv_world4100.dll',backend)
     # Microsoft permits app-local deployment of its redistributable CRT/OpenMP DLLs.
     roots=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.CRT')
@@ -19,7 +20,7 @@ def main():
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     shutil.copytree('assets',target/'assets')
     models=target/'models/las2';models.mkdir(parents=True)
-    for stem in ['LAS2_H_dynamic','LAS2_H_mixed']:
+    for stem in ['LAS2_H_dynamic','LAS2_H_mixed','LAS2_H_iter8_dynamic','LAS2_H_iter8_mixed']:
         for extension in ['onnx','json']:
             name=f'{stem}.{extension}';shutil.copy2(Path('models/las2')/name,models)
     notices=target/'licenses';notices.mkdir();shutil.copytree('runtime-wheel/licenses',notices/'DirectML-runtime');shutil.copy2('runtime-wheel/provenance.json',notices/'DirectML-build.json');shutil.copy2('LICENSE',notices/'Wigglinde-MIT.txt')
@@ -27,7 +28,7 @@ def main():
         file=Path(sys.base_prefix)/name
         if file.is_file():
             dest=notices/'Python-Tcl-Tk'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,dest)
-    shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt')
+    shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt');shutil.copy2('glfw-reference/LICENSE.md',notices/'GLFW-LICENSE.md');shutil.copy2('glm-reference/copying.txt',notices/'GLM-LICENSE.txt')
     for name in ['LICENSE','LICENSE.txt','LICENSE-3RD-PARTY.txt','LICENSE_FFMPEG.txt']:
         for f in a.opencv.rglob(name):
             if f.is_file() and f.stat().st_size<2_000_000:
@@ -57,15 +58,15 @@ def main():
         if not raw:continue
         f=Path(raw.decode())
         if f.is_file():dest=source/f;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(f,dest)
-    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.0',renderer='RVS CPU Precision 1 Simple 5',models=['LAS2-H'],default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (LAS2), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
+    (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version='1.1 Test 2',renderer='RVS CPU / OpenGL Precision 1 Simple 5',models=['LAS2-H'],default_model='LAS2-H',model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},iterations=[4,8],devices='CPU / DirectML (LAS2), CPU / OpenGL (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
-    subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=360)
-    archive=Path('dist/Wigglinde_1.0_Windows_x64.zip')
+    subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=600)
+    archive=Path('dist/Wigglinde_1.1_Test2_Windows_x64.zip')
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,6) as z:
         for f in target.rglob('*'):
             if f.is_file() and '_temp' not in f.parts and f.relative_to(target).parts[0]!='logs' and f.name!='settings.json':z.write(f,f.relative_to(target.parent))
     import hashlib
-    verification=dict(status='passed',platform='Windows_x64',commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),filename=archive.name,bytes=archive.stat().st_size,sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),actual_packaged_application_tested=True,renderer='RVS CPU Precision 1 Simple 5')
+    verification=dict(status='passed',platform='Windows_x64',commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),filename=archive.name,bytes=archive.stat().st_size,sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),actual_packaged_application_tested=True,renderer='RVS CPU / OpenGL Precision 1 Simple 5')
     Path('output/package-verification.json').write_text(json.dumps(verification,indent=2),encoding='utf-8')
     print(json.dumps(verification))
 if __name__=='__main__':main()

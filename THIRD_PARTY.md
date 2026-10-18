@@ -39,3 +39,19 @@ psutil (BSD-3-Clause). OpenCV is built statically with bundled zlib/libpng and i
 third-party notices are included. RVS OpenMP uses LLVM libomp on macOS (Apache-2.0
 with LLVM exceptions) or GCC libgomp on Linux (GPL with GCC Runtime Library
 Exception). The original completion WAV and ICO are included unchanged.
+
+## OpenGL test build
+
+The separate test build additionally uses GLFW 3.4 (zlib/libpng license,
+`a74efa0d5628b74adc0426af4c5710e287fa7c2c`) and GLM 0.9.9.8
+(MIT / Modified MIT, tag object `bf71a834948186f4097caa076cd2663c69a10e1e`).
+Exact upstream notices are included under licenses. OpenGL is provided by the
+system graphics driver, which is not redistributed in the application.
+
+RVS remains pinned to `d757a353c7f84d228ac30c179d6ff9de356c6101`.
+`tools/rvs/runtime/prepare_opengl.py` makes three small, explicit integration
+fixes on generated source copies: call the existing virtual depth accessor
+without an invalid derived-class cast; delete temporary blending VAO/VBO objects;
+throw on shader compilation/link failure. Rasterization/blending shader source
+and inpainting are retained. The hidden GLFW context requires OpenGL 4.4 because
+the upstream FBO uses glClearTexImage.

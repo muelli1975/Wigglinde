@@ -17,7 +17,7 @@ class DeviceSelectionTests(unittest.TestCase):
         return types.SimpleNamespace(disable_telemetry_events=lambda:None,get_available_providers=lambda:['CPUExecutionProvider','DmlExecutionProvider'],SessionOptions=types.SimpleNamespace,InferenceSession=create,ExecutionMode=types.SimpleNamespace(ORT_SEQUENTIAL='sequential'))
     def model(self,folder,precision='float32'):
         path=Path(folder)/'model.onnx';path.write_bytes(b'test')
-        path.with_suffix('.json').write_text(json.dumps({'onnx_sha256':hashlib.sha256(b'test').hexdigest(),'precision':precision}))
+        path.with_suffix('.json').write_text(json.dumps({'onnx_sha256':hashlib.sha256(b'test').hexdigest(),'precision':precision,'iterations':4}))
         return path
     def test_directml_options_and_selected_adapter_are_explicit(self):
         with TemporaryDirectory() as folder,patch.dict('sys.modules',onnxruntime=self.runtime(['DmlExecutionProvider','CPUExecutionProvider'])):
@@ -44,3 +44,14 @@ class DeviceSelectionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'incorrect model precision'):
                 LiteAnyStereo(self.model(folder),device_id=0)
             self.assertIsNone(self.request)
+
+    def test_eight_iteration_model_is_distinct_and_validated(self):
+        self.assertEqual(model_path('/app',DEFAULT_MODEL,iterations=8).name,'LAS2_H_iter8_dynamic.onnx')
+        self.assertEqual(model_path('/app',DEFAULT_MODEL,0,8).name,'LAS2_H_iter8_mixed.onnx')
+        with TemporaryDirectory() as folder,patch.dict('sys.modules',onnxruntime=self.runtime(['CPUExecutionProvider'])):
+            path=self.model(folder)
+            with self.assertRaisesRegex(ValueError,'iteration count'):LiteAnyStereo(path,iterations=8)
+            self.assertIsNone(self.request)
+            meta=json.loads(path.with_suffix('.json').read_text());meta['iterations']=8
+            path.with_suffix('.json').write_text(json.dumps(meta))
+            self.assertEqual(LiteAnyStereo(path,iterations=8).iterations,8)

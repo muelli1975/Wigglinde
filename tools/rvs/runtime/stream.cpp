@@ -13,6 +13,13 @@
 #include <future>
 #include <vector>
 #include <algorithm>
+#include <memory>
+#ifdef WIGGLINDE_OPENGL
+#include "gl_context.hpp"
+#endif
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -22,9 +29,10 @@
 #endif
 using Clock=std::chrono::steady_clock;
 double seconds(Clock::time_point t){return std::chrono::duration<double>(Clock::now()-t).count();}
+std::string quoted(const std::string& s){std::string out="\"";for(char c:s){if(c=='"' || c=='\\')out+='\\';if(static_cast<unsigned char>(c)>=32)out+=c;}return out+"\"";}
 struct Stats {
- std::string path;double input=0,render=0,write=0,pipeline=0;size_t views=0;int workers=1,inner=0,opencv=8;
- void save()const noexcept{try{if(path.empty())return;std::ofstream f(path);f<<"{\"schema_version\":2,\"input_seconds\":"<<input<<",\"render_work_seconds\":"<<render<<",\"render_pipeline_seconds\":"<<pipeline<<",\"stream_write_seconds\":"<<write<<",\"views\":"<<views<<",\"parallel_workers\":"<<workers<<",\"threads_per_view\":"<<inner<<",\"opencv_threads\":"<<opencv<<"}";}catch(...){}}
+ std::string path,backend="cpu",vendor,gpu,version;double input=0,render=0,write=0,pipeline=0;size_t views=0;int workers=1,inner=0,opencv=8;
+ void save()const noexcept{try{if(path.empty())return;std::ofstream f(path);f<<"{\"schema_version\":2,\"input_seconds\":"<<input<<",\"render_work_seconds\":"<<render<<",\"render_pipeline_seconds\":"<<pipeline<<",\"stream_write_seconds\":"<<write<<",\"views\":"<<views<<",\"parallel_workers\":"<<workers<<",\"threads_per_view\":"<<inner<<",\"opencv_threads\":"<<opencv<<",\"backend\":"<<quoted(backend)<<",\"gl_vendor\":"<<quoted(vendor)<<",\"gl_renderer\":"<<quoted(gpu)<<",\"gl_version\":"<<quoted(version)<<"}";}catch(...){}}
 };
 template<class M> M readmat(const std::string&p,cv::Size size){M m(size);std::ifstream f(p,std::ios::binary);f.read((char*)m.data,m.total()*m.elemSize());if(!f)throw std::runtime_error("Datei konnte nicht gelesen werden: "+p);return m;}
 int main(int argc,char**argv){Stats stats;try{
@@ -36,7 +44,22 @@ int main(int argc,char**argv){Stats stats;try{
  _setmode(_fileno(stdout),_O_BINARY);
 #endif
  // Upstream diagnostic text must never enter the binary frame stream.
- std::cout.rdbuf(std::cerr.rdbuf());cv::setNumThreads(stats.opencv);rvs::g_with_opengl=false;
+ std::cout.rdbuf(std::cerr.rdbuf());
+ // Keep C printf diagnostics out of the binary pipe as well as C++ cout.
+#ifdef _WIN32
+ FILE* output=_fdopen(_dup(_fileno(stdout)),"wb");_dup2(_fileno(stderr),_fileno(stdout));
+#else
+ FILE* output=fdopen(dup(fileno(stdout)),"wb");dup2(fileno(stderr),fileno(stdout));
+#endif
+ if(!output)throw std::runtime_error("Could not open frame stream");
+#ifdef WIGGLINDE_OPENGL
+ stats.workers=1;stats.backend="opengl";stats.opencv=stats.inner?stats.inner:8;
+ GLContext context;stats.vendor=context.vendor;stats.gpu=context.renderer;stats.version=context.version;
+ rvs::g_with_opengl=true;
+#else
+ rvs::g_with_opengl=false;
+#endif
+ cv::setNumThreads(stats.opencv);
  auto cfg=rvs::Config::loadFromFile(argv[1]);std::vector<rvs::View> inputs;
  for(int i=0;i<2;i++){
   auto size=cfg.params_real[i].getSize();
@@ -49,11 +72,26 @@ int main(int argc,char**argv){Stats stats;try{
   if(stats.inner)omp_set_num_threads(stats.inner);
 #endif
   auto render_start=Clock::now();
+#ifdef WIGGLINDE_OPENGL
+  const auto target_size=cfg.params_virtual[v].getSize();
+  auto fbo=rvs::opengl::RFBO::getInstance();fbo->init(target_size);fbo->clear_buffers();
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE && glGetError()!=GL_NO_ERROR)
+   throw std::runtime_error("OpenGL framebuffer initialization failed");
+#endif
   rvs::BlendedViewSimple blender(5.f);
   for(int i=0;i<2;i++){
-   rvs::GenericTransformer tr;tr.set_inputPosition(&cfg.params_real[i]);tr.set_targetPosition(&cfg.params_virtual[v]);
+#ifdef WIGGLINDE_OPENGL
+   rvs::OpenGLTransformer tr;
+#else
+   rvs::GenericTransformer tr;
+#endif
+   tr.set_inputPosition(&cfg.params_real[i]);tr.set_targetPosition(&cfg.params_virtual[v]);
    rvs::SynthetisedViewTriangle synth;synth.setSpaceTransformer(&tr);synth.compute(inputs[i]);blender.blend(synth);
   }
+#ifdef WIGGLINDE_OPENGL
+  blender.assignFromGL2CV(target_size);
+  GLenum gl_error=glGetError();if(gl_error!=GL_NO_ERROR)throw std::runtime_error("OpenGL rendering failed: "+std::to_string(gl_error));
+#endif
   auto color=rvs::detail::inpaint(blender.get_color(),blender.get_inpaint_mask(),true);
   cv::resize(color,color,cfg.params_virtual[v].getSize());
   if(!color.isContinuous())color=color.clone();
@@ -81,9 +119,12 @@ int main(int argc,char**argv){Stats stats;try{
   const auto& color=result.color;
   size_t bytes=color.total()*color.elemSize();
   stats.render+=result.elapsed;auto write_start=Clock::now();
-  if(std::fwrite(color.data,1,bytes,stdout)!=bytes)throw std::runtime_error("Ausgabe abgebrochen");
-  std::fflush(stdout);std::cerr<<"view "<<v+1<<"/"<<cfg.params_virtual.size()<<std::endl;
+  if(std::fwrite(color.data,1,bytes,output)!=bytes)throw std::runtime_error("Ausgabe abgebrochen");
+  std::fflush(output);std::cerr<<"view "<<v+1<<"/"<<cfg.params_virtual.size()<<std::endl;
   stats.write+=seconds(write_start);stats.views++;
  }
- stats.pipeline=seconds(pipeline_start);stats.save();return 0;
+#ifdef WIGGLINDE_OPENGL
+ rvs::opengl::RFBO::getInstance()->free();
+#endif
+ std::fclose(output);stats.pipeline=seconds(pipeline_start);stats.save();return 0;
 }catch(const std::exception&e){stats.save();std::cerr<<e.what()<<std::endl;return 1;}}

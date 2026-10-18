@@ -48,3 +48,13 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
   as a side effect. A change to the shared standard requires explicit coordination.
 - Test geometry and output behavior with meaningful examples. Do not create
   slow, arbitrary acceptance gates or claim unrun tests have passed.
+
+## Authorized 1.1 Test 2 experiment (18 October 2026)
+
+On the separate test-opengl-iterations-1.1 branch, Christoph requested an OpenGL
+test build with selectable four/eight LAS2-H iterations. CPU/OpenGL selection
+provides an explicit comparison; test defaults OpenGL/four. Same H weights and
+precision policy; eight uses separate verified ONNX exports. Retain Simple 5.
+Do not update main, v1.0, or stable release assets. The older blending test branch
+remains separate. OpenGL adapter is driver-selected and recorded independently
+of the DirectML depth device. No automatic renderer fallback.

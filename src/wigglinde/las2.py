@@ -6,7 +6,7 @@ import numpy as np
 from .wiggle_export import ExportCancelled
 
 class LiteAnyStereo:
-    def __init__(self,model_path,threads=None,device_id=None):
+    def __init__(self,model_path,threads=None,device_id=None,iterations=4):
         import onnxruntime as ort
         ort.disable_telemetry_events()
         path=Path(model_path)
@@ -14,6 +14,9 @@ class LiteAnyStereo:
         meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
         if hashlib.sha256(path.read_bytes()).hexdigest()!=meta['onnx_sha256']:
             raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.')
+        if iterations not in (4,8) or meta.get('iterations')!=iterations:
+            raise ValueError('Falsche Iterationszahl im Modell / incorrect model iteration count')
+        self.iterations=iterations
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
         self.model_name=meta.get('model');self.device_id=device_id;self.precision=meta.get('precision','float32')

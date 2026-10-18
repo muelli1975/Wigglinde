@@ -6,12 +6,17 @@ from .wiggle_export import ExportCancelled,check_cancelled
 from .resources import render_plan
 
 class RVSRenderer:
-    def __init__(self,executable,scene,positions,work,matching_offset=64):
+    def __init__(self,executable,scene,positions,work,matching_offset=64,backend='cpu'):
+        if backend not in ('cpu','opengl'):raise ValueError('Unbekannter Renderer / unknown renderer')
+        self.backend=backend
         self.executable=Path(executable);self.scene=scene;self.positions=positions;self.work=Path(work)
         self.work.mkdir(parents=True,exist_ok=True);self.process=None;self.metrics={}
         if not self.executable.is_file():raise FileNotFoundError(f'Der RVS-Renderer fehlt: {self.executable}')
         h,w=scene.left.shape[:2]
         self.schedule=render_plan(w,h,len(positions))
+        if backend=='opengl':
+            # Upstream's FBO/context are process globals owned by one thread.
+            self.schedule.update(workers=1,threads_per_view=self.schedule['cpu_capacity'],policy='opengl_single_context_v1')
         bias=max(float(matching_offset),1-float(min(scene.left_disparity.min(),scene.right_disparity.min())))
         self.bias=bias
         for i,(rgb,d) in enumerate(zip((scene.left,scene.right),(scene.left_disparity,scene.right_disparity))):
