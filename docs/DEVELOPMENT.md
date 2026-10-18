@@ -15,6 +15,13 @@ und die gewählte Iterationszahl werden vor Sitzungsstart geprüft.
 Lokaler nativer Acht-Iterationen-/ONNX-Vergleich bei 416x128 und 448x160:
 maximal 0,00003565 / 0,00003219 Pixel Unterschied. 40 schnelle Tests bestanden.
 Dies belegt keine Verbesserung des Problemgitters und keine physische GPU.
+OpenGL lokal mit Mesa llvmpipe ausgeführt: zwei analytische Szenen, positive und
+negative Disparität, fünf Blickpositionen, gerade/ungerade Bildgrößen. Farben und
+Verschiebungsrichtung stimmen im geprüften Innenbereich auf 8 Bit exakt, wiederholte
+Frames identisch, Abbruch beendet den Backend-Prozess. Dies ist Software-OpenGL,
+kein Beleg für Hardwareleistung. Die GL-Eingabesicht normalisiert Tiefen anhand
+des tatsächlichen Kartenmaximums für den GPU-Tiefenpuffer; die Weltkoordinaten
+werden durch die gepaarte Upstream-Umrechnung unverändert wiederhergestellt.
 Weitere tatsächliche Build-/Paketprüfungen werden nach Abschluss ergänzt.
 
 # Entwicklungsstand und Qualitätsprüfung

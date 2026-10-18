@@ -10,12 +10,12 @@ def check(executable,output,allow_unavailable=False):
     reports=[]
     with tempfile.TemporaryDirectory(prefix='wigglinde_gl_') as folder:
         root=Path(folder)
-        for width,height in [(320,160),(323,161)]:
-            y,x=np.mgrid[:height,:width+8]
+        for width,height,shift in [(320,160,8),(323,161,-4)]:
+            y,x=np.mgrid[:height,:width+16]
             texture=np.stack([.1+.5*x/(width+8),.2+.4*y/height,.3+.1*np.sin(x/20)],axis=-1)
             texture=np.rint(texture*255).astype(np.uint8)
-            left=texture[:,:width];right=texture[:,8:width+8]
-            disparity=np.full((height,width),8,np.float32)
+            left=texture[:,8:width+8];right=texture[:,8+shift:width+8+shift]
+            disparity=np.full((height,width),shift,np.float32)
             scene=StereoScene(left,right,disparity,disparity)
             positions=[0,.25,.5,.75,1]
             renderer=RVSRenderer(executable,scene,positions,root/str(width),backend='opengl')
@@ -28,7 +28,7 @@ def check(executable,output,allow_unavailable=False):
             seconds=time.perf_counter()-begin
             errors=[]
             for frame,t in zip(frames,positions):
-                expected=texture[:,round(t*8):round(t*8)+width]
+                expected=texture[:,8+round(t*shift):8+round(t*shift)+width]
                 error=np.abs(frame[8:-8,16:-16].astype(float)-expected[8:-8,16:-16])
                 # Smooth analytic plane: catch blank frames, RGB swaps, flips and
                 # wrong shift direction; allow upstream subpixel raster/filter differences.
@@ -37,7 +37,7 @@ def check(executable,output,allow_unavailable=False):
             repeat=list(renderer.frames(lambda:False))
             assert all(np.array_equal(a,b) for a,b in zip(frames,repeat))
             assert renderer.metrics['backend']=='opengl' and renderer.metrics['parallel_workers']==1
-            reports.append(dict(size=[width,height],seconds=seconds,mean_errors_8bit=errors,repeat_identical=True,metrics=renderer.metrics))
+            reports.append(dict(size=[width,height],disparity_px=shift,seconds=seconds,mean_errors_8bit=errors,repeat_identical=True,metrics=renderer.metrics))
         event=threading.Event();renderer=RVSRenderer(executable,scene,np.linspace(0,1,101),root/'cancel',backend='opengl')
         frames=renderer.frames(event.is_set);next(frames);process=renderer.process;event.set();renderer.cancel()
         try:next(frames);raise AssertionError('Cancellation ignored')

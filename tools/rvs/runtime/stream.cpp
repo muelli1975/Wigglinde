@@ -35,6 +35,15 @@ struct Stats {
  void save()const noexcept{try{if(path.empty())return;std::ofstream f(path);f<<"{\"schema_version\":2,\"input_seconds\":"<<input<<",\"render_work_seconds\":"<<render<<",\"render_pipeline_seconds\":"<<pipeline<<",\"stream_write_seconds\":"<<write<<",\"views\":"<<views<<",\"parallel_workers\":"<<workers<<",\"threads_per_view\":"<<inner<<",\"opencv_threads\":"<<opencv<<",\"backend\":"<<quoted(backend)<<",\"gl_vendor\":"<<quoted(vendor)<<",\"gl_renderer\":"<<quoted(gpu)<<",\"gl_version\":"<<quoted(version)<<"}";}catch(...){}}
 };
 template<class M> M readmat(const std::string&p,cv::Size size){M m(size);std::ifstream f(p,std::ios::binary);f.read((char*)m.data,m.total()*m.elemSize());if(!f)throw std::runtime_error("Datei konnte nicht gelesen werden: "+p);return m;}
+// The GL depth buffer needs normalized positive depth while world coordinates
+// retain the same units. This accessor is paired with upstream's divide/multiply.
+struct MemoryInputView : rvs::View {
+ float maximum;
+ MemoryInputView(cv::Mat3f color,cv::Mat1f depth):rvs::View(color,depth,cv::Mat1f(depth.size(),1.f),cv::Mat1f(depth.size(),1.f)){
+  double value;cv::minMaxLoc(depth,nullptr,&value);maximum=static_cast<float>(value*1.01);
+ }
+ float get_max_depth()const override{return maximum;}
+};
 int main(int argc,char**argv){Stats stats;try{
  if(argc!=3 && argc!=5)throw std::runtime_error("wigglinde_rvs config.json metrics.json [workers threads_per_view]");
  if(argc==5){stats.workers=std::stoi(argv[3]);stats.inner=std::stoi(argv[4]);if(stats.workers<1 || stats.inner<1)throw std::runtime_error("Invalid thread count");}
@@ -60,10 +69,10 @@ int main(int argc,char**argv){Stats stats;try{
  rvs::g_with_opengl=false;
 #endif
  cv::setNumThreads(stats.opencv);
- auto cfg=rvs::Config::loadFromFile(argv[1]);std::vector<rvs::View> inputs;
+ auto cfg=rvs::Config::loadFromFile(argv[1]);std::vector<MemoryInputView> inputs;
  for(int i=0;i<2;i++){
   auto size=cfg.params_real[i].getSize();
-  inputs.emplace_back(readmat<cv::Mat3f>(cfg.texture_names[i],size),readmat<cv::Mat1f>(cfg.depth_names[i],size),cv::Mat1f(size,1.f),cv::Mat1f(size,1.f));
+  inputs.emplace_back(readmat<cv::Mat3f>(cfg.texture_names[i],size),readmat<cv::Mat1f>(cfg.depth_names[i],size));
  }
  stats.input=seconds(input_start);
  struct Result {cv::Mat3f color;double elapsed;};
