@@ -1,5 +1,27 @@
 # 1.1 Test 3: LAS2-Modellvergleich
 
+## Paketprüfung abgeschlossen
+
+Build: https://github.com/muelli1975/Wigglinde/actions/runs/39120123438
+Paketquellstand: `fd9a801b7968161e0db312ee3cf60cb4a79e1c44`.
+40 Quelltests auf Linux/Windows bestanden. S/M/L native/ONNX-Vergleiche und
+Mischgraph-Prüfungen abgeschlossen; S-Toleranzüberschreitung ausdrücklich
+protokolliert, keine Zusage allgemeiner Foto-Parität. H-Graphen unverändert
+wiederverwendet. CPU-RVS entspricht dem stabilen Quellpfad; serieller/paralleler
+Vergleich bitgleich. Die tatsächlich gepackte Windows-EXE führt alle vier
+Modelle aus; MP4/GIF/PNG, Tiefenkarten, Sitzungswiederverwendung, Deutsch/Englisch,
+Modellwahl-Speicherung, alte Renderer-/Iterations-Einstellungen, Busy-Farben und
+Geometrie bei 100/125/150 Prozent geprüft. Windows-Screenshot visuell kontrolliert.
+Hosted DirectML konnte nicht initialisiert werden; keine physische GPU-Prüfung.
+
+`Wigglinde_1.1_Test3_Windows_x64.zip`: 427226713 Byte, SHA-256
+`427e48270bbcbcd190c055025ba4b7e1bdb78fd3b47ed699155fdd05551d882d`.
+Heruntergeladenes Archiv CRC-/hashgeprüft, acht Modelle samt Hashes/Metadaten,
+Quellidentität (plattformbedingte Zeilenenden berücksichtigt) und Bereinigung
+bestätigt. Keine Logs, Einstellungen, GL-EXE/-Lizenzen oder iter8-Modelle.
+Dieser Prüfvermerk entstand nach dem Build und gehört nicht zum Quell-Snapshot
+im ZIP. IGEV++-Untersuchung: [IGEV_REVIEW.md](IGEV_REVIEW.md).
+
 18. Oktober 2026, auf ausdrücklichen Wunsch von Christoph: OpenGL und die
 Iterationsauswahl aus dem Testbuild entfernen und auf den unveränderten
 RVS-CPU-Pfad der stabilen 1.0 zurückgehen. Simple 5, Precision 1, Bildgeometrie,
