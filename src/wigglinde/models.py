@@ -1,11 +1,18 @@
-"""Fixed LAS2-H model. No automatic model substitution."""
+"""Explicit local LAS2 model selection. No automatic model substitution."""
 from pathlib import Path
 
-MODELS=('LAS2-H',)
+MODELS=('LAS2-S','LAS2-M','LAS2-L','LAS2-H')
 DEFAULT_MODEL='LAS2-H'
 
-def model_path(app_dir,name,device_id=None,iterations=4):
-    if iterations not in (4,8):raise ValueError('Iterationen: 4 oder 8 wählen. / Iterations: choose 4 or 8.')
+def model_iterations(name):
     if name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(name))
-    suffix='_dynamic.onnx' if device_id is None else '_mixed.onnx'
-    return Path(app_dir)/'models/las2'/(name.replace('-','_')+('_iter8' if iterations==8 else '')+suffix)
+    return 4 if name=='LAS2-H' else None
+
+def model_precision(name,device_id=None):
+    model_iterations(name)
+    return 'mixed_float16_float32' if name=='LAS2-H' and device_id is not None else 'float32'
+
+def model_path(app_dir,name,device_id=None):
+    if name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(name))
+    suffix='_mixed.onnx' if model_precision(name,device_id)=='mixed_float16_float32' else '_dynamic.onnx'
+    return Path(app_dir)/'models/las2'/(name.replace('-','_')+suffix)

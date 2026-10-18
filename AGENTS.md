@@ -49,12 +49,13 @@ for this project's agreed scope and `docs/DEVELOPMENT.md` for its actual status.
 - Test geometry and output behavior with meaningful examples. Do not create
   slow, arbitrary acceptance gates or claim unrun tests have passed.
 
-## Authorized 1.1 Test 2 experiment (18 October 2026)
+## Authorized 1.1 Test 3 experiment (18 October 2026)
 
-On the separate test-opengl-iterations-1.1 branch, Christoph requested an OpenGL
-test build with selectable four/eight LAS2-H iterations. CPU/OpenGL selection
-provides an explicit comparison; test defaults OpenGL/four. Same H weights and
-precision policy; eight uses separate verified ONNX exports. Retain Simple 5.
-Do not update main, v1.0, or stable release assets. The older blending test branch
-remains separate. OpenGL adapter is driver-selected and recorded independently
-of the DirectML depth device. No automatic renderer fallback.
+Christoph requests removing OpenGL and the iteration selector from the test build,
+cleaning their code/dependencies/models, and comparing LAS2 variants. Work on
+`test-models-1.1`; retain stable main/v1.0 and the historical test branches.
+Explicit S/M/L/H model menu, default H. H has four fixed iterations and its
+existing CPU FP32 / DirectML mixed policy. S/M/L use FP32 on both devices.
+Unchanged CPU RVS Precision 1 Simple 5 and geometry/export behavior. No GL backend
+or eight-iteration graphs in this package. Separately investigate IGEV++ quality,
+code/weight licenses, CPU/ONNX/DirectML; do not bundle an unverified integration.

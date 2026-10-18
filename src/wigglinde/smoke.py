@@ -6,7 +6,7 @@ from PIL import Image
 from . import theme as T
 from .processor import Processor
 from .las2 import LiteAnyStereo
-from .models import MODELS,DEFAULT_MODEL,model_path
+from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations
 from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
@@ -112,36 +112,31 @@ def run(app_dir,report_path):
     latest=json.loads((Path(app_dir)/'logs/latest_run.json').read_text(encoding='utf-8'))
     assert latest['run_id']==diagnosis['run_id'] and latest['status']=='passed'
     processor.close()
-    # The eight-iteration graph must execute; selecting its filename is not a test.
-    processor8=Processor(app_dir,iterations=8)
-    try:
-        result8=processor8.convert(source,work/'Eight iterations',WiggleOptions(format='png',cycle_seconds=.5))
-        assert result8['iterations']==8 and processor8.model.iterations==8
-        assert processor8.model.session.get_providers()==['CPUExecutionProvider']
-    finally:processor8.close()
-    # Test the packaged GL executable, or record an explicit missing-context result
-    # on hosted Windows machines. Linux development tests require actual GL output.
-    from .rvs import RVSRenderer
-    from .stereo import StereoScene
-    d=np.full((160,320),8,np.float32)
-    glrenderer=RVSRenderer(Path(app_dir)/'backend'/('wigglinde_rvs_gl.exe' if sys.platform=='win32' else 'wigglinde_rvs_gl'),StereoScene(texture[:,:320],texture[:,8:328],d,d),[0,.5,1],work/'opengl',backend='opengl')
-    try:
-        glframes=list(glrenderer.frames(lambda:False))
-        assert len(glframes)==3 and all(frame.shape==(160,320,3) for frame in glframes)
-        assert glrenderer.metrics['backend']=='opengl'
-        opengl=dict(status='passed',metrics=glrenderer.metrics,physical_gpu_validated=False)
-    except RuntimeError as error:
-        if 'OPENGL_INIT:' not in str(error):raise
-        opengl=dict(status='unavailable',reason=str(error),physical_gpu_validated=False)
     assert hashlib.sha256(source.read_bytes()).hexdigest()==before
     for height in (720,1080,2160):assert WiggleOptions(video_height=height).output_size(3840,2160)==(round(height*16/9),height)
     for side in (640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
+    # Every additional estimator runs through the actual packaged CPU/RVS path.
+    model_checks=[]
+    for label in MODELS:
+        if label==DEFAULT_MODEL:continue
+        alternate=Processor(app_dir,model_name=label)
+        try:
+            result=alternate.convert(source,work/label,WiggleOptions(format='png',cycle_seconds=.5))
+            assert result['model']==label and result['iterations'] is None
+            assert result['renderer']=='RVS CPU Precision 1 Simple 5'
+            frames=sorted(Path(result['output']).glob('*.png'))
+            assert len(frames)==15
+            with Image.open(frames[7]) as image:assert image.size==(320,160)
+            alternate_session=id(alternate.model.session)
+            repeated=alternate.diagnose(source,WiggleOptions())
+            assert repeated['model']==label and id(alternate.model.session)==alternate_session
+            model_checks.append(dict(model=label,status='passed',iterations=result['iterations'],depth_seconds=result['depth_seconds'],session_reused=True))
+        finally:alternate.close()
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
-    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='LAS2-L',layout='Half-SBS')),encoding='utf-8')
+    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
     assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
-    assert gui.renderer.get()=='OpenGL' and gui.iterations.get()=='4'
     assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
     icon=Path(app_dir)/'assets/wigglinde.ico'
     assert hashlib.sha256(icon.read_bytes()).hexdigest()=='0c8a3539748d834a6532b41ead10e886f802238793f8a625960b40606cad747f'
@@ -150,7 +145,9 @@ def run(app_dir,report_path):
     assert not hasattr(gui,'blending_method') and not hasattr(gui,'blending_menu')
     assert not hasattr(gui,'layout') and 'layout' not in gui.settings
     assert not hasattr(gui,'swap')
-    assert not hasattr(gui,'model_name') and 'model' not in gui.settings
+    assert gui.model_name.get()==DEFAULT_MODEL and gui.model_menu.cget('values')==list(MODELS)
+    assert not hasattr(gui,'iterations') and not hasattr(gui,'renderer')
+    assert 'iterations' not in gui.settings and 'renderer' not in gui.settings
     assert gui.diagnose_button.cget('state')=='disabled'
     gui.input_file.set(str(source));gui.update()
     assert gui.diagnose_button.cget('state')=='normal'
@@ -166,7 +163,7 @@ def run(app_dir,report_path):
         gui.language.set(language);gui._language_changed();gui.update()
         assert gui._wiggle_options().png_height==2160 and gui._wiggle_options().png_fps==60
         assert gui.depth_check.cget('text')==gui.tr('save_depth')
-        assert not hasattr(gui,'model_name')
+        assert gui.model_menu.cget('values')==list(MODELS)
         assert gui.input_folder.get()==str(work) and gui.own.get()==str(work/'Custom output')
         assert gui.output_label.cget('text').endswith(str(work/'Custom output'))
         assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
@@ -178,10 +175,10 @@ def run(app_dir,report_path):
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
     gui.save_depth.set(True);gui.kind.set('MP4');gui._format_changed()
-    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.iterations.set('8');gui.renderer.set('CPU');gui._save();gui.destroy()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('LAS2-L');gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
-    assert gui.iterations.get()=='8' and gui.renderer.get()=='CPU'
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
+    assert gui.model_name.get()=='LAS2-L'
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     gui.input_file.set(str(source));gui.update()
@@ -199,6 +196,9 @@ def run(app_dir,report_path):
             for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
                 gui.device.set(device_label);gui.update()
                 assert geometry_snapshot()==baseline
+        for label in MODELS:
+            gui.model_name.set(label);gui.update()
+            assert geometry_snapshot()==baseline
         gui.device.set(device_before)
     for scaling in (1.,1.25,1.5):
         ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling);gui.update()
@@ -220,15 +220,18 @@ def run(app_dir,report_path):
     # Explicit development probe, including WARP on a hosted runner if available.
     # A software adapter does not establish performance on a physical GPU.
     directml=[]
+    model_metadata=[]
+    for label in MODELS:
+        for device in ([None,0] if sys.platform=='win32' else [None]):
+            path=model_path(app_dir,label,device)
+            meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
+            assert meta['model']==label and meta['iterations']==model_iterations(label)
+            assert hashlib.sha256(path.read_bytes()).hexdigest()==meta['onnx_sha256']
+            model_metadata.append(dict(model=label,device=device,sha256=meta['onnx_sha256']))
+    assert not list((Path(app_dir)/'models/las2').glob('*iter8*'))
+    assert not list((Path(app_dir)/'backend').glob('*_gl*'))
     mixed_path=model_path(app_dir,DEFAULT_MODEL,device_id=0)
     mixed_meta=None
-    model_metadata=[]
-    for iterations in (4,8):
-        for device in (None,0) if sys.platform=='win32' else (None,):
-            path=model_path(app_dir,DEFAULT_MODEL,device,iterations)
-            meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
-            assert meta['iterations']==iterations and hashlib.sha256(path.read_bytes()).hexdigest()==meta['onnx_sha256']
-            model_metadata.append(meta)
     if sys.platform=='win32':
         mixed_meta=json.loads(mixed_path.with_suffix('.json').read_text(encoding='utf-8'))
         assert mixed_meta['precision']=='mixed_float16_float32'
@@ -253,4 +256,4 @@ def run(app_dir,report_path):
                 np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',formats=results,eight_iterations=result8,opengl=opengl,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

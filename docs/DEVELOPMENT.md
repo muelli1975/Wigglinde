@@ -1,3 +1,33 @@
+# 1.1 Test 3: LAS2-Modellvergleich
+
+18. Oktober 2026, auf ausdrücklichen Wunsch von Christoph: OpenGL und die
+Iterationsauswahl aus dem Testbuild entfernen und auf den unveränderten
+RVS-CPU-Pfad der stabilen 1.0 zurückgehen. Simple 5, Precision 1, Bildgeometrie,
+Größen, Export und Suchversatz bleiben erhalten. LAS2-S/M/L/H sind ausdrücklich
+wählbar, Standard H. H bleibt bei vier Iterationen und seiner bisherigen
+CPU-Float32-/DirectML-Mischpräzision. S/M/L behalten Float32 auf CPU und GPU.
+S-Mischpräzision fiel im kleinen Konvertierungsvergleich durch (bis 1,3421 px
+Abweichung an verletzten Toleranzen); sie wird nicht ausgeliefert. Kein stilles
+Modell-, Geräte- oder Auflösungs-Fallback. Keine automatische Modellinstallation.
+
+Separate Branch `test-models-1.1`, keine Änderung an main oder Release 1.0.
+Modellwahl wird gespeichert und pro Auftrag eingefroren. Alte Einstellungen für
+Renderer/Iterationen werden entfernt. Keine OpenGL-Bibliotheken, GL-Backend-EXE
+oder Acht-Iterationen-Graphen im neuen Paket. Stabile H-Graphen aus geprüftem
+Run 39041230523 werden bytegleich wiederverwendet; S/M/L aus denselben gepinnten
+LAS2-Quellen und Gewichtsrevisionen nativ/ONNX verglichen. Die Modellnamen
+sind Vergleichsoptionen, keine Zusage einer Qualitätsrangfolge.
+
+Praxisrückmeldung Test 2: OpenGL etwa doppelt so schnell, aber erheblich schlechtere
+Kanten mit hellen Säumen. Acht Iterationen bringen am Problemfoto keinen sichtbaren
+Vorteil; CPU/vier ist die Qualitätsreferenz. Beschleunigung rechtfertigt hier
+keinen Qualitätsverlust. `bild054_cs.jpg` zeigt bereits in der H-Tiefenkarte
+fehlende Trennung vieler Gitteröffnungen vom Vordergrund. Das ist ein Befund am
+vorliegenden Foto, kein allgemeiner Modellvergleich. IGEV++ wird separat auf
+Lizenz, CPU/ONNX/DirectML und das Foto geprüft und noch nicht mitgeliefert.
+
+Die frühere Test-2-Implementierung ist nur historische Dokumentation:
+
 # 1.1 Test 2: OpenGL und vier/acht Iterationen
 
 Auftrag vom 18. Oktober 2026, separate Branch test-opengl-iterations-1.1 auf

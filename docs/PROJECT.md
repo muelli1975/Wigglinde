@@ -1,10 +1,11 @@
-# Aktueller Testauftrag 1.1 Test 2
+# Aktueller Testauftrag 1.1 Test 3
 
-18. Oktober 2026: separate Windows-Testversion mit RVS OpenGL und wählbaren
-vier/acht LAS2-H-Iterationen. CPU-Renderer bleibt zum direkten Vergleich wählbar.
-Gleicher H-Checkpoint, Simple 5, Precision 1 und unveränderte Bildgeometrie.
-Kein Vulkan, kein Lentikular und keine neuen Blending-Regler in diesem Test.
-Die folgenden Festlegungen dokumentieren den Umfang der stabilen 1.0.
+Separate Windows-Testversion: Modellwahl LAS2-S/M/L/H, Standard H mit vier festen
+Iterationen. Ausschließlich RVS CPU, Precision 1, Simple 5. OpenGL und die
+Iterationsauswahl aus Test 2 entfallen. H-Präzision bleibt unverändert; S/M/L
+Float32 auch auf DirectML. Qualität hat Vorrang. IGEV++ zunächst separat prüfen,
+eine spätere Einbindung hängt von Qualität, Lizenz und belastbarer Integration ab.
+Kein Lentikular in diesem Test. Die folgenden Abschnitte dokumentieren die stabile 1.0.
 
 # Wigglinde: vereinbarter Projektumfang
 

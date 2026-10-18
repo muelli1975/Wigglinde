@@ -1,12 +1,13 @@
-"""Local LAS2 M/L/H ONNX inference; explicit CPU/DirectML, signed mounted disparity."""
+"""Local LAS2 S/M/L/H ONNX inference; explicit CPU/DirectML, signed mounted disparity."""
 from pathlib import Path
 import hashlib,json,threading
 from contextlib import nullcontext
 import numpy as np
 from .wiggle_export import ExportCancelled
+from .models import model_iterations,model_precision
 
 class LiteAnyStereo:
-    def __init__(self,model_path,threads=None,device_id=None,iterations=4):
+    def __init__(self,model_path,threads=None,device_id=None):
         import onnxruntime as ort
         ort.disable_telemetry_events()
         path=Path(model_path)
@@ -14,20 +15,19 @@ class LiteAnyStereo:
         meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
         if hashlib.sha256(path.read_bytes()).hexdigest()!=meta['onnx_sha256']:
             raise ValueError('Die LAS2-Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.')
-        if iterations not in (4,8) or meta.get('iterations')!=iterations:
+        if meta.get('iterations')!=model_iterations(meta.get('model')):
             raise ValueError('Falsche Iterationszahl im Modell / incorrect model iteration count')
-        self.iterations=iterations
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
         self.model_name=meta.get('model');self.device_id=device_id;self.precision=meta.get('precision','float32')
-        expected='float32' if device_id is None else 'mixed_float16_float32'
+        expected=model_precision(self.model_name,device_id)
         if self.precision!=expected:
             raise ValueError('Falsche Modellpräzision / incorrect model precision: '+self.precision)
         if device_id is None:
             self.session=ort.InferenceSession(str(path),sess_options=settings,providers=['CPUExecutionProvider'])
         else:
             # Official DirectML constraints: sequential execution, no memory pattern.
-            # The selected GPU model mixes FP16/FP32 internally. Public tensors
+            # H mixes FP16/FP32; S/M/L retain Float32. Public tensors
             # remain Float32; no image-size change or integer quantization.
             if 'DmlExecutionProvider' not in ort.get_available_providers():
                 raise RuntimeError('GPU_INIT: DirectML is not available in this runtime.')

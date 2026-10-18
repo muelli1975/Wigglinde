@@ -2,7 +2,7 @@
 import re
 
 TEXT = {
-    'version': ('1.1 Test 2', '1.1 Test 2'),
+    'version': ('1.1 Test 3', '1.1 Test 3'),
     'save_depth': ('Tiefenkarten zusätzlich speichern', 'Also save depth maps'),
     'diagnose': ('Tiefenberechnung testen', 'Test depth estimation'),
     'diagnosed': ('Tiefentest abgeschlossen.', 'Depth test completed.'),
@@ -24,8 +24,7 @@ TEXT = {
     'model': ('Modell', 'Model'),
     'unavailable': ('nicht verfügbar', 'unavailable'),
     'device': ('Berechnung', 'Compute'),
-    'renderer': ('Renderer', 'Renderer'),
-    'iterations': ('Iterationen', 'Iterations'),
+    'renderer': ('RVS: CPU', 'RVS: CPU'),
     'ready': ('Bereit.', 'Ready.'),
     'start': ('Start', 'Start'),
     'cancel': ('Abbrechen', 'Cancel'),

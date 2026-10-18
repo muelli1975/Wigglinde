@@ -1,3 +1,19 @@
+# 1.1 Test 3 model comparison build
+
+The separate [test workflow](.github/workflows/models-test-build.yml) exports
+LAS2-S/M/L Float32 from the pinned source/weight revisions and compares native
+inference with ONNX on two image shapes. Windows reuses unchanged verified H
+Float32/mixed graphs and the telemetry-free DirectML runtime from run 39041230523.
+The five graphs and matching metadata are local. S/M/L use the same Float32 graph
+on CPU and DirectML; only H uses its existing mixed graph for DirectML.
+
+Only the RVS CPU backend is built. No GLFW/GLM/OpenGL prerequisites or iteration-8
+exports are needed. `tools/package_windows.py` creates
+`dist/Wigglinde_1.1_Test3_Windows_x64.zip` and runs the actual EXE with all four
+estimators, GUI model persistence, old-setting migration, MP4/GIF/PNG and depth maps.
+This is a test artifact; no stable release is published by this workflow.
+The following historical instructions describe stable 1.0 builds.
+
 # Source use and portable builds
 
 Wigglinde uses Python 3.12. Install the application dependencies with
