@@ -1,6 +1,6 @@
 # Wigglinde 1.1
 
-[Deutsch](README_DE.md)
+[Downloads and SHA-256](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1) · [Deutsch](README_DE.md)
 
 Wigglinde is a local tool for creating wiggle animations from already
 aligned Full-SBS stereo photographs. It estimates depth from the existing left
@@ -11,8 +11,6 @@ Processing runs locally, without an account, cloud or tracking. The portable
 package includes the model and runtimes; no automatic downloads are required.
 The interface is available in German and English.
 
-[Download Wigglinde 1.1](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1)
-
 ![Wigglinde 1.1 interface (English)](docs/screenshots/Wigglinde.png)
 
 ## Requirements and installation
@@ -22,10 +20,10 @@ The interface is available in German and English.
   with a DirectX 12 driver can accelerate depth estimation through DirectML.
 - No separate Python installation, CUDA toolkit or build tools are required.
 
-Extract `Wigglinde_1.1_Windows_x64.zip` and start `Wigglinde\Wigglinde.exe`.
-On Linux extract `Wigglinde_1.1_Linux_x64.tar.gz` and start `Wigglinde/Wigglinde`.
-On macOS extract the matching `Wigglinde_1.1_macOS_AppleSilicon.zip` or
-`Wigglinde_1.1_macOS_Intel.zip` and open `Wigglinde/Wigglinde.app`.
+Extract [Wigglinde_1.1_Windows_x64.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Windows_x64.zip) and start `Wigglinde\Wigglinde.exe`.
+On Linux extract [Wigglinde_1.1_Linux_x64.tar.gz](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Linux_x64.tar.gz) and start `Wigglinde/Wigglinde`.
+On macOS extract the matching [Wigglinde_1.1_macOS_AppleSilicon.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_AppleSilicon.zip) or
+[Wigglinde_1.1_macOS_Intel.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_Intel.zip) and open `Wigglinde/Wigglinde.app`.
 The macOS apps are ad-hoc signed, without Apple notarization; macOS may require
 approval in **System Settings → Privacy & Security → Open Anyway** after first launch.
 Keep the complete application folder together, including models and assets beside
@@ -80,7 +78,7 @@ resolution or precision. Fine structures, occlusions, glass and reflections can
 still produce doubled contours or transition artifacts.
 
 
-WebP and AVIF default to 720p/30 fps, with fixed quality and no quality selector. AVIF uses encoder speed 6. Existing GIF/MP4 settings are unchanged.
+WebP and AVIF default to 720p at 30 fps and loop continuously.
 
 ## Output and depth maps
 

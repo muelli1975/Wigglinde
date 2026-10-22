@@ -1,6 +1,6 @@
 # Wigglinde 1.1
 
-[English](README.md)
+[Downloads und SHA-256](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1) · [English](README.md)
 
 Wigglinde ist ein lokales Programm, das Wiggle-Animationen aus bereits
 justierten Full-SBS-Stereofotos erzeugt. **Lite Any Stereo V2 H (LAS2-H)** oder
@@ -11,8 +11,6 @@ Die Verarbeitung läuft lokal, ohne Konto, Cloud oder Tracking. Das portable Pak
 enthält Modell und Laufzeiten; automatische Downloads sind nicht erforderlich.
 Die Oberfläche ist auf Deutsch und Englisch verfügbar.
 
-[Wigglinde 1.1 herunterladen](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1)
-
 ![Wigglinde 1.1 – englische Oberfläche](docs/screenshots/Wigglinde.png)
 
 ## Voraussetzungen und Installation
@@ -22,10 +20,10 @@ Die Oberfläche ist auf Deutsch und Englisch verfügbar.
   mit DirectX-12-Treiber die Tiefenberechnung über DirectML beschleunigen.
 - Keine separate Python-Installation, kein CUDA-Toolkit und keine Build-Werkzeuge nötig.
 
-`Wigglinde_1.1_Windows_x64.zip` entpacken und `Wigglinde\Wigglinde.exe` starten.
-Unter Linux `Wigglinde_1.1_Linux_x64.tar.gz` entpacken und `Wigglinde/Wigglinde` starten.
-Unter macOS das passende `Wigglinde_1.1_macOS_AppleSilicon.zip` oder
-`Wigglinde_1.1_macOS_Intel.zip` entpacken und `Wigglinde/Wigglinde.app` öffnen.
+[Wigglinde_1.1_Windows_x64.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Windows_x64.zip) entpacken und `Wigglinde\Wigglinde.exe` starten.
+Unter Linux [Wigglinde_1.1_Linux_x64.tar.gz](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Linux_x64.tar.gz) entpacken und `Wigglinde/Wigglinde` starten.
+Unter macOS das passende [Wigglinde_1.1_macOS_AppleSilicon.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_AppleSilicon.zip) oder
+[Wigglinde_1.1_macOS_Intel.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_Intel.zip) entpacken und `Wigglinde/Wigglinde.app` öffnen.
 Die Mac-Apps sind ad hoc signiert, ohne Apple-Notarisierung. macOS kann nach dem
 ersten Start eine Freigabe unter **Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen** verlangen.
 Den vollständigen Programmordner zusammenhalten, einschließlich Modell und Assets
@@ -84,7 +82,7 @@ Präzision nicht automatisch. Feine Strukturen, Verdeckungen, Glas und Spiegelun
 können weiterhin Doppelkonturen oder Übergangsstörungen verursachen.
 
 
-WebP und AVIF starten mit 720p/30 fps und fester Qualität ohne Qualitätsauswahl. AVIF nutzt Encoder-Geschwindigkeit 6. Bestehende GIF-/MP4-Einstellungen bleiben unverändert.
+WebP und AVIF starten mit 720p bei 30 fps und werden als Endlosschleife abgespielt.
 
 ## Ausgabe und Tiefenkarten
 
