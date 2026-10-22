@@ -120,6 +120,7 @@ def run(app_dir,report_path):
     for height in (720,1080,2160):assert WiggleOptions(video_height=height).output_size(3840,2160)==(round(height*16/9),height)
     for side in (640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
     # Every additional estimator runs through the actual packaged CPU/RVS path.
+    png_result=next(r for r in results if "depth_export" in r)
     model_checks=[]
     for label in MODELS:
         if label==DEFAULT_MODEL:continue
@@ -127,12 +128,12 @@ def run(app_dir,report_path):
         try:
             result=alternate.convert(source,work/'Ausgabe_Größe',WiggleOptions(format='png',cycle_seconds=.5,save_depth=True))
             assert result['model']==label and result['iterations']==model_iterations(label)
-            assert result['output']!=results[2]['output'] and Path(results[2]['output']).exists()
+            assert result['output']!=png_result['output'] and Path(png_result['output']).exists()
             assert model_suffix(label) in Path(result['output']).name
             metadata=json.loads(Path(result['depth_export']['metadata_file']).read_text(encoding='utf-8'))
             assert metadata['model']==label and metadata['iterations']==model_iterations(label)
             assert metadata['precision']=='float32' and metadata['device']=='CPU'
-            assert set(metadata['maps'].values()).isdisjoint(Path(p).name for p in results[2]['depth_export']['files'])
+            assert set(metadata['maps'].values()).isdisjoint(Path(p).name for p in png_result['depth_export']['files'])
             assert result['renderer']=='RVS CPU Precision 1 Simple 5'
             frames=sorted(Path(result['output']).glob('*.png'))
             assert len(frames)==15
