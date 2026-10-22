@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1 — export update, 2026-10-22
+
+- Add animated WebP at fixed quality 85 and animated AVIF at fixed quality 60, 4:4:4, speed 6.
+- Both new formats: 720/1080/2160 maximum image height, 30/60 fps, default 720p/30 fps, infinite looping and no upscaling.
+- Preserve existing GIF/MP4/PNG outputs, model/renderer settings and version number.
+
 ## 1.1 — 2026-10-18
 
 - Add IGEV++ Middlebury with sixteen fixed iterations as an alternative to LAS2-H.

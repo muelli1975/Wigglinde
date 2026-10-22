@@ -58,6 +58,8 @@ bleiben erhalten. Vor der Tiefenberechnung wird mit Lanczos verkleinert.
 | Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Fünf Pendelzyklen |
+| WebP | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 85 |
+| AVIF | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
 | PNG-Bildfolge | 1080 / 2160 Pixel Höhe | 30 / 60 fps | Ein nummerierter Zyklus |
 
@@ -81,6 +83,9 @@ auf jede Grafikkarte passt. Speicherfehler ändern Gerät, Modell, Auflösung od
 Präzision nicht automatisch. Feine Strukturen, Verdeckungen, Glas und Spiegelungen
 können weiterhin Doppelkonturen oder Übergangsstörungen verursachen.
 
+
+WebP und AVIF starten mit 720p/30 fps und fester Qualität ohne Qualitätsauswahl. AVIF nutzt Encoder-Geschwindigkeit 6. Bestehende GIF-/MP4-Einstellungen bleiben unverändert.
+
 ## Ausgabe und Tiefenkarten
 
 Standardziel ist `output` neben dem Einzelbild beziehungsweise im gewählten Bildordner.
@@ -88,7 +93,7 @@ Alternativ kann ein eigener Ausgabeordner verwendet werden.
 
 | Ordner | Inhalt |
 | --- | --- |
-| `wiggle` | MP4, GIF oder ein Ordner je PNG-Bildfolge |
+| `wiggle` | MP4, GIF, WebP, AVIF oder ein Ordner je PNG-Bildfolge |
 | `depth_maps` | Optionale linke/rechte 16-Bit-PNG-Tiefenkarten und Angaben zur Skala |
 | `_temp` | Temporäre Arbeitsdateien, die nach der Verarbeitung entfernt werden |
 

@@ -1,3 +1,11 @@
+# Freigegebenes Export-Update 1.1 — 22. Oktober 2026
+
+WebP fest 85; AVIF fest 60 / 4:4:4 / Speed 6. Beide 720/1080/2160,
+30/60 fps, Standard 720p/30, Endlosschleife, keine Hochskalierung. Keine
+Qualitätsoptionen. GIF/MP4/PNG, Modelle, Renderer und sonstige Standards erhalten.
+Bestehende 1.1 auf allen bisherigen Plattformen aktualisieren. SplatTricia
+beauftragt Christoph separat mit Standard 1080p für seine neuen Formate.
+
 # Freigegebene Version 1.1 — 18. Oktober 2026
 
 Christoph beauftragt die Fertigstellung nach den praktischen Vergleichen.

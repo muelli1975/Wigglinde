@@ -56,6 +56,8 @@ images are reduced with Lanczos before depth estimation.
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Five cycles |
+| WebP | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 85 |
+| AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
 | PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |
 
@@ -77,6 +79,9 @@ on every GPU. Memory errors do not silently change the selected device, model,
 resolution or precision. Fine structures, occlusions, glass and reflections can
 still produce doubled contours or transition artifacts.
 
+
+WebP and AVIF default to 720p/30 fps, with fixed quality and no quality selector. AVIF uses encoder speed 6. Existing GIF/MP4 settings are unchanged.
+
 ## Output and depth maps
 
 The default destination is `output` beside the selected image or inside the selected
@@ -84,7 +89,7 @@ image folder. A custom destination can be used instead.
 
 | Folder | Contents |
 | --- | --- |
-| `wiggle` | MP4, GIF or a folder for each PNG sequence |
+| `wiggle` | MP4, GIF, WebP, AVIF or a folder for each PNG sequence |
 | `depth_maps` | Optional left/right 16-bit PNG depth maps and scale metadata |
 | `_temp` | Temporary working files, removed after processing |
 

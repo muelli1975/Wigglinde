@@ -71,6 +71,10 @@ jobs:
           python tools/rvs/check_parallel.py --renderer build/rvs/Release/wigglinde_rvs.exe --output output/rvs-parallel.json
       - name: Package and test the actual Windows application
         run: python tools/package_windows.py --opencv opencv-sdk/opencv --rvs rvs-reference --las2 las2-reference --igev igev-reference
+      - name: Play packaged WebP and AVIF in the installed browser
+        run: |
+          python -m pip install playwright
+          python tools/check_browser_animations.py output --output output/browser-animations.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -81,6 +85,7 @@ jobs:
             output/windows-smoke.json
             output/gui-build-check.png
             output/rvs-parallel.json
+            output/browser-animations.json
           if-no-files-found: warn
           retention-days: 30
 
