@@ -42,7 +42,7 @@ or `aplay` when installed. Linux and macOS use CPU/Float32 only.
 
 Input must be Full-SBS: the normal-width left half followed by the right half.
 Wigglinde does not align images, swap views, crop the source or adjust convergence.
-Supported formats are JPEG, PNG, TIFF, BMP and WebP with opaque 8-bit RGB or grayscale
+Supported formats are JPEG, PNG, TIFF and BMP with opaque 8-bit RGB or grayscale
 pixels. EXIF orientation and embedded colour profiles are respected.
 
 First-launch defaults: **LAS2-H, MP4, 720p, 30 fps, two-second cycle and CPU**.
@@ -54,7 +54,6 @@ images are reduced with Lanczos before depth estimation.
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Five cycles |
-| WebP | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 80 |
 | AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
 | PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |
@@ -78,7 +77,7 @@ resolution or precision. Fine structures, occlusions, glass and reflections can
 still produce doubled contours or transition artifacts.
 
 
-WebP and AVIF default to 720p at 30 fps and loop continuously.
+AVIF defaults to 720p at 30 fps and loops continuously.
 
 ## Output and depth maps
 
@@ -87,7 +86,7 @@ image folder. A custom destination can be used instead.
 
 | Folder | Contents |
 | --- | --- |
-| `wiggle` | MP4, GIF, WebP, AVIF or a folder for each PNG sequence |
+| `wiggle` | MP4, GIF, AVIF or a folder for each PNG sequence |
 | `depth_maps` | Optional left/right 16-bit PNG depth maps and scale metadata |
 | `_temp` | Temporary working files, removed after processing |
 

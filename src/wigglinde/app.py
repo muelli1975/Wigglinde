@@ -57,8 +57,8 @@ class WigglindeApp(ctk.CTk):
         self.input_file=ctk.StringVar(value=self.settings.get('last_input_file',''))
         self.input_folder=ctk.StringVar(value='' if self.input_file.get() else self.settings.get('last_input_folder',''));self.changing_input=False
         saved_options=WiggleOptions.from_settings(self.settings.get('wiggle',{}))
-        self.kind=ctk.StringVar(value=self.tr('png') if saved_options.format=='png' else {'webp':'WebP','avif':'AVIF'}.get(saved_options.format,saved_options.format.upper()))
-        saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height,'webp':saved_options.webp_height,'avif':saved_options.avif_height}[saved_options.format]
+        self.kind=ctk.StringVar(value=self.tr('png') if saved_options.format=='png' else saved_options.format.upper())
+        saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height,'avif':saved_options.avif_height}[saved_options.format]
         self.size=ctk.StringVar(value=str(saved_size));self.fps=ctk.StringVar(value=str(saved_options.fps));self.duration=ctk.StringVar(value=f'{saved_options.cycle_seconds:g}')
         self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
         saved_model=self.settings.get('model',DEFAULT_MODEL)
@@ -114,7 +114,7 @@ class WigglindeApp(ctk.CTk):
         self._button(own,'choose',self._choose_output,width=110).grid(row=0,column=2)
         self.output_label=self._label(f,'',anchor='w',wraplength=740,justify='left');self.output_label.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,7))
         f=self._panel(3);bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=0,column=0,sticky='ew',padx=12,pady=(9,6));bar.grid_columnconfigure(5,weight=1)
-        self._label(bar,'format').grid(row=0,column=0,padx=(0,8));self.format_menu=self._menu(bar,self.kind,['MP4','GIF','WebP','AVIF',self.tr('png')],self._format_changed,150);self.format_menu.grid(row=0,column=1,padx=(0,18))
+        self._label(bar,'format').grid(row=0,column=0,padx=(0,8));self.format_menu=self._menu(bar,self.kind,['MP4','GIF','AVIF',self.tr('png')],self._format_changed,150);self.format_menu.grid(row=0,column=1,padx=(0,18))
         self._label(bar,'size').grid(row=0,column=2,padx=(0,8));self.size_menu=self._menu(bar,self.size,self._sizes(),width=100);self.size_menu.grid(row=0,column=3)
         self.unit_label=self._label(bar,self.tr('long_side' if self.kind.get()=='GIF' else 'height'));self.unit_label.grid(row=0,column=4,padx=(6,18))
         self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),width=80);self.fps_menu.grid(row=0,column=7)
@@ -151,16 +151,16 @@ class WigglindeApp(ctk.CTk):
             border_color=T.START_HOVER_BORDER if hovered else T.START_BORDER if enabled else T.START_DISABLED_BORDER,
         )
 
-    def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF','WebP','AVIF') else 'PNG'
-    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'WebP':['720','1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
+    def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF','AVIF') else 'PNG'
+    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
-        self.size_menu.configure(values=self._sizes());self.size.set({'GIF':'800','MP4':'720','PNG':'1080','WebP':'720','AVIF':'720'}[self._kind()])
+        self.size_menu.configure(values=self._sizes());self.size.set({'GIF':'800','MP4':'720','PNG':'1080','AVIF':'720'}[self._kind()])
         self.fps_menu.configure(values=self._rates());self.fps.set('15' if self._kind()=='GIF' else '30');self.unit_label.configure(text=self.tr('long_side' if self._kind()=='GIF' else 'height'))
     def _language_changed(self,*_):
         kind=self._kind();self.locale='en' if self.language.get()=='English' else 'de'
         for widget,key in self.localized:widget.configure(text=self.tr(key))
-        self.format_menu.configure(values=['MP4','GIF','WebP','AVIF',self.tr('png')])
+        self.format_menu.configure(values=['MP4','GIF','AVIF',self.tr('png')])
         if kind=='PNG':self.kind.set(self.tr('png'))
         self.unit_label.configure(text=self.tr('long_side' if kind=='GIF' else 'height'))
         self.stop.configure(text=self.tr('cancel'))
@@ -197,7 +197,7 @@ class WigglindeApp(ctk.CTk):
         kind=self._kind().lower()
         try:size=int(self.size.get());fps=int(self.fps.get());duration=float(self.duration.get().replace(',','.'))
         except ValueError:raise ValueError(self.tr('numbers')) from None
-        return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,webp_fps=fps if kind=='webp' else 30,avif_fps=fps if kind=='avif' else 30,webp_height=size if kind=='webp' else 720,avif_height=size if kind=='avif' else 720,cycle_seconds=duration,save_depth=self.save_depth.get())
+        return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,avif_fps=fps if kind=='avif' else 30,avif_height=size if kind=='avif' else 720,cycle_seconds=duration,save_depth=self.save_depth.get())
     def _save(self):
         self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
             last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),model=self.model_name.get())

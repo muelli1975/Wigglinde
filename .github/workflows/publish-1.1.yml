@@ -36,7 +36,7 @@ jobs:
               if (label === 'Windows_x64' ? !report.actual_packaged_application_tested || !smoke.mixed_model_bundled : !report.actual_extracted_package_tested || smoke.mixed_model_bundled) throw new Error('Packaged application not tested: ' + label);
               if (!smoke.model_names_separate || !smoke.depth_model_metadata || smoke.model_checks.length !== 1 || smoke.model_checks[0].model !== models[1] || smoke.model_checks[0].iterations !== 16 || smoke.model_checks[0].status !== 'passed') throw new Error('Middlebury or filename checks missing: ' + label);
               if (smoke.model_metadata.length !== (label === 'Windows_x64' ? 4 : 2) || !smoke.model_metadata.every(m => models.includes(m.model))) throw new Error('Wrong bundled model set: ' + label);
-              if (!['mp4','gif','png','webp','avif'].every(ext => smoke.formats.some(r => r.output.endsWith('.'+ext) || (ext === 'png' && r.output.endsWith('_png'))))) throw new Error('Missing export test: '+label);
+              if (!['mp4','gif','png','avif'].every(ext => smoke.formats.some(r => r.output.endsWith('.'+ext) || (ext === 'png' && r.output.endsWith('_png'))))) throw new Error('Missing export test: '+label);
               if (!smoke.formats.every(r => r.status === 'passed' && r.renderer === renderer && r.blending?.BlendingMethod === 'Simple' && r.blending?.BlendingFactor === 5)) throw new Error('Wrong renderer: ' + label);
               const data = fs.readFileSync(path.join(root, label === 'Windows_x64' ? 'dist' : 'release', name));
               const digest = 'sha256:' + crypto.createHash('sha256').update(data).digest('hex');
@@ -45,5 +45,5 @@ jobs:
             }
             const browserRoot = path.join('packages', 'Wigglinde-1.1-Windows_x64', 'output');
             const browser = JSON.parse(fs.readFileSync(path.join(browserRoot, 'browser-animations.json')));
-            if (browser.status !== 'passed' || !['webp','avif'].every(ext => browser.animations.some(a => a.file.endsWith('.'+ext) && a.status === 'passed'))) throw new Error('Browser animation checks missing');
+            if (browser.status !== 'passed' || !['avif'].every(ext => browser.animations.some(a => a.file.endsWith('.'+ext) && a.status === 'passed'))) throw new Error('Browser animation checks missing');
             require('child_process').execFileSync('python', ['tools/publish_export_update.py', '--root', 'packages', '--config', '.github/export-update.json', '--notes', 'docs/RELEASE_1.1.md'], {stdio:'inherit', env:process.env});

@@ -43,7 +43,7 @@ ausschließlich CPU/Float32.
 
 Die Eingabe muss Full-SBS sein: das ungestauchte linke Halbbild links, das rechte
 rechts. Wigglinde justiert nicht, tauscht keine Ansichten, beschneidet nicht und
-ändert die Scheinfensterlage nicht. Unterstützt werden JPEG, PNG, TIFF, BMP und WebP
+ändert die Scheinfensterlage nicht. Unterstützt werden JPEG, PNG, TIFF und BMP
 mit deckenden RGB-/Graustufenpixeln und 8 Bit pro Kanal. EXIF-Ausrichtung und
 eingebettete Farbprofile werden berücksichtigt.
 
@@ -56,7 +56,6 @@ bleiben erhalten. Vor der Tiefenberechnung wird mit Lanczos verkleinert.
 | Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Fünf Pendelzyklen |
-| WebP | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 80 |
 | AVIF | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
 | PNG-Bildfolge | 1080 / 2160 Pixel Höhe | 30 / 60 fps | Ein nummerierter Zyklus |
@@ -82,7 +81,7 @@ Präzision nicht automatisch. Feine Strukturen, Verdeckungen, Glas und Spiegelun
 können weiterhin Doppelkonturen oder Übergangsstörungen verursachen.
 
 
-WebP und AVIF starten mit 720p bei 30 fps und werden als Endlosschleife abgespielt.
+AVIF startet mit 720p bei 30 fps und wird als Endlosschleife abgespielt.
 
 ## Ausgabe und Tiefenkarten
 
@@ -91,7 +90,7 @@ Alternativ kann ein eigener Ausgabeordner verwendet werden.
 
 | Ordner | Inhalt |
 | --- | --- |
-| `wiggle` | MP4, GIF, WebP, AVIF oder ein Ordner je PNG-Bildfolge |
+| `wiggle` | MP4, GIF, AVIF oder ein Ordner je PNG-Bildfolge |
 | `depth_maps` | Optionale linke/rechte 16-Bit-PNG-Tiefenkarten und Angaben zur Skala |
 | `_temp` | Temporäre Arbeitsdateien, die nach der Verarbeitung entfernt werden |
 

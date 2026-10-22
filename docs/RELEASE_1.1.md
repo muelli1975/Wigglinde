@@ -1,8 +1,7 @@
 # Wigglinde 1.1
 
 - Add IGEV++ Middlebury as an alternative depth model for difficult image structures. LAS2-H remains the default.
-- Add animated WebP and AVIF export alongside MP4, GIF and PNG sequences.
-- Improve animated WebP compression and reduce block artifacts in smooth areas.
+- Add animated AVIF export alongside MP4, GIF and PNG sequences.
 - Identify the selected model in output filenames and depth-map metadata.
 - Remember the model selection between sessions.
 

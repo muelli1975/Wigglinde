@@ -1,16 +1,10 @@
-# Freigegebene WebP-Korrektur 1.1 — 22. Oktober 2026
+# Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
-WebP fest 80 statt 85. Zusätzliche Größenoptimierung deaktivieren und die normalen
-Pillow-Schlüsselbildvorgaben nutzen. Beide vorhandenen 1.1-Releases aktualisieren;
-AVIF und alle anderen Ausgabe-, Modell- und Renderereinstellungen erhalten.
-
-# Freigegebenes Export-Update 1.1 — 22. Oktober 2026
-
-WebP fest 85; AVIF fest 60 / 4:4:4 / Speed 6. Beide 720/1080/2160,
-30/60 fps, Standard 720p/30, Endlosschleife, keine Hochskalierung. Keine
-Qualitätsoptionen. GIF/MP4/PNG, Modelle, Renderer und sonstige Standards erhalten.
-Bestehende 1.1 auf allen bisherigen Plattformen aktualisieren. SplatTricia
-beauftragt Christoph separat mit Standard 1080p für seine neuen Formate.
+Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,
+4:4:4 und Geschwindigkeit 6, mit 720/1080/2160 Pixel Bildhöhe und 30/60 fps.
+Standard 720p/30 fps in Wigglinde und 1080p/30 fps in SplatTricia.
+Bestehende 1.1-Pakete aktualisieren; Modelle, Renderer, Geometrie und die übrigen
+Ausgabeparameter erhalten. Vorhandene Einstellungen der übrigen Formate erhalten.
 
 # Freigegebene Version 1.1 — 18. Oktober 2026
 

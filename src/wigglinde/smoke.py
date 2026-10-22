@@ -57,7 +57,7 @@ def run(app_dir,report_path):
     texture=np.asarray(Image.fromarray(texture).resize((352,160)))
     source=work/'Bild_Größe.png';Image.fromarray(np.concatenate((texture[:,:320],texture[:,8:328]),axis=1)).save(source)
     before=hashlib.sha256(source.read_bytes()).hexdigest();processor=Processor(app_dir);results=[];session=None
-    for kind in ['mp4','gif','webp','avif','png']:
+    for kind in ['mp4','gif','avif','png']:
         options=WiggleOptions(format=kind,png_fps=60,cycle_seconds=.8 if kind=='gif' else .5,save_depth=kind=='png')
         result=processor.convert(source,work/'Ausgabe_Größe',options)
         assert not (work/'Ausgabe_Größe'/'_temp').exists()
@@ -86,7 +86,7 @@ def run(app_dir,report_path):
                 duration=0
                 for i in range(image.n_frames):image.seek(i);duration+=image.info['duration']
                 assert abs(duration-options.cycle_seconds*1000)<=10
-        elif kind in ('webp','avif'):
+        elif kind in ('avif',):
             from .animation_checks import check_animation
             check_animation(output,(320,160),options.cycle_seconds*1000)
         else:
@@ -198,10 +198,11 @@ def run(app_dir,report_path):
     assert hashlib.sha1(b'blob '+str(sound.stat().st_size).encode()+b'\0'+sound.read_bytes()).hexdigest()=='260fb0d49982873a13dabd750b997448acb675ca'
     for language in ['English','Deutsch']:
         gui.language.set(language);gui._language_changed();gui.update()
+        assert set(gui.format_menu.cget('values'))=={'MP4','GIF','AVIF',gui.tr('png')}
         def geometry_snapshot():
             return [(w.winfo_rootx(),w.winfo_rooty(),w.winfo_width(),w.winfo_height()) for w in gui.controls]
         baseline=geometry_snapshot();device_before=gui.device.get()
-        for kind in ['GIF',gui.tr('png'),'WebP','AVIF','MP4']:
+        for kind in ['GIF',gui.tr('png'),'AVIF','MP4']:
             gui.kind.set(kind);gui._format_changed();gui._wiggle_options().validate()
             # A long label exercises layout only; it does not probe a device.
             for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
