@@ -54,7 +54,7 @@ images are reduced with Lanczos before depth estimation.
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Five cycles |
-| WebP | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 85 |
+| WebP | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 80 |
 | AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
 | PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |

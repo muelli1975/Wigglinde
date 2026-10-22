@@ -56,7 +56,7 @@ bleiben erhalten. Vor der Tiefenberechnung wird mit Lanczos verkleinert.
 | Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Fünf Pendelzyklen |
-| WebP | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 85 |
+| WebP | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 80 |
 | AVIF | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 60, 4:4:4 |
 | GIF | 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
 | PNG-Bildfolge | 1080 / 2160 Pixel Höhe | 30 / 60 fps | Ein nummerierter Zyklus |

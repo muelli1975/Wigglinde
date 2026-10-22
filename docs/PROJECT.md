@@ -1,3 +1,9 @@
+# Freigegebene WebP-Korrektur 1.1 — 22. Oktober 2026
+
+WebP fest 80 statt 85. Zusätzliche Größenoptimierung deaktivieren und die normalen
+Pillow-Schlüsselbildvorgaben nutzen. Beide vorhandenen 1.1-Releases aktualisieren;
+AVIF und alle anderen Ausgabe-, Modell- und Renderereinstellungen erhalten.
+
 # Freigegebenes Export-Update 1.1 — 22. Oktober 2026
 
 WebP fest 85; AVIF fest 60 / 4:4:4 / Speed 6. Beide 720/1080/2160,

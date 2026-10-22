@@ -3,6 +3,7 @@
 ## 1.1 — 2026-10-22
 
 - Add animated WebP and AVIF export.
+- Improve WebP compression and reduce block artifacts in smooth areas.
 - Add IGEV++ Middlebury as an alternative for difficult image structures.
 - Identify the model in output filenames and depth-map metadata.
 - Remember the selected model between sessions.
