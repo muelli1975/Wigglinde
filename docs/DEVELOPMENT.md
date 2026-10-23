@@ -1,3 +1,24 @@
+# 1.2 Test 1: Windows-Paketprüfung abgeschlossen — 23. Oktober 2026
+
+Build: https://github.com/muelli1975/Wigglinde/actions/runs/39928946000
+Paketquellstand: `b843943b89e89fa1056282b2f27f4a664107791f`.
+58 Quelltests unter Windows und Linux bestanden. Die tatsächlich gepackte EXE
+prüft MP4/GIF/AVIF/PNG, alle drei Modelle mit CPU-RVS und CPU-VWS, getrennte
+Einstellungen, Deutsch/Englisch und Layout bei 100/125/150 Prozent einschließlich
+780×600 Mindestgröße. Windows-Screenshot visuell kontrolliert. Native RVS- und
+VWS-Prüfungen bestätigen seriell/parallel pixelgleiche Bilder und Abbruch.
+DirectML ließ sich auf dem Hosted Runner nicht initialisieren; keine physische
+GPU-Prüfung. CPU-geprüfte Mischgraphen sind enthalten.
+
+`Wigglinde_1.2_Test1_Windows_x64.zip`: 348065537 Byte, SHA-256
+`fe7b72122bb2cb23d96672249800a60cb2fd361c1ac65f678b93c0fe87f98bf3`.
+Heruntergeladenes Archiv CRC-/hashgeprüft; sechs Produktgraphen samt Hashes,
+exakter Projektquellstand (plattformbedingte Zeilenenden berücksichtigt), beide
+Renderer und Lizenztexte bestätigt. Keine Einstellungen, Logs oder PyTorch-/
+timm-Laufzeitpakete im Archiv. TMIV unverändert, interne Geometrie 10 Bit und
+4:2:0. Main, v1.1 und veröffentlichte Pakete bleiben unverändert.
+Dieser Prüfvermerk entstand nach dem Build und gehört nicht zum ZIP-Quellstand.
+
 # 1.2 Test 1: parallele VWS-Ansichten — 23. Oktober 2026
 
 Original-TMIV-Aufrufe über unabhängige Ansichten parallelisiert, mit dokumentiertem
