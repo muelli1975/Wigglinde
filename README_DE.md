@@ -55,11 +55,12 @@ bleiben erhalten. Vor der Tiefenberechnung wird mit Lanczos verkleinert.
 
 | Format | Maximale Größe | Bildrate | Ablauf |
 | --- | --- | --- | --- |
-| MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Fünf Pendelzyklen |
-| AVIF | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 60, 4:4:4 |
+| MP4 | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Zyklusanzahl wählbar (Standard: 5) |
+| AVIF | 720 / 1080 / 2160 Pixel Höhe | 30 / 60 fps | Endlosschleife; Qualität 60, 4:2:0 |
 | GIF | 640 / 800 / 1024 Pixel lange Seite | 10 / 15 / 20 / 25 fps | Endlosschleife |
 | PNG-Bildfolge | 1080 / 2160 Pixel Höhe | 30 / 60 fps | Ein nummerierter Zyklus |
 
+Größe und Bildrate werden je Format gespeichert, die Zyklusdauer gilt gemeinsam.
 Die Zyklusdauer ist von 0,5 bis 30 Sekunden einstellbar. Die Bewegung ist sinusförmig,
 ohne doppeltes Schlussbild. Rückweg und Wiederholungen verwenden dieselben gerenderten
 Ansichten. MP4 nutzt H.264 CRF 18/slow; GIF eine gemeinsame Palette für den gesamten

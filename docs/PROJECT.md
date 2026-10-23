@@ -1,10 +1,14 @@
 # Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
 Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,
-4:4:4 und Geschwindigkeit 6, mit 720/1080/2160 Pixel Bildhöhe und 30/60 fps.
+4:2:0 und Geschwindigkeit 6, mit 720/1080/2160 Pixel Bildhöhe und 30/60 fps.
 Standard 720p/30 fps in Wigglinde und 1080p/30 fps in SplatTricia.
 Bestehende 1.1-Pakete aktualisieren; Modelle, Renderer, Geometrie und die übrigen
 Ausgabeparameter erhalten. Vorhandene Einstellungen der übrigen Formate erhalten.
+MP4-Zyklusanzahl als positive ganze Zahl, Standard 5; unveränderte Ansichten und
+verlustfreie Wiederholung des einmal kodierten Zyklus. Größe und Bildrate pro
+Format sowie MP4-Zyklusanzahl über Formatwechsel und Neustarts speichern.
+Zyklusdauer bleibt gemeinsam für alle Formate (Standard 2 s). Kein APNG.
 
 # Freigegebene Version 1.1 — 18. Oktober 2026
 

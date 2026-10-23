@@ -185,13 +185,28 @@ def run(app_dir,report_path):
     assert gui.stop.cget('state')=='normal' and gui.start.cget('border_color')=='#333333'
     gui.running=False;gui._set_busy(False);gui.standard.set(True);gui._dependencies()
     assert gui.own_entry.cget('state')=='disabled'
+    assert gui.cycles_entry.cget('state')=='disabled'
     gui.save_depth.set(True);gui.kind.set('MP4');gui._format_changed()
+    gui.cycles.set('1')
+    assert gui.cycles_entry.cget('state')=='normal'
+    gui.size.set('1080');gui.fps.set('60')
+    gui.kind.set('GIF');gui._format_changed();gui.size.set('640');gui.fps.set('25')
+    gui.kind.set('AVIF');gui._format_changed();gui.size.set('1080');gui.fps.set('60')
+    gui.kind.set('MP4');gui._format_changed()
+    assert (gui.size.get(),gui.fps.get(),gui.cycles.get())==('1080','60','1')
     gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
     assert gui.model_name.get()=='IGEV++ Middlebury'
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
+    assert gui._wiggle_options().video_cycles==1
+    gui.kind.set('GIF');gui._format_changed()
+    assert (gui.size.get(),gui.fps.get())==('640','25')
+    assert gui.cycles_entry.cget('state')=='disabled'
+    gui.kind.set('AVIF');gui._format_changed()
+    assert (gui.size.get(),gui.fps.get())==('1080','60')
+    gui.kind.set('MP4');gui._format_changed()
     gui.input_file.set(str(source));gui.update()
     adapters=list(gui.adapters)
     sound=Path(app_dir)/'assets/ready.wav'

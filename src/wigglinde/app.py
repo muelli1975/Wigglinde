@@ -1,5 +1,6 @@
 """Portable converter with the shared Stereo-Tools controls and path selection."""
 from pathlib import Path
+from dataclasses import replace
 import json,queue,sys,threading,time
 from tkinter import filedialog,messagebox
 import customtkinter as ctk
@@ -57,6 +58,8 @@ class WigglindeApp(ctk.CTk):
         self.input_file=ctk.StringVar(value=self.settings.get('last_input_file',''))
         self.input_folder=ctk.StringVar(value='' if self.input_file.get() else self.settings.get('last_input_folder',''));self.changing_input=False
         saved_options=WiggleOptions.from_settings(self.settings.get('wiggle',{}))
+        self.wiggle_options=saved_options
+        self.cycles=ctk.StringVar(value=str(saved_options.video_cycles))
         self.kind=ctk.StringVar(value=self.tr('png') if saved_options.format=='png' else saved_options.format.upper())
         saved_size={'mp4':saved_options.video_height,'gif':saved_options.gif_long_side,'png':saved_options.png_height,'avif':saved_options.avif_height}[saved_options.format]
         self.size=ctk.StringVar(value=str(saved_size));self.fps=ctk.StringVar(value=str(saved_options.fps));self.duration=ctk.StringVar(value=f'{saved_options.cycle_seconds:g}')
@@ -115,11 +118,16 @@ class WigglindeApp(ctk.CTk):
         self.output_label=self._label(f,'',anchor='w',wraplength=740,justify='left');self.output_label.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,7))
         f=self._panel(3);bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=0,column=0,sticky='ew',padx=12,pady=(9,6));bar.grid_columnconfigure(5,weight=1)
         self._label(bar,'format').grid(row=0,column=0,padx=(0,8));self.format_menu=self._menu(bar,self.kind,['MP4','GIF','AVIF',self.tr('png')],self._format_changed,150);self.format_menu.grid(row=0,column=1,padx=(0,18))
-        self._label(bar,'size').grid(row=0,column=2,padx=(0,8));self.size_menu=self._menu(bar,self.size,self._sizes(),width=100);self.size_menu.grid(row=0,column=3)
+        self._label(bar,'size').grid(row=0,column=2,padx=(0,8));self.size_menu=self._menu(bar,self.size,self._sizes(),self._save_quietly,width=100);self.size_menu.grid(row=0,column=3)
         self.unit_label=self._label(bar,self.tr('long_side' if self.kind.get()=='GIF' else 'height'));self.unit_label.grid(row=0,column=4,padx=(6,18))
-        self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),width=80);self.fps_menu.grid(row=0,column=7)
+        self._label(bar,'fps').grid(row=0,column=6,padx=(0,8));self.fps_menu=self._menu(bar,self.fps,self._rates(),self._save_quietly,width=80);self.fps_menu.grid(row=0,column=7)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=1,column=0,sticky='ew',padx=12,pady=(0,6));bar.grid_columnconfigure(2,weight=1)
-        self._label(bar,'duration').grid(row=0,column=0,padx=(0,10));self._entry(bar,self.duration,75).grid(row=0,column=1)
+        self._label(bar,'duration').grid(row=0,column=0,padx=(0,10))
+        self.duration_entry=self._entry(bar,self.duration,75);self.duration_entry.grid(row=0,column=1)
+        self.cycles_label=self._label(bar,'cycles');self.cycles_label.grid(row=0,column=3,padx=(18,10))
+        self.cycles_entry=self._entry(bar,self.cycles,75);self.cycles_entry.grid(row=0,column=4)
+        for entry in (self.duration_entry,self.cycles_entry):
+            entry.bind('<FocusOut>',self._save_quietly);entry.bind('<Return>',self._save_quietly)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
         self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=180);self.model_menu.grid(row=0,column=1,sticky='w')
@@ -155,8 +163,15 @@ class WigglindeApp(ctk.CTk):
     def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
-        self.size_menu.configure(values=self._sizes());self.size.set({'GIF':'800','MP4':'720','PNG':'1080','AVIF':'720'}[self._kind()])
-        self.fps_menu.configure(values=self._rates());self.fps.set('15' if self._kind()=='GIF' else '30');self.unit_label.configure(text=self.tr('long_side' if self._kind()=='GIF' else 'height'))
+        # The menu variable already holds the new format; capture the old one first.
+        self._capture_format(self.wiggle_options.format)
+        kind=self._kind().lower();self.wiggle_options=replace(self.wiggle_options,format=kind)
+        size={'mp4':self.wiggle_options.video_height,'gif':self.wiggle_options.gif_long_side,
+              'png':self.wiggle_options.png_height,'avif':self.wiggle_options.avif_height}[kind]
+        self.size_menu.configure(values=self._sizes());self.size.set(str(size))
+        self.fps_menu.configure(values=self._rates());self.fps.set(str(self.wiggle_options.fps))
+        self.unit_label.configure(text=self.tr('long_side' if kind=='gif' else 'height'))
+        self._dependencies();self._save_quietly()
     def _language_changed(self,*_):
         kind=self._kind();self.locale='en' if self.language.get()=='English' else 'de'
         for widget,key in self.localized:widget.configure(text=self.tr(key))
@@ -185,6 +200,9 @@ class WigglindeApp(ctk.CTk):
         if folder:self.own.set(folder);self.standard.set(False);self._dependencies();self._save_quietly()
     def _dependencies(self):
         if self.running:return
+        mp4=self._kind()=='MP4'
+        self.cycles_entry.configure(state='normal' if mp4 else 'disabled',text_color=T.TEXT if mp4 else T.TEXT_DISABLED)
+        self.cycles_label.configure(text_color=T.TEXT if mp4 else T.TEXT_DISABLED)
         own=not self.standard.get();self.own_entry.configure(state='normal' if own else 'disabled',text_color=T.TEXT if own else T.TEXT_DISABLED);self.own_label.configure(text_color=T.TEXT if own else T.TEXT_DISABLED)
         self.start.configure(state='normal' if self._has_input() else 'disabled');self._style_start()
         self.diagnose_button.configure(state='normal' if self.input_file.get().strip() else 'disabled')
@@ -193,17 +211,25 @@ class WigglindeApp(ctk.CTk):
         elif self.input_file.get().strip():target=str(Path(self.input_file.get().strip()).parent/'output')
         else:target=self.tr('after_input')
         self.output_label.configure(text=self.tr('target',path=target))
+    def _capture_format(self,kind):
+        size_key={'mp4':'video_height','gif':'gif_long_side','png':'png_height','avif':'avif_height'}[kind]
+        fps_key='video_fps' if kind=='mp4' else kind+'_fps'
+        self.wiggle_options=replace(self.wiggle_options,**{size_key:int(self.size.get()),fps_key:int(self.fps.get())})
     def _wiggle_options(self):
         kind=self._kind().lower()
-        try:size=int(self.size.get());fps=int(self.fps.get());duration=float(self.duration.get().replace(',','.'))
+        try:
+            self._capture_format(kind)
+            duration=float(self.duration.get().replace(',','.'))
+            cycles=int(self.cycles.get())
         except ValueError:raise ValueError(self.tr('numbers')) from None
-        return WiggleOptions(format=kind,video_fps=fps if kind=='mp4' else 30,gif_fps=fps if kind=='gif' else 15,png_fps=fps if kind=='png' else 30,video_height=size if kind=='mp4' else 720,gif_long_side=size if kind=='gif' else 800,png_height=size if kind=='png' else 1080,avif_fps=fps if kind=='avif' else 30,avif_height=size if kind=='avif' else 720,cycle_seconds=duration,save_depth=self.save_depth.get())
+        return replace(self.wiggle_options,format=kind,cycle_seconds=duration,
+                       video_cycles=cycles,save_depth=self.save_depth.get())
     def _save(self):
         self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
             last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),model=self.model_name.get())
         # A partly typed invalid number must not discard the last valid options.
         try:
-            options=self._wiggle_options();options.validate();self.settings['wiggle']=options.to_settings()
+            options=self._wiggle_options();options.validate();self.wiggle_options=options;self.settings['wiggle']=options.to_settings()
         except ValueError:pass
         temporary=self.settings_path.with_name(self.settings_path.name+'.partial')
         temporary.write_text(json.dumps(self.settings,ensure_ascii=False,indent=2),encoding='utf-8')
@@ -239,6 +265,7 @@ class WigglindeApp(ctk.CTk):
         self._set_busy(True);self._set_status('starting')
         threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,self.model_name.get()),daemon=True).start()
     def _set_busy(self,busy):
+        self.cycles_label.configure(text_color=T.TEXT_DISABLED if busy or self._kind()!='MP4' else T.TEXT)
         for control in self.controls:
             control.configure(state='disabled' if busy else 'normal')
             if isinstance(control,ctk.CTkEntry):control.configure(text_color=T.TEXT_DISABLED if busy else T.TEXT)

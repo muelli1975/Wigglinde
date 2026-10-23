@@ -53,11 +53,12 @@ images are reduced with Lanczos before depth estimation.
 
 | Format | Maximum size | Frame rate | Playback |
 | --- | --- | --- | --- |
-| MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Five cycles |
-| AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:4:4 |
+| MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Selectable cycle count (default: 5) |
+| AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:2:0 |
 | GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
 | PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |
 
+Size and frame rate are remembered separately for each format; cycle duration is shared.
 Cycle duration is adjustable from 0.5 to 30 seconds. Motion is sinusoidal, without
 a duplicated final endpoint. The return path and repeated cycles reuse the same
 rendered views. MP4 uses H.264 CRF 18/slow; GIF uses a shared palette for the whole

@@ -1,8 +1,11 @@
 # Changelog
 
-## 1.1 — 2026-10-22
+## 1.1 — 2026-10-23
 
 - Add animated AVIF export.
+- Reduce animated AVIF file sizes.
+- Add an adjustable MP4 cycle count (default: 5).
+- Remember animation size and frame rate separately for each format.
 - Add IGEV++ Middlebury as an alternative for difficult image structures.
 - Identify the model in output filenames and depth-map metadata.
 - Remember the selected model between sessions.

@@ -21,6 +21,7 @@ TEXT = {
     'height': ('px Höhe', 'px height'),
     'long_side': ('px lange Seite', 'px long side'),
     'duration': ('Zyklusdauer (s)', 'Cycle duration (s)'),
+    'cycles': ('Anzahl der Zyklen', 'Number of cycles'),
     'model': ('Modell', 'Model'),
     'unavailable': ('nicht verfügbar', 'unavailable'),
     'device': ('Berechnung', 'Compute'),

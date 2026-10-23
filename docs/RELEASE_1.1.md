@@ -4,6 +4,9 @@
 - Add animated AVIF export alongside MP4, GIF and PNG sequences.
 - Identify the selected model in output filenames and depth-map metadata.
 - Remember the model selection between sessions.
+- Add an adjustable MP4 cycle count (default: 5).
+- Reduce animated AVIF file sizes.
+- Remember animation size and frame rate separately for each format.
 
 ## Installation
 
