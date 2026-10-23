@@ -7,11 +7,11 @@ import customtkinter as ctk
 from . import __version__,theme as T
 from .devices import graphics_adapters
 from .models import DEFAULT_MODEL,MODELS
-from .diagnostics import error_message,memory_failure
+from .diagnostics import error_message
+from .batch_worker import BatchProcess
 from .i18n import tr,message,TEXT
 from .export_options import WiggleOptions
-from .processor import Processor,collect_files,EXTENSIONS
-from .wiggle_export import ExportCancelled
+from .processor import collect_files,EXTENSIONS
 
 def app_directory():
     if getattr(sys,'frozen',False):
@@ -160,7 +160,7 @@ class WigglindeApp(ctk.CTk):
         )
 
     def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF','AVIF') else 'PNG'
-    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
+    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['512','640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
         # The menu variable already holds the new format; capture the old one first.
@@ -284,29 +284,27 @@ class WigglindeApp(ctk.CTk):
     def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,model_name=DEFAULT_MODEL):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
-            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,model_name=model_name)
-            for i,path in enumerate(files):
-                if self.cancel_event.is_set():raise ExportCancelled()
-                self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))
-                base=(root/'output' if root else path.parent/'output') if standard else own
-                def progress(text,p):self.events.put(('progress',(text,(i+p)/len(files))))
-                try:
-                    if depth_only:diagnosis=self.processor.diagnose(path,options,progress=progress)
-                    else:self.processor.convert(path,base,options,progress=progress)
-                    completed+=1
-                except ExportCancelled:raise
-                except Exception as e:
-                    details=error_message(e)
-                    if memory_failure(e):details=self.tr('memory')+'\n'+details
-                    errors.append(f'{path.name}: {self._error_message(details[:1800])}')
-                    if str(e).startswith('GPU_INIT: '):break
-        except ExportCancelled:cancelled=True
-        except Exception as e:errors.append(self._error_message(str(e)))
+            self.processor=BatchProcess(app_dir=self.app_dir,files=files,root=root,standard=standard,own=own,options=options,
+                device_id=device_id,device_name=device_name,depth_only=depth_only,model_name=model_name)
+            if self.cancel_event.is_set():self.processor.cancel()
+            self.processor.start()
+            for kind,payload in self.processor.messages():
+                if kind!='done':self.events.put((kind,payload));continue
+                completed,failures,cancelled,diagnosis=payload
+                for failure in failures:
+                    details=failure['detail']
+                    if failure['memory']:details=self.tr('memory')+'\n'+details
+                    prefix=failure['file']+': ' if failure['file'] else ''
+                    errors.append(prefix+self._error_message(details[:1800]))
+        except Exception as e:errors.append(self._error_message(error_message(e)))
         finally:
-            if self.processor:self.processor.close()
+            if self.processor:
+                try:self.processor.close()
+                except Exception as e:errors.append(self._error_message(error_message(e)))
             self.processor=None;self.events.put(('done',(completed,errors,cancelled,diagnosis)))
     def _error_message(self,text):
         if text.startswith('GPU_INIT: '):return self.tr('gpu_failed',error=text[10:])
+        if text.startswith('WORKER_EXIT: '):return self.tr('worker_failed',code=text[13:])
         return message(self.locale,text)
     def _cancel(self):
         self.cancel_event.set();self.stop.configure(state='disabled');self._set_status('cancelling')
@@ -328,7 +326,7 @@ class WigglindeApp(ctk.CTk):
             while True:
                 kind,payload=self.events.get_nowait()
                 if kind=='file':self.last_file=payload[:105];self.current.configure(text=self.last_file)
-                elif kind=='progress':self._set_status('pipeline',text=payload[0]);self.progress.set(payload[1])
+                elif kind=='progress' and not self.cancel_event.is_set():self._set_status('pipeline',text=payload[0]);self.progress.set(payload[1])
                 elif kind=='done':
                     completed,errors,cancelled,diagnosis=payload;self.running=False;self.error_count=len(errors);self._set_busy(False)
                     self._set_status('cancelled' if cancelled else 'diagnosed' if diagnosis else 'finished',count=completed)

@@ -48,6 +48,7 @@ TEXT = {
     'elapsed': ('Verstrichen: {minutes:02d}:{seconds:02d}', 'Elapsed: {minutes:02d}:{seconds:02d}'),
     'numbers': ('Bitte gültige Zahlen für Größe, Bildrate und Zyklusdauer eingeben.', 'Please enter valid numbers for size, frame rate and cycle duration.'),
     'memory': ('Der Arbeitsspeicher oder Grafikspeicher reicht für diese Berechnungsgröße nicht aus. Bitte eine kleinere Größe wählen.', 'There is not enough RAM or GPU memory for this processing size. Please choose a smaller size.'),
+    'worker_failed': ('Der Verarbeitungsprozess wurde unerwartet beendet (Code {code}). Details: logs/latest_run.json', 'The processing process ended unexpectedly (code {code}). Details: logs/latest_run.json'),
     'gpu_failed': ('Die gewählte Grafikkarte konnte nicht verwendet werden. Bitte Treiber prüfen oder CPU wählen. Details: {error}', 'The selected GPU could not be used. Please check the driver or select CPU. Details: {error}'),
 }
 

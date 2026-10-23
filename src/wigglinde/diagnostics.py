@@ -71,7 +71,7 @@ class LocalLogs:
 class RunTrace:
     def __init__(self,logs,context,device_id=None,child=lambda:None):
         self.logs=logs;self.data=dict(schema_version=1,version=__version__,run_id=uuid.uuid4().hex,
-            started_at=datetime.now(timezone.utc).isoformat(),**context)
+            started_at=datetime.now(timezone.utc).isoformat(),processing_process_id=os.getpid(),**context)
         self.memory=MemorySampler(device_id,child);self.timings={};self.current='starting'
 
     def event(self,event,**fields):

@@ -55,7 +55,7 @@ images are reduced with Lanczos before depth estimation.
 | --- | --- | --- | --- |
 | MP4 | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Selectable cycle count (default: 5) |
 | AVIF | 720 / 1080 / 2160 pixels high | 30 / 60 fps | Infinite loop; quality 60, 4:2:0 |
-| GIF | 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
+| GIF | 512 / 640 / 800 / 1024 pixels on the long edge | 10 / 15 / 20 / 25 fps | Infinite loop |
 | PNG sequence | 1080 / 2160 pixels high | 30 / 60 fps | One numbered cycle |
 
 Size and frame rate are remembered separately for each format; cycle duration is shared.

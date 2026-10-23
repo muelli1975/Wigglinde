@@ -1,3 +1,15 @@
+# Freigegebenes Korrekturupdate 1.1 — 23. Oktober 2026
+
+Christoph beauftragt GIF512 und die Korrektur sporadischer GUI-Hänger beim nativen
+Modellstart als Update der bestehenden1.1 für alle vier Plattformen. Das bisherige
+Layout bleibt erhalten; Presets und automatische Gerätewahl bleiben vorgemerkt.
+GIF-Auswahl512/640/800/1024Pixel an der langen Seite, Standard weiterhin800.
+Verarbeitung pro GUI-Auftrag im eigenen Arbeitsprozess, eine Modellsitzung pro
+Stapel, unveränderte Berechnungs- und Exportfunktionen. Kein Vulkan im Produkt:
+Praxistests zeigen keinen verlässlichen Gesamtzeitvorteil und schwarze Randfehler.
+CPU-RVS P1/Simple5, LAS2-H und IGEV++ Middlebury sowie die korrigierte SDR-Ausgabe
+bleiben erhalten. Keine neue Versionsnummer und keine zusätzliche Release-Prosa.
+
 # Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
 Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,

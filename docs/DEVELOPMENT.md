@@ -1,3 +1,17 @@
+# Korrekturupdate der bestehenden1.1 — 23. Oktober 2026
+
+Aus dem separaten Test gezielt übernommen: GIF512 und ein eigener Arbeitsprozess
+pro GUI-Auftrag gegen GIL-bedingte Hänger bei der nativen Modellinitialisierung.
+Start, Status, Abbruch, Fehlermeldungen und Stapel-Sitzungswiederverwendung bleiben
+über denselben Processor erhalten. Die Paketprüfung startet einen tatsächlichen
+GUI-Auftrag mit Middlebury, prüft die getrennte Prozess-ID und die GUI-Reaktion.
+Vier Regressionstests prüfen Stapelwiederverwendung, Abbruch, GPU-Startfehler ohne
+Fallback sowie Diagnose-/Speicherfehler. GIF512 wird einschließlich Speicherung
+über Neustart geprüft. Bisheriges Layout und settings.json bleiben erhalten.
+Keine Vulkan-Anbindung, Presets, automatischen Gerätewechsel oder Modell-/Renderer-
+änderungen aus dem Test übernehmen. Veröffentlichung über den bestehenden1.1-
+Workflow mit Ersatz der vier geprüften Pakete und Erhalt der Release-Prosa.
+
 # Finalisierung 1.1 — 18. Oktober 2026
 
 Freigegeben: LAS2-H als Standard (4), IGEV++ Middlebury als Alternative (16),
