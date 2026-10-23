@@ -23,8 +23,13 @@ jobs:
           python-version: '3.12'
       - name: Native build prerequisites
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y glslc libvulkan-dev mesa-vulkan-drivers nlohmann-json3-dev ninja-build
+          for apt_sources_file in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/apt-mirrors.txt; do
+            if [ -f "$apt_sources_file" ]; then
+              sudo sed -i -e 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' -e 's|http://archive.ubuntu.com|https://archive.ubuntu.com|g' "$apt_sources_file"
+            fi
+          done
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y glslc libvulkan-dev mesa-vulkan-drivers nlohmann-json3-dev ninja-build
           python -m pip install -e .
           git clone https://gitlab.ulb.be/hovitron/hovitron-pipeline.git hovitron-reference
           git -C hovitron-reference checkout e0f00f9c67dfd868d2b1489051e9118158b6de03

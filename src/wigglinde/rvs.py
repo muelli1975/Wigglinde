@@ -6,8 +6,10 @@ from .wiggle_export import ExportCancelled,check_cancelled
 from .resources import render_plan
 
 class RVSRenderer:
-    def __init__(self,executable,scene,positions,work,matching_offset=64):
+    def __init__(self,executable,scene,positions,work,matching_offset=64,stream_format="float32"):
         self.executable=Path(executable);self.scene=scene;self.positions=positions;self.work=Path(work)
+        if stream_format not in ("float32","rgb24"):raise ValueError("Unknown renderer stream format")
+        self.stream_format=stream_format
         self.work.mkdir(parents=True,exist_ok=True);self.process=None;self.metrics={}
         if not self.executable.is_file():raise FileNotFoundError(f'Der RVS-Renderer fehlt: {self.executable}')
         h,w=scene.left.shape[:2]
@@ -33,10 +35,10 @@ class RVSRenderer:
             except OSError:pass
 
     def frames(self,cancel):
-        h,w=self.scene.left.shape[:2];size=h*w*3*4
+        h,w=self.scene.left.shape[:2];packed=self.stream_format=="rgb24";size=h*w*3*(1 if packed else 4)
         flags=getattr(subprocess,'CREATE_NO_WINDOW',0)
         with (self.work/'rvs.log').open('wb') as log:
-            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json'),str(self.work/'metrics.json'),str(self.schedule['workers']),str(self.schedule['threads_per_view'])],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
+            self.process=subprocess.Popen([str(self.executable),str(self.work/'config.json'),str(self.work/'metrics.json'),str(self.schedule['workers']),str(self.schedule['threads_per_view']),*(['--rgb24'] if packed else [])],stdout=subprocess.PIPE,stderr=log,creationflags=flags)
             p=self.process
             try:
                 for index in range(len(self.positions)):
@@ -48,8 +50,9 @@ class RVSRenderer:
                             check_cancelled(cancel)
                             raise RuntimeError('RVS: '+(self.work/'rvs.log').read_text(errors='replace')[-1500:])
                         received+=n
-                    rgb=np.frombuffer(data,dtype=np.float32).reshape(h,w,3)
-                    yield np.rint(np.clip(rgb,0,1)*255).astype(np.uint8)
+                    rgb=np.frombuffer(data,dtype=np.uint8 if packed else np.float32).reshape(h,w,3)
+                    yield rgb if packed else np.rint(np.clip(rgb,0,1)*255).astype(np.uint8)
+                if packed and p.stdout.read(1):raise RuntimeError("RVSVulkan: unexpected bytes after the final RGB frame")
                 if p.wait():raise RuntimeError('RVS: '+(self.work/'rvs.log').read_text(errors='replace')[-1500:])
             finally:
                 self.cancel();p.stdout.close();p.wait();self.process=None

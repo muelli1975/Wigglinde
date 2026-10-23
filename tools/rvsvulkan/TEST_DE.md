@@ -45,3 +45,27 @@ Lokale Protokolle stehen wie bisher in `logs`. Der Test arbeitet nach dem
 Entpacken offline und benötigt weder Headset noch Kamera-Schnittstellen.
 
 Quelle: <https://gitlab.ulb.be/hovitron/hovitron-pipeline>
+
+## Korrektur der Bildübertragung (23. Oktober 2026)
+
+Die ursprüngliche C-Meldung `Real number of elements …` wurde im bisherigen
+Adapter in denselben stdout-Kanal wie die Float-Bilddaten geschrieben.
+Die vorhandene cout-Umleitung erfasste printf nicht. Bei 1080×720 entstehen
+32 zusätzliche Bytes (verschobene Farbkanäle), bei 1620×1080 33 Bytes
+(zerstörte Float-Ausrichtung). Die Diagnoseausgaben werden jetzt einschließlich
+C-stdio in stderr geführt; die Bilddaten benutzen einen zuvor duplizierten,
+eigenständigen Binärkanal. Tests erkennen ausdrücklich auch den alten Fehler.
+
+Die Anwendung überträgt beim Vulkan-Renderer die bereits vorliegenden RGB8-Werte
+jetzt direkt als RGB24. Die bisherige Umwandlung RGBA8 → RGB-Float32 → RGB8
+entfällt. Pro Bild sind damit ein Viertel der bisherigen Pipe-Bytes erforderlich;
+alle 256 Kanalwerte bleiben unverändert. CPU-RVS behält seinen Float32-Pfad.
+Die bewährten Raster-, Tiefen-, Blending-, Gamma- und Shaderoperationen werden
+durch diese Korrektur nicht verändert. Der Native-Test prüft beide Transportformate
+mit C- und C++-Meldungen vor und zwischen Bildern, ohne eine GPU vorauszusetzen.
+
+Das Laufprotokoll ergänzt `stream_format`, `stream_bytes` und
+`pixel_pack_seconds`. `stream_write_seconds` kann Wartezeit auf den
+Bildexport enthalten; es ist keine isolierte GPU-Zeit. Der geringere Datentransport
+ist kein Nachweis einer entsprechenden Beschleunigung des gesamten Exports.
+Ein neuer Laufzeitvergleich auf Christophs RTX 3060 bleibt erforderlich.

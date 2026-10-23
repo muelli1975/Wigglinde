@@ -107,7 +107,7 @@ class Processor:
                     exe=self.app_dir/'backend'/native
                     if not exe.is_file() and getattr(sys,'frozen',False):
                         exe=Path(sys._MEIPASS)/'backend'/native
-                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
+                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset,stream_format='rgb24' if self.render_backend=='vulkan' else 'float32')
                     if self.render_backend=='vulkan':self.renderer.schedule=dict(workers=1,threads_per_view=1,backend='vulkan')
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule

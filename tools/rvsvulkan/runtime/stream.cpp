@@ -1,6 +1,7 @@
 // Offline file/stream adapter: MIT. Rasterization, visibility and blending use
 // pinned HoviTron RVSVulkan sources and shaders (Apache-2.0). The build corrects
 // one headless-output branch; rasterization and all shaders remain unchanged.
+#include "frame_output.h"
 #include "WindowAbstract.h"
 #include "SourcesVulkan/VulkanWrapper.h"
 #include "SourcesVulkan/VulkanDrawing.h"
@@ -42,9 +43,11 @@ public:
 
 class FileWindow final:public WindowAbstract {
   vk::Buffer buffer;vk::DeviceMemory memory;void* mapped=nullptr;
+  FILE* frameOutput;bool packedRgb;
 public:
   json cameras;json metrics;
-  FileWindow(uint32_t w,uint32_t h,json virtualCameras):cameras(std::move(virtualCameras)) {
+  FileWindow(uint32_t w,uint32_t h,json virtualCameras,FILE* output=stdout,bool rgb24=false)
+    :frameOutput(output),packedRgb(rgb24),cameras(std::move(virtualCameras)) {
     needSwapchain=false;separateFromWindowDim=true;
     swapchains.emplace_back(std::make_unique<OutputSlot>(w,h));
   }
@@ -74,8 +77,8 @@ public:
   vk::Buffer getRenderingDestination()override{return buffer;}
   void resetOrigin()override{}
   void mainLoop(VulkanDrawing* drawing)override {
-    auto e=getSwapchainExtent(0);std::vector<float> rgb(size_t(e.width)*e.height*3);
-    double render=0,write=0;size_t count=0;auto pipelineStart=Clock::now();
+    auto e=getSwapchainExtent(0);wigglinde::RGBFrameBlock frame(size_t(e.width)*e.height,packedRgb);
+    double render=0,write=0,pack=0;size_t count=0;auto pipelineStart=Clock::now();
     for(const auto& cam:cameras) {
       auto start=Clock::now();auto p=cam.at("Principle_point");auto f=cam.at("Focal");
       float px=p[0],py=p[1],fx=f[0],fy=f[1];auto position=cam.at("Position");
@@ -86,15 +89,15 @@ public:
       std::vector<vk::Semaphore> signals;
       auto fence=drawing->submitDrawCall({0,0},{},signals,0);
       if(wrapper->context.device.waitForFences(fence,true,UINT64_MAX)!=vk::Result::eSuccess)throw std::runtime_error("Vulkan output fence failed");
-      const auto* rgba=static_cast<const uint8_t*>(mapped);
-      for(size_t i=0;i<rgb.size()/3;++i)for(int ch=0;ch<3;++ch)rgb[3*i+ch]=rgba[4*i+ch]/255.f;
+      auto packStart=Clock::now();
+      frame.pack(static_cast<const uint8_t*>(mapped));pack+=elapsed(packStart);
       render+=elapsed(start);start=Clock::now();
-      if(std::fwrite(rgb.data(),sizeof(float),rgb.size(),stdout)!=rgb.size())throw std::runtime_error("Output cancelled");
-      std::fflush(stdout);write+=elapsed(start);++count;
+      frame.write(frameOutput);write+=elapsed(start);++count;
       std::cerr<<"view "<<count<<"/"<<cameras.size()<<std::endl;
     }
     metrics={{"schema_version",1},{"renderer","HoviTron RVSVulkan raster"},{"views",count},{"render_work_seconds",render},
-      {"render_pipeline_seconds",elapsed(pipelineStart)},{"stream_write_seconds",write},{"parallel_workers",1},
+      {"render_pipeline_seconds",elapsed(pipelineStart)},{"stream_write_seconds",write},{"pixel_pack_seconds",pack},
+      {"stream_format",packedRgb?"rgb24":"rgb_float32"},{"stream_bytes",count*frame.sizeBytes()},{"parallel_workers",1},
       {"blending_factor",5.0},{"triangle_threshold",30},{"internal_color_format","RGBA8_UNORM"},
       {"upstream_commit","e0f00f9c67dfd868d2b1489051e9118158b6de03"},
       {"vulkan_device",std::string(wrapper->context.physicalDevice.getProperties().deviceName.data())}};
@@ -173,7 +176,8 @@ int run(int argc,char** argv) {
     if(argc==2 && std::string(argv[1])=="--identity") {
       std::cout<<"HoviTron RVSVulkan e0f00f9c67dfd868d2b1489051e9118158b6de03; raster; Simple 5; threshold 30; unmodified shaders\n";return 0;
     }
-    if(argc!=3 && argc!=5)throw std::runtime_error("wigglinde_rvsvulkan config.json metrics.json [ignored_CPU_workers ignored_CPU_threads]");
+    bool packedRgb=argc==6 && std::string(argv[5])=="--rgb24";
+    if(argc!=3 && argc!=5 && !packedRgb)throw std::runtime_error("wigglinde_rvsvulkan config.json metrics.json [ignored_CPU_workers ignored_CPU_threads [--rgb24]]");
     auto cfg=readJson(fs::absolute(fs::u8path(argv[1])));auto metricsPath=fs::absolute(fs::u8path(argv[2]));
     // Resolve the existing RVS adapter's paths before entering the shader folder.
     for(const char* key:{"InputCameraParameterFile","VirtualCameraParameterFile"}) {
@@ -190,14 +194,12 @@ int run(int argc,char** argv) {
     if(real.size()!=2 || targets.empty())throw std::runtime_error("Expected stereo inputs and target views");
     uint32_t w=real[0]["Resolution"][0],h=real[0]["Resolution"][1];
     fs::current_path(fs::absolute(fs::u8path(argv[0])).parent_path());
-#ifdef _WIN32
-    _setmode(_fileno(stdout),_O_BINARY);
-#endif
+    wigglinde::BinaryFrameOutput frameOutput;
     std::cout.rdbuf(std::cerr.rdbuf());auto inputStart=Clock::now();
     // Upstream also links the loader. Keep our dynamically loaded copy alive
     // until all function pointers and Vulkan objects have finished using it.
     vk::DynamicLoader loaderLifetime;
-    FileWindow window(w,h,targets);VulkanWrapper wrapper(&window,PipelineMode::Raster);wrapper.init();
+    FileWindow window(w,h,targets,frameOutput.get(),packedRgb);VulkanWrapper wrapper(&window,PipelineMode::Raster);wrapper.init();
     if(wrapper.context.physicalDevice.getProperties().deviceType==vk::PhysicalDeviceType::eCpu)
       throw std::runtime_error("RVSVulkan GPU selected, but the Vulkan driver is a CPU software renderer");
     {

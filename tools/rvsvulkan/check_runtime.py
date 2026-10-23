@@ -9,7 +9,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--renderer',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--allow-unavailable',action='store_true');a=p.parse_args()
     with tempfile.TemporaryDirectory(prefix='Vulkan_Größe_') as folder:
         rgb=np.full((96,128,3),(37,113,201),np.uint8);d=np.full(rgb.shape[:2],4,np.float32)
-        renderer=RVSRenderer(a.renderer.resolve(),StereoScene(rgb,rgb,d,d),[0,.5,1],Path(folder))
+        renderer=RVSRenderer(a.renderer.resolve(),StereoScene(rgb,rgb,d,d),[0,.5,1],Path(folder),stream_format="rgb24")
         try:
             frames=list(renderer.frames(lambda:False))
             assert len(frames)==3
