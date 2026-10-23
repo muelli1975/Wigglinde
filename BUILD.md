@@ -1,3 +1,28 @@
+# Isolated 1.2 Test 1
+
+The `test-great-vws-1.2` branch builds a Windows Actions artifact through
+`.github/workflows/great-vws-test-build.yml`. It never calls a publication job.
+The GREAT model job builds and checks pinned Float32/mixed graphs; the Windows
+job reuses the unchanged LAS2-H/Middlebury graphs and no-telemetry DirectML wheel.
+PyTorch/timm and the GREAT source are build-only Linux dependencies.
+
+TMIV/VWS is built from unchanged commit
+`8faacbe722f0e2fc1dc6f8247eb2da166a0297c6` with fmt
+`0c9fce2ffefecfdce794e1859584e25877b7b592`; only renderer-related libraries are
+enabled. No geometry/chroma patches, codecs or GPU renderer are added. VWS
+parallelism uses separate original processes and the native `-j` option, bounded
+by CPU/RAM. `tools/vws/check_native.py` verifies geometry, exact serial/parallel
+image equality and cleanup of all processes on cancellation.
+
+The Windows packaging call additionally requires `--tmiv tmiv-reference` and
+`--fmt fmt-reference`. The actual packaged EXE checks all three estimators with both
+renderers, all output formats, persisted options and bilingual GUI geometry at
+100/125/150% scaling, including 780×600 minimum size. Notices and provenance are
+included. Physical DirectML availability is recorded separately from CPU graph
+verification. See `TESTVERSION.md` for the user-facing test scope.
+
+The following instructions document the retained 1.1 build.
+
 # Building Wigglinde 1.1
 
 Use Python 3.12 and `python -m pip install -e .`; `wigglinde` launches the GUI.

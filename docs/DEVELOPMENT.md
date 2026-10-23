@@ -7,6 +7,8 @@ Prozesse geprüft. Erstes Problemfoto: fünf Ansichten ca.4,0 s seriell und2,4 s
 parallel; aktueller CPU-RVS im vorherigen Lauf ca.1,6 s einschließlich PNG-Speicherung.
 Einzelmessungen auf diesem Rechner, keine allgemeine Geschwindigkeitsgarantie.
 Originalcode, 10-Bit-Geometrie, 4:2:0 und Standard-VWS-Parameter unverändert.
+58 Quelltests bestanden. Die lokalen GREAT-Prozessorläufe erzeugen MP4, GIF,
+AVIF und PNG erfolgreich; die Windows-Paketprüfung läuft.
 
 # 1.2 Test 1 — laufender Build, 23. Oktober 2026
 

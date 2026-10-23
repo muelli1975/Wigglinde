@@ -249,12 +249,16 @@ def run(app_dir,report_path):
             gui.renderer_name.set(renderer);gui.update()
             assert geometry_snapshot()==baseline
         gui.device.set(device_before)
+    gui.geometry('780x600');gui.update()
     for scaling in (1.,1.25,1.5):
         ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling);gui.update()
         for control in gui.controls+[gui.stop]:
             assert control.winfo_rootx()>=gui.winfo_rootx()
             assert control.winfo_rootx()+control.winfo_width()<=gui.winfo_rootx()+gui.winfo_width()
             assert control.winfo_rooty()+control.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
+        # Both lower-row options and the wider model menu stay in their rows.
+        assert gui.depth_check.winfo_rootx()+gui.depth_check.winfo_width()<gui.renderer_menu.winfo_rootx()
+        assert gui.model_menu.winfo_rootx()+gui.model_menu.winfo_width()<=gui.renderer_menu.winfo_rootx()+gui.renderer_menu.winfo_width()
     ctk.set_widget_scaling(1.);ctk.set_window_scaling(1.)
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
