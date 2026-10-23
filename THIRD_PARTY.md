@@ -8,6 +8,10 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 | IGEV++ Middlebury | MIT project notice; https://github.com/gangweiX/IGEV-plusplus . Official checkpoint linked by its authors; source/weight hashes in models/README.md. No separate contradictory weight terms found. |
 | timm architecture used for IGEV export | Apache-2.0 notice included; build-only, no timm runtime in the app; https://github.com/huggingface/pytorch-image-models/tree/v0.5.4 |
 | RVS | Modified BSD, including its patent/third-party-rights reservation; https://gitlab.com/mpeg-i-visual/rvs |
+| HoviTron RVSVulkan (separate test) | Apache-2.0; https://gitlab.ulb.be/hovitron/hovitron-pipeline |
+| GLM 0.9.9.8 | MIT; https://github.com/g-truc/glm/tree/0.9.9.8 |
+| nlohmann/json 3.11.3 | MIT; https://github.com/nlohmann/json/tree/v3.11.3 |
+| Vulkan-Headers 1.3.275 | Apache-2.0 / MIT notices included; https://github.com/KhronosGroup/Vulkan-Headers/tree/v1.3.275 |
 | OpenCV 4.10 | Apache-2.0 and third-party notices; https://github.com/opencv/opencv/tree/4.10.0 |
 | ONNX Runtime | MIT; https://github.com/microsoft/onnxruntime |
 | NumPy | BSD-3-Clause and bundled notices; https://numpy.org |
@@ -20,6 +24,14 @@ Wigglinde's own source is MIT. Bundled components retain their own licenses.
 
 Exact versions and build commit accompany the package. No claim is made that these
 licenses grant all third-party patent rights. No component is downloaded by the app.
+
+RVSVulkan copyright 2023 Université Libre de Bruxelles (ULB), Universidad
+Politécnica de Madrid (UPM), CREAL, Deutsches Zentrum für Luft- und Raumfahrt
+(DLR). The separate test uses revision
+`e0f00f9c67dfd868d2b1489051e9118158b6de03`. Its Apache-2.0 license and the
+dependency notices accompany the package. The offline file adapter is Wigglinde
+code; upstream raster shaders are unchanged. The installed graphics driver's
+Vulkan runtime is used and is not redistributed in the package.
 
 The Windows package uses ONNX Runtime DirectML 1.24.4 from official source on Windows
 (including the CPU provider), with `onnxruntime_USE_TELEMETRY=OFF`.

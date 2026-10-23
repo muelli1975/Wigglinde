@@ -162,6 +162,15 @@ int run(int argc,char** argv) {
     }
     if(argc!=3 && argc!=5)throw std::runtime_error("wigglinde_rvsvulkan config.json metrics.json [ignored_CPU_workers ignored_CPU_threads]");
     auto cfg=readJson(fs::absolute(fs::u8path(argv[1])));auto metricsPath=fs::absolute(fs::u8path(argv[2]));
+    // Resolve the existing RVS adapter's paths before entering the shader folder.
+    for(const char* key:{"InputCameraParameterFile","VirtualCameraParameterFile"}) {
+      auto path=fs::absolute(fs::u8path(cfg.at(key).get<std::string>())).u8string();
+      cfg[key]=std::string(path.begin(),path.end());
+    }
+    for(const char* key:{"ViewImageNames","DepthMapNames"})for(auto& value:cfg.at(key)) {
+      auto path=fs::absolute(fs::u8path(value.get<std::string>())).u8string();
+      value=std::string(path.begin(),path.end());
+    }
     auto allCameras=readJson(fs::u8path(cfg.at("InputCameraParameterFile").get<std::string>())).at("cameras");
     auto lookup=[&](const json& names){json result=json::array();for(auto& name:names){bool found=false;for(auto& cam:allCameras)if(cam["Name"]==name){result.push_back(cam);found=true;break;}if(!found)throw std::runtime_error("Camera missing");}return result;};
     auto real=lookup(cfg.at("InputCameraNames")),targets=lookup(cfg.at("VirtualCameraNames"));
