@@ -1,3 +1,15 @@
+# Separater RVSVulkan-Test — 23. Oktober 2026
+
+Christoph verwirft DEFOM nach dem Fernbereichsvergleich. GREAT-IGEV und VWS bleiben
+ebenfalls zurückgestellt. Stabiler 1.1-Stand unverändert: LAS2-H, IGEV++ Middlebury,
+CPU-RVS. Keine Übernahme der Modellversuche oder Änderung am veröffentlichten Paket.
+Christoph möchte RVSVulkan selbst ausprobieren. Separater Branch
+`test-rvsvulkan-1.2` auf Basis von main/v1.1. Bisherige Modelle und CPU-Renderer
+erhalten; ausschließlich eine zusätzliche Rendererwahl im Testpaket.
+HoviTron-Rasterpipeline mit unveränderten Shadern und vorgesehenen Werten zuerst
+testen. Anbindung für feste RGB-D-Eingaben, Kamera und Bildausgabe ergänzen.
+Keine spekulativen Präzisions-, Filter- oder Parameteränderungen.
+
 # Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
 Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,

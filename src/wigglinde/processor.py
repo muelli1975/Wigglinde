@@ -51,8 +51,10 @@ def collect_files(folder,excluded=()):
                    and p.resolve() not in excluded),key=lambda p:p.name)
 
 class Processor:
-    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None):
+    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None,render_backend='cpu'):
         if model_name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(model_name))
+        if render_backend not in ('cpu','vulkan'):raise ValueError('Unknown renderer: '+str(render_backend))
+        self.render_backend=render_backend
         self.model_name=model_name;self.device_id=device_id;self.device_name=device_name or ('CPU' if device_id is None else f'GPU {device_id}')
         self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
         self.logs=LocalLogs(app_dir);self.last_diagnostics=None
@@ -95,15 +97,18 @@ class Processor:
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
                 suffix+='_'+model_suffix(self.model_name)
+                if self.render_backend=='vulkan':suffix+='_rvsvulkan'
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
+                trace.data.update(output=str(output),renderer='HoviTron RVSVulkan raster Simple 5' if self.render_backend=='vulkan' else 'RVS CPU Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
                 with temporary_workspace(temp_root) as work:
-                    exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                    native=Path('vulkan')/('wigglinde_rvsvulkan.exe' if os.name=='nt' else 'wigglinde_rvsvulkan') if self.render_backend=='vulkan' else Path('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                    exe=self.app_dir/'backend'/native
                     if not exe.is_file() and getattr(sys,'frozen',False):
-                        exe=Path(sys._MEIPASS)/'backend'/exe.name
+                        exe=Path(sys._MEIPASS)/'backend'/native
                     with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
+                    if self.render_backend=='vulkan':self.renderer.schedule=dict(workers=1,threads_per_view=1,backend='vulkan')
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
                     trace.data['rvs_schedule']=renderer.schedule
                     def render(position):

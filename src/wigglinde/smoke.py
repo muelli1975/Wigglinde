@@ -145,7 +145,7 @@ def run(app_dir,report_path):
         finally:alternate.close()
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
-    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
+    (Path(app_dir)/'settings-vulkan-test.json').write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
     assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
     assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
@@ -159,6 +159,10 @@ def run(app_dir,report_path):
     assert gui.model_name.get()==DEFAULT_MODEL and gui.model_menu.cget('values')==list(MODELS)
     assert not hasattr(gui,'iterations') and not hasattr(gui,'renderer')
     assert 'iterations' not in gui.settings and 'renderer' not in gui.settings
+    assert gui.render_backend.get()=='RVS (CPU)'
+    assert gui.renderer_menu.cget('values')==['RVS (CPU)','RVSVulkan (GPU)']
+    identity=subprocess.check_output([str(Path(app_dir)/'backend/vulkan/wigglinde_rvsvulkan.exe'),'--identity'],text=True)
+    assert 'e0f00f9c67dfd868d2b1489051e9118158b6de03' in identity
     assert gui.diagnose_button.cget('state')=='disabled'
     gui.input_file.set(str(source));gui.update()
     assert gui.diagnose_button.cget('state')=='normal'
@@ -194,10 +198,12 @@ def run(app_dir,report_path):
     gui.kind.set('AVIF');gui._format_changed();gui.size.set('1080');gui.fps.set('60')
     gui.kind.set('MP4');gui._format_changed()
     assert (gui.size.get(),gui.fps.get(),gui.cycles.get())==('1080','60','1')
-    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui._save();gui.destroy()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui.render_backend.set('RVSVulkan (GPU)');gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
     assert gui.model_name.get()=='IGEV++ Middlebury'
+    assert gui.render_backend.get()=='RVSVulkan (GPU)'
+    gui.render_backend.set('RVS (CPU)')
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     assert gui._wiggle_options().video_cycles==1

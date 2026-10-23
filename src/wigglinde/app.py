@@ -34,7 +34,7 @@ def screen_work_area(window):
 class WigglindeApp(ctk.CTk):
     def __init__(self,app_dir=None):
         ctk.set_appearance_mode('dark');super().__init__()
-        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
+        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings-vulkan-test.json'
         icon=self.app_dir/'assets/wigglinde.ico'
         if sys.platform=='win32' and icon.is_file():self.iconbitmap(default=str(icon))
         elif icon.is_file():
@@ -67,6 +67,7 @@ class WigglindeApp(ctk.CTk):
         saved_model=self.settings.get('model',DEFAULT_MODEL)
         self.model_name=ctk.StringVar(value=saved_model if saved_model in MODELS else DEFAULT_MODEL)
         self.settings.pop('iterations',None);self.settings.pop('renderer',None)
+        self.render_backend=ctk.StringVar(value='RVSVulkan (GPU)' if self.settings.get('test_render_backend')=='vulkan' else 'RVS (CPU)')
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
         self.adapters={'CPU':None,**{f'GPU {i}: {name}':i for i,name in graphics_adapters()}}
         saved=self.settings.get('device_id')
@@ -133,9 +134,12 @@ class WigglindeApp(ctk.CTk):
         self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=180);self.model_menu.grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
-        self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
-        self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
-        self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
+        bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(1,weight=1)
+        self.depth_check=self._check(bar,'save_depth',self.save_depth,self._save_quietly)
+        self.depth_check.grid(row=0,column=0,sticky='w')
+        self._label(bar,'render_method').grid(row=0,column=2,padx=(12,8))
+        self.renderer_menu=self._menu(bar,self.render_backend,['RVS (CPU)','RVSVulkan (GPU)'],self._save_quietly,width=180)
+        self.renderer_menu.grid(row=0,column=3,sticky='e')
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -225,6 +229,7 @@ class WigglindeApp(ctk.CTk):
         return replace(self.wiggle_options,format=kind,cycle_seconds=duration,
                        video_cycles=cycles,save_depth=self.save_depth.get())
     def _save(self):
+        self.settings['test_render_backend']='vulkan' if self.render_backend.get()=='RVSVulkan (GPU)' else 'cpu'
         self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
             last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),model=self.model_name.get())
         # A partly typed invalid number must not discard the last valid options.
@@ -263,7 +268,7 @@ class WigglindeApp(ctk.CTk):
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,self.model_name.get()),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,self.model_name.get(),'vulkan' if self.render_backend.get()=='RVSVulkan (GPU)' else 'cpu'),daemon=True).start()
     def _set_busy(self,busy):
         self.cycles_label.configure(text_color=T.TEXT_DISABLED if busy or self._kind()!='MP4' else T.TEXT)
         for control in self.controls:
@@ -281,10 +286,10 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,model_name=DEFAULT_MODEL):
+    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,model_name=DEFAULT_MODEL,render_backend='cpu'):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
-            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,model_name=model_name)
+            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,model_name=model_name,render_backend=render_backend)
             for i,path in enumerate(files):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))

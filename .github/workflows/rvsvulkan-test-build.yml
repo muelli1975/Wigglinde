@@ -1,0 +1,142 @@
+name: Separate RVSVulkan test build
+on:
+  push:
+    branches: [test-rvsvulkan-1.2]
+    paths: ['src/**', 'tools/**', 'tests/**', '.github/workflows/rvsvulkan-test-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+concurrency:
+  group: wigglinde-rvsvulkan-test
+  cancel-in-progress: true
+jobs:
+  shaders:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Native build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y glslc libvulkan-dev mesa-vulkan-drivers nlohmann-json3-dev ninja-build
+          python -m pip install -e .
+          git clone https://gitlab.ulb.be/hovitron/hovitron-pipeline.git hovitron-reference
+          git -C hovitron-reference checkout e0f00f9c67dfd868d2b1489051e9118158b6de03
+      - name: Compile unchanged upstream shaders and native adapter
+        run: |
+          python tools/rvsvulkan/prepare_shaders.py --source hovitron-reference --output vulkan-runtime/shaders
+          cmake -S tools/rvsvulkan/runtime -B build/vulkan -G Ninja -DCMAKE_BUILD_TYPE=Release -DHOVITRON_SOURCE_DIR="$PWD/hovitron-reference"
+          cmake --build build/vulkan --parallel 2
+          cp build/vulkan/wigglinde_rvsvulkan vulkan-runtime/
+          vulkan-runtime/wigglinde_rvsvulkan --identity
+      - name: Probe hosted Vulkan adapter without a CPU fallback
+        run: |
+          python tools/rvsvulkan/check_runtime.py --renderer vulkan-runtime/wigglinde_rvsvulkan --output output/linux-vulkan-probe.json --allow-unavailable
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rvsvulkan-shaders
+          path: |
+            vulkan-runtime/shaders
+            vulkan-runtime/shader-provenance.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rvsvulkan-linux-probe
+          path: output/linux-vulkan-probe.json
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: shaders
+    runs-on: windows-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: rvsvulkan-shaders
+          path: vulkan-runtime
+      - uses: actions/download-artifact@v4
+        with:
+          name: las2-h-onnx
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/las2
+      - uses: actions/download-artifact@v4
+        with:
+          name: directml-no-telemetry
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: runtime-wheel
+      - uses: actions/download-artifact@v4
+        with:
+          name: igev-middlebury-onnx
+          run-id: 39124980286
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/igev
+      - name: Install application dependencies
+        shell: pwsh
+        run: |
+          python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
+          python -m pip install -e . pyinstaller
+      - name: Fetch pinned native prerequisites
+        shell: pwsh
+        run: |
+          git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
+          git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
+          git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
+          git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
+          git clone https://github.com/gangweiX/IGEV-plusplus.git igev-reference
+          git -C igev-reference checkout 099dec97989780d151700459c682df1cc2c18e88
+          git clone https://gitlab.ulb.be/hovitron/hovitron-pipeline.git hovitron-reference
+          git -C hovitron-reference checkout e0f00f9c67dfd868d2b1489051e9118158b6de03
+          git clone --depth 1 --branch v1.3.275 https://github.com/KhronosGroup/Vulkan-Headers.git vulkan-headers
+          git clone --depth 1 --branch v3.11.3 https://github.com/nlohmann/json.git json-reference
+          curl.exe -fL --retry 3 -o opencv.exe https://github.com/opencv/opencv/releases/download/4.10.0/opencv-4.10.0-windows.exe
+          if ((Get-FileHash opencv.exe -Algorithm SHA256).Hash.ToLower() -ne 'bff38466091c313dac21a0b73eea8278316a89c1d434c6f0b10697e087670168') { throw 'OpenCV checksum mismatch' }
+          7z x opencv.exe -oopencv-sdk -y | Out-Null
+          New-Item -ItemType Directory -Force vulkan-notices | Out-Null
+          curl.exe -fL --retry 3 -o vulkan-notices/GLM-MIT.txt https://raw.githubusercontent.com/g-truc/glm/0.9.9.8/copying.txt
+          Copy-Item json-reference/LICENSE.MIT vulkan-notices/nlohmann-json-MIT.txt
+          Copy-Item vulkan-headers/LICENSE.md vulkan-notices/Vulkan-Headers.txt
+          Copy-Item -Recurse vulkan-headers/LICENSES vulkan-notices/Vulkan-Headers-LICENSES
+      - name: Build both native renderers
+        shell: pwsh
+        run: |
+          cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR="$pwd/rvs-reference" -DOpenCV_DIR="$pwd/opencv-sdk/opencv/build/x64/vc16/lib"
+          cmake --build build/rvs --config Release --parallel 4
+          cmake -S tools/rvsvulkan/runtime -B build/vulkan -DHOVITRON_SOURCE_DIR="$pwd/hovitron-reference" -DVULKAN_INCLUDE_DIR="$pwd/vulkan-headers/include" -DJSON_INCLUDE_DIR="$pwd/json-reference/single_include"
+          cmake --build build/vulkan --config Release --parallel 4
+          Copy-Item build/vulkan/Release/wigglinde_rvsvulkan.exe vulkan-runtime/
+          vulkan-runtime/wigglinde_rvsvulkan.exe --identity
+      - name: Application checks and unchanged CPU reference
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -v
+          $env:PATH = "$pwd/opencv-sdk/opencv/build/x64/vc16/bin;$env:PATH"
+          Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll' | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName build/rvs/Release/ }
+          python tools/rvs/check_parallel.py --renderer build/rvs/Release/wigglinde_rvs.exe --output output/rvs-parallel.json
+      - name: Package and test the actual Windows application
+        run: python tools/package_windows.py --opencv opencv-sdk/opencv --rvs rvs-reference --las2 las2-reference --igev igev-reference --vulkan vulkan-runtime --hovitron hovitron-reference
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-Vulkan-Test-Windows_x64
+          path: |
+            dist/Wigglinde_1.2_Vulkan_Test_Windows_x64.zip
+            output/package-verification.json
+            output/windows-smoke.json
+            output/gui-build-check.png
+            output/rvs-parallel.json
+          if-no-files-found: warn
+          retention-days: 30

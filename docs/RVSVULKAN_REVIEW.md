@@ -1,5 +1,10 @@
 # RVSVulkan: Prüfung der Übernehmbarkeit
 
+Nachtrag 23. Oktober: Der hier beschriebene Kandidat wird auf Christophs Wunsch
+erstmals als separater Test gebaut. Aktueller Stand in DEVELOPMENT.md.
+Die unten genannte Multispectral-Konfiguration beschreibt den historischen
+Prüfzeitpunkt; die stabile heutige Referenz ist CPU-RVS P1/Simple5.
+
 Stand: 17. Oktober 2026. Quellprüfung, noch kein Build oder GPU-Benchmark.
 
 ## Ergebnis

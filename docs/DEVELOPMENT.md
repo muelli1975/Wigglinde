@@ -1,3 +1,33 @@
+# Separater RVSVulkan-Test — 23. Oktober 2026
+
+DEFOM nach Christophs Fernbereichsvergleich verworfen. Stabile 1.1 bleibt Basis;
+GREAT-IGEV und VWS werden nicht übernommen. Frühere RVSVulkan-Quellprüfung vom
+17. Oktober wieder aufgenommen: damals ausdrücklich kein Build/Fotovergleich.
+Kein neuer Fund. Die damalige Multispectral-Referenz ist historisch; der heutige
+Vergleichsmaßstab ist der veröffentlichte CPU-RVS P1/Simple5.
+
+Testadapter in `tools/rvsvulkan`: originale C++-Renderklassen und alle 14 Shader
+unverändert; feste Dateien statt Kamera-DLL, eine feste virtuelle Kamera statt
+Headset, vorhandener GPU-zu-Buffer-Pfad als Ausgabe. Sampler entsprechen dem
+ursprünglichen RGB-Pfad. Gleiche Szenendateien/Kameraparameter wie CPU-RVS,
+einschließlich des bisherigen Disparitäts-Bias und seiner Hauptpunktkompensation.
+Rastermodus, Faktor5, Dreiecksschwelle30 und RGBA8-Zwischenformat unverändert.
+Kein Compute-Modus, Zusatzfilter, zusätzliche Lückenfüllung oder CPU-Fallback.
+
+Linux-Kompilierung und Shaderübersetzung gelungen. 53 Anwendungstests bestanden.
+Der örtliche Mesa-Softwareadapter erfüllt die unveränderten Geräteanforderungen
+nicht; Start endet mit klarer Fehlermeldung. Noch kein erfolgreiches GPU-Rendering
+oder Geschwindigkeits-/Fotoqualitätsnachweis. Windows-Paketprüfung steht aus.
+GUI: Rendererwahl in vorhandener Tiefenkarten-Zeile, getrennte Test-Einstellungen,
+zusätzliches `_rvsvulkan` nur an Vulkan-Animationen/-Bildfolgen.
+
+Zusätzlicher Nutzervergleich `bild026_DxO_cs`: beide bereitgestellten AVIFs
+1619×1080, 60Frames. Bei LAS2-H sind in Zwischenansichten vordere senkrechte
+Gitterstreben unterbrochen/seitlich versetzt; IGEV++ Middlebury erhält sie deutlich
+durchgängiger, mit verbleibenden Kantenunregelmäßigkeiten. Das ist ein visueller
+Vergleich fertiger Animationen, keine numerische Tiefenkartenanalyse.
+Private Bilddateien werden nicht ins Repository übernommen.
+
 # Finalisierung 1.1 — 18. Oktober 2026
 
 Freigegeben: LAS2-H als Standard (4), IGEV++ Middlebury als Alternative (16),
