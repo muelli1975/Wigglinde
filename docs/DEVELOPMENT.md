@@ -1,3 +1,38 @@
+# GUI und native Modellinitialisierung — 23. Oktober 2026
+
+Christoph meldet sporadische kurze Hänger vor der Berechnung; er ist nicht sicher,
+ob ausschließlich Middlebury betroffen ist. Keine pauschale Ursache für jeden
+Hänger behauptet. Lokaler 20ms-Python-Heartbeat neben tatsächlichem Modellladen
+in einem Hintergrundthread: ORT1.24.4, CPU, vier Threads, Middlebury maximale
+Lücke8.013s bei8.257s Ladezeit; LAS2-H1.023s bei1.116s. Der gepinnte ORT-Quellstand
+`2d924974ef147392ced8409d36bd6d2e7fcc8a74`, `onnxruntime_pybind_state.cc`, gibt beim
+Konstruktor/initialize_session den GIL nicht frei, anders als bei Run(). Das ist
+ein konkreter Blockierpfad; kein Nachweis aller sporadischen PC-Ursachen.
+
+GUI-Aufträge verwenden jetzt einen separaten Standard-Python-spawn-Prozess mit
+unverändertem Processor für den ganzen Stapel. Status/Ergebnis über Queue,
+Abbruch über gemeinsames Event und bisherigen ONNX-/RVS-Abbruch. Keine Modell-,
+Präzisions-, Geräte-, Qualitäts-, Auflösungs- oder Exportänderung. Derselbe
+Modellzustand bleibt für alle Dateien erhalten. Native Initialisierung ist nicht
+sofort unterbrechbar; Abbruch wird danach beachtet, ohne Tk anzuhalten. Fehler
+bleiben sichtbar, kein CPU-Fallback. Windows-Start über freeze_support vor GUI-
+Import; muss mit tatsächlicher gepackter EXE geprüft werden.
+
+Diagnose läuft im Arbeitsprozess und ergänzt processing_process_id. Speicherwerte
+beziehen sich auf diesen rechnenden Prozess und seinen nativen RVS-Kindprozess;
+der separate GUI-Prozess ist darin nicht summiert. Keine Änderung der Messintervalle.
+57 Anwendungstests lokal bestanden, einschließlich Stapelwiederverwendung,
+Abbruchweitergabe, expliziter GPU-Fehler und Diagnoseresultate. Tatsächlicher lokaler
+GUI-Start -> separater Prozess -> Middlebury/CPU/RVS/MP4 bestanden: Modellladen
+7.341s, maximale GUI-Heartbeat-Lücke40ms. Separater Abbruch während Modellladen
+mit maximal153ms GUI-Lücke und Ergebnis cancelled bestanden. Dies ist keine
+Windows-/DirectML-Freigabe. Paketprüfung ergänzt echten GUI-Start mit Middlebury-
+Export, verschiedene Prozess-IDs und gemessenen GUI-Heartbeat.
+
+Zwischenbau39962995857 (4c989aa) mit Vulkan-Ausgabefix/Optionszeile ist erfolgreich,
+enthält aber noch nicht diese GUI-Prozesstrennung und wird nicht als Endpaket
+für den erweiterten Testauftrag ausgegeben. Neuer Windows-Bau folgt.
+
 # Vulkan-Ausgabekorrektur und Menüzeile — 23. Oktober 2026
 
 Christophs erster GPU-Test bricht nach erfolgreicher Middlebury-Tiefenberechnung

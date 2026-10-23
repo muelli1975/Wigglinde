@@ -1,3 +1,15 @@
+# Reaktionsfähige Oberfläche beim Modellstart — 23. Oktober 2026
+
+Christoph meldet sporadisches kurzes Einfrieren vor der Berechnung; Middlebury
+ist nicht als alleinige Ursache festgelegt. Konkreter lokaler Befund: Der native
+Modellstart der verwendeten ORT1.24.4 hält Python trotz Hintergrundthread an
+(Middlebury ca.8s, LAS2-H ca.1s). Verarbeitung pro GUI-Auftrag deshalb in einen
+eigenen Arbeitsprozess verlegen. Derselbe Processor, eine Modellsitzung pro
+Stapel, unveränderte Modelle/Präzision/Geräte/Geometrie/Renderer/Exporte. Status,
+Fehler und Abschluss an GUI übergeben; Abbruch über gemeinsames Event erhalten.
+Modellinitialisierung kann bei Abbruch noch zu Ende laufen, die Oberfläche bleibt
+dabei bedienbar. Kein vorsorgliches Qualitätstuning. Separates Testpaket prüfen.
+
 # Korrektur des Vulkan-Tests und Optionslayout — 23. Oktober 2026
 
 Christoph meldet den Abbruch mit `No display image` auf RTX3060, Middlebury/720p.

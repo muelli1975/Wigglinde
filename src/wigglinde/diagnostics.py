@@ -70,7 +70,7 @@ class LocalLogs:
 
 class RunTrace:
     def __init__(self,logs,context,device_id=None,child=lambda:None):
-        self.logs=logs;self.data=dict(schema_version=1,version=__version__,run_id=uuid.uuid4().hex,
+        self.logs=logs;self.data=dict(schema_version=1,version=__version__,run_id=uuid.uuid4().hex,processing_process_id=os.getpid(),
             started_at=datetime.now(timezone.utc).isoformat(),**context)
         self.memory=MemorySampler(device_id,child);self.timings={};self.current='starting'
 

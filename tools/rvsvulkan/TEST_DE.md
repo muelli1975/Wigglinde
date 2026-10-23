@@ -36,6 +36,10 @@ RVSVulkan ist eine eigene RVS-Implementierung; pixelgleiche CPU-Ergebnisse sind
 damit nicht zugesichert.
 
 Einstellungen liegen getrennt in `settings-vulkan-test.json`.
+Die Verarbeitung läuft in einem eigenen Arbeitsprozess, damit die Oberfläche
+auch beim nativen Modellstart reagiert. Bei Abbruch kann eine bereits laufende
+Modellinitialisierung noch zu Ende laufen. Die Modellsitzung wird im Stapel
+wiederverwendet; an Bildberechnung und Qualitätsparametern ändert sich nichts.
 Lokale Protokolle stehen wie bisher in `logs`. Der Test arbeitet nach dem
 Entpacken offline und benötigt weder Headset noch Kamera-Schnittstellen.
 

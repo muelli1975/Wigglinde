@@ -25,6 +25,7 @@ TEXT = {
     'model': ('Modell', 'Model'),
     'unavailable': ('nicht verfügbar', 'unavailable'),
     'device': ('Berechnung', 'Compute'),
+    'worker_failed': ('Die Berechnung wurde unerwartet beendet (Exit {code}).', 'Processing ended unexpectedly (exit {code}).'),
     'render_method': ('Renderer', 'Renderer'),
     'ready': ('Bereit.', 'Ready.'),
     'start': ('Start', 'Start'),

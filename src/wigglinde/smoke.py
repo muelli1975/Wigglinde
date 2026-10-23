@@ -50,6 +50,41 @@ def check_button_colors(gui):
             event(button._canvas,'<Enter>');drawn(button,T.BUTTON_HOVER,T.BORDER,T.TEXT)
             event(button._canvas,'<Leave>');drawn(button,T.BUTTON_BG,T.BORDER,T.TEXT)
 
+def check_gui_worker(gui,source,app_dir):
+    """Actual GUI Start -> spawned packaged process -> Middlebury/CPU MP4."""
+    from tkinter import messagebox
+    import os
+    names=['model_name','render_backend','duration','cycles','save_depth','standard','own']
+    saved={name:getattr(gui,name).get() for name in names}
+    errors=[];previous_error=messagebox.showerror;previous_sound=gui._play_ready_sound
+    original=hashlib.sha256(source.read_bytes()).hexdigest()
+    try:
+        messagebox.showerror=lambda *args,**kwargs:errors.append(str(args))
+        gui._play_ready_sound=lambda:None
+        gui.model_name.set('IGEV++ Middlebury');gui.render_backend.set('RVS (CPU)')
+        gui.duration.set('.5');gui.cycles.set('1');gui.save_depth.set(False)
+        gui.standard.set(False);gui.own.set(str(source.parent/'GUI_Worker_Export'))
+        gui._dependencies();gui.update();gui._start(False)
+        ticks=[];last=time.monotonic();deadline=last+180
+        while gui.running and time.monotonic()<deadline:
+            gui.update();now=time.monotonic();ticks.append(now-last);last=now;time.sleep(.02)
+        assert not gui.running,'GUI worker did not finish'
+        assert not errors and not gui.error_count,errors
+        report=json.loads((Path(app_dir)/'logs/latest_run.json').read_text(encoding='utf-8'))
+        assert report['status']=='passed' and report['model']=='IGEV++ Middlebury'
+        assert report['processing_process_id']!=os.getpid()
+        assert report['stage_seconds']['model_load']>0 and Path(report['output']).is_file()
+        assert report['renderer']=='RVS CPU Precision 1 Simple 5'
+        assert max(ticks)<1.,f'GUI heartbeat stalled for {max(ticks):.2f} s'
+        assert hashlib.sha256(source.read_bytes()).hexdigest()==original
+        return dict(status='passed',model=report['model'],processing_process_id=report['processing_process_id'],
+            gui_process_id=os.getpid(),model_load_seconds=report['stage_seconds']['model_load'],
+            maximum_gui_heartbeat_gap_seconds=max(ticks),actual_start_button_and_export=True)
+    finally:
+        messagebox.showerror=previous_error;gui._play_ready_sound=previous_sound
+        for name,value in saved.items():getattr(gui,name).set(value)
+        gui._dependencies()
+
 def run(app_dir,report_path):
     report_path=Path(report_path);report_path.parent.mkdir(parents=True,exist_ok=True)
     work=report_path.parent/'Stereotest_ÄÖÜ';work.mkdir(exist_ok=True)
@@ -253,6 +288,7 @@ def run(app_dir,report_path):
     gui.update()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
+    gui_worker=check_gui_worker(gui,source,app_dir)
     try:
         from PIL import ImageGrab
         ImageGrab.grab().save(report_path.parent/'gui-build-check.png')
@@ -300,4 +336,4 @@ def run(app_dir,report_path):
                 np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),mean_difference_px=float(diff.mean()),within_h_numerical_tolerance=bool(np.all(diff<=.1+.01*np.abs(cpu))),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',gui_processing_worker=gui_worker,model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
