@@ -9,8 +9,11 @@ from .export_options import camera_weight
 from .stereo import StereoScene
 from .las2 import LiteAnyStereo
 from .igev import IGEVMiddlebury
-from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision,model_family,model_suffix
+from .great import GREATMiddlebury
+from .models import DEFAULT_MODEL,MODELS,model_path,model_iterations,model_precision,model_suffix,model_family
 from .rvs import RVSRenderer
+from .vws import VWSRenderer
+from .renderers import DEFAULT_RENDERER,renderer_description
 from .depth_export import save_depth_maps
 from .wiggle_export import export_wiggle,check_cancelled
 
@@ -51,9 +54,10 @@ def collect_files(folder,excluded=()):
                    and p.resolve() not in excluded),key=lambda p:p.name)
 
 class Processor:
-    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None):
+    def __init__(self,app_dir,cancel_event=None,device_id=None,model_name=DEFAULT_MODEL,device_name=None,renderer_name=DEFAULT_RENDERER):
         if model_name not in MODELS:raise ValueError('Unbekanntes Modell / unknown model: '+str(model_name))
         self.model_name=model_name;self.device_id=device_id;self.device_name=device_name or ('CPU' if device_id is None else f'GPU {device_id}')
+        renderer_description(renderer_name);self.renderer_name=renderer_name
         self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
         self.logs=LocalLogs(app_dir);self.last_diagnostics=None
 
@@ -72,7 +76,7 @@ class Processor:
     def _run(self,path,options,progress,output_root):
         options.validate();check_cancelled(self.event.is_set)
         context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=model_iterations(self.model_name),precision=model_precision(self.model_name,self.device_id),layout='Full-SBS',input_order='left_then_right',
-            device=self.device_name,depth_device_id=self.device_id,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
+            device=self.device_name,depth_device_id=self.device_id,renderer_choice=self.renderer_name,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
         trace=RunTrace(self.logs,context,self.device_id,child=lambda:self.renderer.process.pid if self.renderer and self.renderer.process else None)
         self.last_diagnostics=trace.data
         with trace:
@@ -84,7 +88,7 @@ class Processor:
             trace.event('prepared',processing_size=size,matching_offset=offset)
             if self.model is None:
                 progress(self.model_name+' laden',0.)
-                estimator=IGEVMiddlebury if model_family(self.model_name)=='igev' else LiteAnyStereo
+                estimator={'igev':IGEVMiddlebury,'great':GREATMiddlebury,'las2':LiteAnyStereo}[model_family(self.model_name)]
                 with trace.stage('model_load'):self.model=estimator(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
             if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
             trace.data['depth_provider']=self.model.session.get_providers()
@@ -95,17 +99,22 @@ class Processor:
                 scene=StereoScene(left,right,dl,dr);positions=[camera_weight(i,options.frame_count) for i in range(options.frame_count//2+1)]
                 suffix=f'_wiggle_{options.fps}fps_{size[1]}p' if options.format!='gif' else f'_wiggle_{options.fps}fps_{max(size)}px'
                 suffix+='_'+model_suffix(self.model_name)
+                suffix+='_'+self.renderer_name.lower()
                 stem=Path(path).stem
                 target=output_root/'wiggle';target.mkdir(parents=True,exist_ok=True)
                 output=target/(stem+suffix+('.'+options.format if options.format!='png' else '_png'))
-                trace.data.update(output=str(output),renderer='RVS CPU Precision 1 Simple 5',blending=dict(BlendingMethod='Simple',BlendingFactor=5.))
+                trace.data.update(output=str(output),renderer=renderer_description(self.renderer_name))
+                if self.renderer_name=='RVS':trace.data['blending']=dict(BlendingMethod='Simple',BlendingFactor=5.)
                 with temporary_workspace(temp_root) as work:
-                    exe=self.app_dir/'backend'/('wigglinde_rvs.exe' if os.name=='nt' else 'wigglinde_rvs')
+                    backend='wigglinde_'+self.renderer_name.lower()
+                    exe=self.app_dir/'backend'/(backend+'.exe' if os.name=='nt' else backend)
                     if not exe.is_file() and getattr(sys,'frozen',False):
                         exe=Path(sys._MEIPASS)/'backend'/exe.name
-                    with trace.stage('rvs_prepare'):self.renderer=RVSRenderer(exe,scene,positions,work/'rvs',offset)
+                    renderer_class=RVSRenderer if self.renderer_name=='RVS' else VWSRenderer
+                    renderer_key=self.renderer_name.lower()
+                    with trace.stage(renderer_key+'_prepare'):self.renderer=renderer_class(exe,scene,positions,work/renderer_key,offset)
                     renderer=self.renderer;frames=iter(renderer.frames(self.event.is_set));index=0;wait_seconds=0.;export_times={}
-                    trace.data['rvs_schedule']=renderer.schedule
+                    trace.data[renderer_key+'_schedule']=renderer.schedule
                     def render(position):
                         nonlocal index,wait_seconds
                         check_cancelled(self.event.is_set);begin=time.perf_counter();rgb=next(frames);index+=1
@@ -117,7 +126,7 @@ class Processor:
                     try:
                         with trace.stage('view_export'):export_wiggle(render,size,options,output,work,exporting,self.event.is_set,timings=export_times)
                     finally:
-                        frames.close();trace.data.update(rvs=renderer.metrics,export_timings=export_times,render_stream_wait_seconds=wait_seconds);self.renderer=None
+                        frames.close();trace.data.update({renderer_key:renderer.metrics},export_timings=export_times,render_stream_wait_seconds=wait_seconds);self.renderer=None
                     if options.save_depth:
                         progress('Tiefenkarten speichern',.99)
                         with trace.stage('depth_export'):

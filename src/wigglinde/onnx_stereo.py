@@ -22,6 +22,7 @@ class OnnxStereo:
             raise ValueError('Falsche Iterationszahl im Modell / incorrect model iteration count')
         settings=ort.SessionOptions()
         if threads:settings.intra_op_num_threads=threads
+        if self.family=='great':settings.enable_cpu_mem_arena=False
         self.model_name=meta.get('model');self.device_id=device_id;self.precision=meta.get('precision','float32')
         expected=model_precision(self.model_name,device_id)
         if self.precision!=expected:

@@ -1,3 +1,22 @@
+# Components added by the isolated 1.2 Test 1 branch
+
+- GREAT-Stereo, classical GREAT-IGEV Middlebury: Apache-2.0 project source at
+  `2a6b1efede8c3a9eec9540790c2700ea2f3dee7d`; exact official linked checkpoint
+  SHA-256 `2f11060a718713df561cfb402494c11f05b157ce8a5da1b8364a0b9d53ef29cb`.
+  No separate weight-license statement was found; applying the project license
+  is recorded as that reading. See [GREAT study](docs/GREAT_IGEV_STUDY.md).
+  The package includes the unchanged Apache text, attribution and build adapter
+  source. PyTorch, timm, OpenCV Python and other training tools are not runtime
+  components; the existing timm Apache notice is retained.
+- TMIV/VWS: unchanged source at `8faacbe722f0e2fc1dc6f8247eb2da166a0297c6`,
+  BSD three-clause ISO/IEC license, including its contributor/patent-rights
+  reservation. No source patches, VVC/HEVC codecs or MIV bitstream support added.
+- fmt 11.0.2, commit `0c9fce2ffefecfdce794e1859584e25877b7b592`, MIT license;
+  statically linked into the TMIV renderer.
+
+Source provenance and notices are included in `licenses` in the test package.
+The following sections describe the retained 1.1 components.
+
 # Third-party components
 
 Wigglinde's own source is MIT. Bundled components retain their own licenses.

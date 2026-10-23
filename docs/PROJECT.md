@@ -1,3 +1,13 @@
+# Beauftragte 1.2 Test 1 — 23. Oktober 2026
+
+Separate Windows-Testversion mit GREAT-IGEV Middlebury und unabhängiger RVS/VWS-Wahl.
+LAS2-H und CPU-RVS bleiben Standard. VWS verwendet unveränderten TMIV-Code und
+die vorgesehenen MPEG-Standardparameter einschließlich 10-Bit-Geometrie/4:2:0.
+Christoph legt fest: zuerst die vorgesehenen Originalfunktionen; Änderungen erst
+bei begründetem Bedarf. Keine 16-Bit-/4:4:4-Patches im Paket.
+Qualitätsvergleich vor möglicher 1.2; Lentikular-Funktionen erst danach.
+Eigenständiges Actions-Testartefakt, keine Veröffentlichung oder Änderung der 1.1.
+
 # Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
 Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,

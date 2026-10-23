@@ -1,3 +1,11 @@
+# Wigglinde 1.2 Test 1
+
+Dieser Branch enthält die separate Windows-Testversion mit GREAT-IGEV und VWS.
+Vergleichsanleitung und Grenzen: [TESTVERSION.md](TESTVERSION.md).
+Die stabile 1.1 und ihre Downloads bleiben unverändert.
+
+---
+
 # Wigglinde 1.1
 
 [Downloads und SHA-256](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1) · [English](README.md)

@@ -56,6 +56,6 @@ class DeviceSelectionTests(unittest.TestCase):
     def test_all_selected_models_have_separate_cpu_and_gpu_graphs(self):
         for label in MODELS:
             with self.subTest(model=label):
-                stem='IGEV_Middlebury' if label==IGEV_MODEL else label.replace('-','_')
+                stem='IGEV_Middlebury' if label==IGEV_MODEL else 'GREAT_IGEV_Middlebury' if label=='GREAT-IGEV Middlebury' else label.replace('-','_')
                 self.assertEqual(model_path('/app',label).name,stem+'_dynamic.onnx')
                 self.assertEqual(model_path('/app',label,0).name,stem+'_mixed.onnx')

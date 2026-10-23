@@ -1,0 +1,145 @@
+name: GREAT-IGEV and VWS test build
+on:
+  push:
+    branches: [test-great-vws-1.2]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+concurrency:
+  group: wigglinde-great-vws-test
+  cancel-in-progress: true
+jobs:
+  models:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        id: great-cache
+        with:
+          path: |
+            models/great
+            output/great-mixed.json
+          key: great-middlebury-32-mixed-v1-${{ hashFiles('tools/great_igev/*.py', 'tools/convert_las2_mixed.py') }}
+      - name: Install build-only dependencies
+        if: steps.great-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . onnx==1.17.0 timm==0.5.4 scipy einops opencv-python-headless gdown==6.4.2
+      - name: Get exact official GREAT source and checkpoint
+        if: steps.great-cache.outputs.cache-hit != 'true'
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess,hashlib,gdown
+          subprocess.run(['git','clone','https://github.com/JarvisLee0423/GREAT-Stereo.git','great-reference'],check=True)
+          subprocess.run(['git','-C','great-reference','checkout','2a6b1efede8c3a9eec9540790c2700ea2f3dee7d'],check=True)
+          gdown.download(id='1OPRHwfLid56J4Bvo7Lzx_7wkJujGD40f',output='great-middlebury.pth',quiet=False)
+          assert hashlib.sha256(Path('great-middlebury.pth').read_bytes()).hexdigest()=='2f11060a718713df561cfb402494c11f05b157ce8a5da1b8364a0b9d53ef29cb'
+      - name: Export and verify full 32-iteration Float32 and mixed graphs
+        if: steps.great-cache.outputs.cache-hit != 'true'
+        run: |
+          python tools/great_igev/export.py --source great-reference --weights great-middlebury.pth --output models/great/GREAT_IGEV_Middlebury_dynamic.onnx
+          python tools/great_igev/convert_mixed.py --source models/great/GREAT_IGEV_Middlebury_dynamic.onnx --output models/great/GREAT_IGEV_Middlebury_mixed.onnx --report output/great-mixed.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: great-middlebury-onnx
+          path: |
+            models/great/*.onnx
+            models/great/*.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: great-conversion-verification
+          path: output/great-mixed.json
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: models
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: las2-h-onnx
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/las2
+      - uses: actions/download-artifact@v4
+        with:
+          name: directml-no-telemetry
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: runtime-wheel
+      - uses: actions/download-artifact@v4
+        with:
+          name: igev-middlebury-onnx
+          run-id: 39124980286
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/igev
+      - uses: actions/download-artifact@v4
+        with:
+          name: great-middlebury-onnx
+          path: models/great
+      - name: Install application and packaging dependencies
+        shell: pwsh
+        run: |
+          python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
+          python -m pip install -e . pyinstaller
+      - name: Get pinned native prerequisites
+        shell: pwsh
+        run: |
+          git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
+          git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
+          git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
+          git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
+          git clone https://github.com/gangweiX/IGEV-plusplus.git igev-reference
+          git -C igev-reference checkout 099dec97989780d151700459c682df1cc2c18e88
+          git clone https://gitlab.com/mpeg-i-visual/tmiv.git tmiv-reference
+          git -C tmiv-reference checkout 8faacbe722f0e2fc1dc6f8247eb2da166a0297c6
+          git clone https://github.com/fmtlib/fmt.git fmt-reference
+          git -C fmt-reference checkout 0c9fce2ffefecfdce794e1859584e25877b7b592
+          curl.exe -fL --retry 3 -o opencv.exe https://github.com/opencv/opencv/releases/download/4.10.0/opencv-4.10.0-windows.exe
+          if ((Get-FileHash opencv.exe -Algorithm SHA256).Hash.ToLower() -ne 'bff38466091c313dac21a0b73eea8278316a89c1d434c6f0b10697e087670168') { throw 'OpenCV checksum mismatch' }
+          7z x opencv.exe -oopencv-sdk -y | Out-Null
+      - name: Build unchanged CPU RVS and TMIV VWS
+        shell: pwsh
+        run: |
+          cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR="$pwd/rvs-reference" -DOpenCV_DIR="$pwd/opencv-sdk/opencv/build/x64/vc16/lib"
+          cmake --build build/rvs --config Release --parallel 4
+          python tools/vws/build.py --source tmiv-reference --fmt fmt-reference
+      - name: Source and native geometry checks
+        shell: pwsh
+        run: |
+          python -m unittest discover -s tests -v
+          $env:PATH = "$pwd/opencv-sdk/opencv/build/x64/vc16/bin;$env:PATH"
+          Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll' | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName build/rvs/Release/ }
+          python tools/rvs/check_parallel.py --renderer build/rvs/Release/wigglinde_rvs.exe --output output/rvs-parallel.json
+          python tools/vws/check_native.py --renderer build/vws/wigglinde_vws.exe --output output/vws-native.json
+      - name: Package and test actual portable Windows application
+        run: python tools/package_windows.py --opencv opencv-sdk/opencv --rvs rvs-reference --las2 las2-reference --igev igev-reference --tmiv tmiv-reference --fmt fmt-reference
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-1.2-Test1-Windows_x64
+          path: |
+            dist/Wigglinde_1.2_Test1_Windows_x64.zip
+            output/package-verification.json
+            output/windows-smoke.json
+            output/gui-build-check.png
+            output/rvs-parallel.json
+            output/vws-native.json
+          if-no-files-found: warn
+          retention-days: 30

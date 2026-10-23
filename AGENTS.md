@@ -85,3 +85,19 @@ model/iterations/precision/device in depth JSON. Preserve bilingual GUI layout.
 User reports successful Middlebury 2160p processing on RTX 3060 12 GB; record as
 one real-hardware success, not a universal memory guarantee. Finish the existing
 four platform packages and release v1.1; do not overwrite historical v1.0.
+
+## Authorized 1.2 Test 1: GREAT-IGEV and TMIV/VWS (23 October 2026)
+
+Christoph requests a separate portable Windows test package to compare GREAT-IGEV
+and VWS personally. Work on `test-great-vws-1.2`; preserve main, v1.1, releases
+and the research branch. Retain LAS2-H and IGEV++ Middlebury, default LAS2-H and
+CPU RVS P1/Simple5. Add explicit GREAT-IGEV Middlebury (32 iterations, maxdisp768,
+CPU FP32 / DirectML mixed) and independent RVS/VWS renderer selection. VWS uses
+unchanged official TMIV source and best-reference defaults, including its 10-bit
+geometry and YUV420 transport. Christoph explicitly requests using the intended
+original functions first; modifications require an evidenced need. No torch/timm/CUDA runtime. Keep
+geometry, export formats/options and per-format settings. Distinct test version,
+archive and settings file; renderer suffix on animation outputs to compare without
+overwriting. Bilingual restrained GUI; inspect 100/125/150% and minimum size.
+Build an Actions artifact, not a public prerelease or stable replacement.
+Evaluate quality before a possible 1.2; lenticular work follows afterwards.

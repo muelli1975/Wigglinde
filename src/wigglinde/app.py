@@ -4,9 +4,10 @@ from dataclasses import replace
 import json,queue,sys,threading,time
 from tkinter import filedialog,messagebox
 import customtkinter as ctk
-from . import __version__,theme as T
+from . import __version__,SETTINGS_FILENAME,theme as T
 from .devices import graphics_adapters
 from .models import DEFAULT_MODEL,MODELS
+from .renderers import DEFAULT_RENDERER,RENDERER_LABELS
 from .diagnostics import error_message,memory_failure
 from .i18n import tr,message,TEXT
 from .export_options import WiggleOptions
@@ -34,7 +35,7 @@ def screen_work_area(window):
 class WigglindeApp(ctk.CTk):
     def __init__(self,app_dir=None):
         ctk.set_appearance_mode('dark');super().__init__()
-        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
+        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/SETTINGS_FILENAME
         icon=self.app_dir/'assets/wigglinde.ico'
         if sys.platform=='win32' and icon.is_file():self.iconbitmap(default=str(icon))
         elif icon.is_file():
@@ -66,7 +67,9 @@ class WigglindeApp(ctk.CTk):
         self.save_depth=ctk.BooleanVar(value=self.settings.get('save_depth',False) is True)
         saved_model=self.settings.get('model',DEFAULT_MODEL)
         self.model_name=ctk.StringVar(value=saved_model if saved_model in MODELS else DEFAULT_MODEL)
-        self.settings.pop('iterations',None);self.settings.pop('renderer',None)
+        saved_renderer=self.settings.get('renderer',DEFAULT_RENDERER)
+        self.renderer_name=ctk.StringVar(value=RENDERER_LABELS.get(saved_renderer,RENDERER_LABELS[DEFAULT_RENDERER]))
+        self.settings.pop('iterations',None)
         self.language=ctk.StringVar(value='English' if self.locale=='en' else 'Deutsch')
         self.adapters={'CPU':None,**{f'GPU {i}: {name}':i for i,name in graphics_adapters()}}
         saved=self.settings.get('device_id')
@@ -130,12 +133,15 @@ class WigglindeApp(ctk.CTk):
             entry.bind('<FocusOut>',self._save_quietly);entry.bind('<Return>',self._save_quietly)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
-        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=180);self.model_menu.grid(row=0,column=1,sticky='w')
+        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=230);self.model_menu.grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
         self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
-        self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
-        self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
-        self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
+        bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=3,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(0,weight=1)
+        self.depth_check=self._check(bar,'save_depth',self.save_depth,self._save_quietly)
+        self.depth_check.grid(row=0,column=0,sticky='w',padx=(0,12))
+        self._label(bar,'renderer').grid(row=0,column=1,padx=(0,8))
+        self.renderer_menu=self._menu(bar,self.renderer_name,list(RENDERER_LABELS.values()),self._save_quietly,width=160)
+        self.renderer_menu.grid(row=0,column=2,sticky='e')
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -160,6 +166,7 @@ class WigglindeApp(ctk.CTk):
         )
 
     def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF','AVIF') else 'PNG'
+    def _renderer(self):return next(name for name,label in RENDERER_LABELS.items() if label==self.renderer_name.get())
     def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
@@ -226,7 +233,8 @@ class WigglindeApp(ctk.CTk):
                        video_cycles=cycles,save_depth=self.save_depth.get())
     def _save(self):
         self.settings.update(standard_output=self.standard.get(),own_output=self.own.get(),language=self.locale,device_id=self.adapters[self.device.get()],save_depth=self.save_depth.get(),
-            last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),model=self.model_name.get())
+            last_input_file=self.input_file.get(),last_input_folder=self.input_folder.get(),model=self.model_name.get(),
+            renderer=self._renderer())
         # A partly typed invalid number must not discard the last valid options.
         try:
             options=self._wiggle_options();options.validate();self.wiggle_options=options;self.settings['wiggle']=options.to_settings()
@@ -263,7 +271,7 @@ class WigglindeApp(ctk.CTk):
         self.running=True;self.cancel_event.clear();self.started=time.monotonic();self.progress.set(0)
         self.diagnosing=depth_only;self.error_count=0;self.last_file='';self.current.configure(text='');self.elapsed_seconds=0;self._show_elapsed()
         self._set_busy(True);self._set_status('starting')
-        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,self.model_name.get()),daemon=True).start()
+        threading.Thread(target=self._work,args=(list(self.files),self.source_root,self.standard.get(),Path(self.own.get()),options,self.adapters[self.device.get()],self.device.get(),depth_only,self.model_name.get(),self._renderer()),daemon=True).start()
     def _set_busy(self,busy):
         self.cycles_label.configure(text_color=T.TEXT_DISABLED if busy or self._kind()!='MP4' else T.TEXT)
         for control in self.controls:
@@ -281,10 +289,10 @@ class WigglindeApp(ctk.CTk):
         self.status.configure(text=text)
     def _show_elapsed(self):
         self.elapsed.configure(text='' if self.elapsed_seconds is None else self.tr('elapsed',minutes=self.elapsed_seconds//60,seconds=self.elapsed_seconds%60))
-    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,model_name=DEFAULT_MODEL):
+    def _work(self,files,root,standard,own,options,device_id,device_name,depth_only=False,model_name=DEFAULT_MODEL,renderer_name=DEFAULT_RENDERER):
         completed=0;errors=[];cancelled=False;diagnosis=None
         try:
-            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,model_name=model_name)
+            self.processor=Processor(self.app_dir,self.cancel_event,device_id=device_id,device_name=device_name,model_name=model_name,renderer_name=renderer_name)
             for i,path in enumerate(files):
                 if self.cancel_event.is_set():raise ExportCancelled()
                 self.events.put(('file',f'{i+1}/{len(files)} · {path.name}'))

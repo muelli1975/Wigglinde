@@ -95,8 +95,8 @@ def system_memory():
 
 
 class MemorySampler:
-    def __init__(self,device_id=None,child=lambda:None,interval=.25):
-        self.device_id=device_id;self.child=child;self.interval=interval
+    def __init__(self,device_id=None,child=lambda:None,interval=.25,child_label='rvs'):
+        self.device_id=device_id;self.child=child;self.interval=interval;self.child_label=child_label
         self.stop_event=threading.Event();self.lock=threading.Lock();self.phase='starting';self.stages={};self.notes={};self.gpu=None
 
     def __enter__(self):
@@ -115,7 +115,7 @@ class MemorySampler:
             if phase is not None:self.phase=phase
             values={}
             for key,reader in [('main',lambda:{'main_'+k:v for k,v in process_memory().items()}),('system',system_memory),
-                               ('rvs',lambda:{'rvs_'+k:v for k,v in process_memory(self.child()).items()} if self.child() else {}),
+                               (self.child_label,lambda:{self.child_label+'_'+k:v for k,v in process_memory(self.child()).items()} if self.child() else {}),
                                ('gpu',lambda:self.gpu.snapshot() if self.gpu else {})]:
                 try:values.update(reader())
                 except Exception as error:self.notes[key+'_counter_unavailable']=str(error)

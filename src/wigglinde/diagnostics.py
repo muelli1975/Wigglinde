@@ -72,7 +72,7 @@ class RunTrace:
     def __init__(self,logs,context,device_id=None,child=lambda:None):
         self.logs=logs;self.data=dict(schema_version=1,version=__version__,run_id=uuid.uuid4().hex,
             started_at=datetime.now(timezone.utc).isoformat(),**context)
-        self.memory=MemorySampler(device_id,child);self.timings={};self.current='starting'
+        self.memory=MemorySampler(device_id,child,child_label=context.get('renderer_choice','RVS').lower());self.timings={};self.current='starting'
 
     def event(self,event,**fields):
         self.logs.write('events',dict(timestamp=datetime.now(timezone.utc).isoformat(),run_id=self.data['run_id'],event=event,**fields))

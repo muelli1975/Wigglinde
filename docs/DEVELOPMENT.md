@@ -1,3 +1,13 @@
+# 1.2 Test 1 — laufender Build, 23. Oktober 2026
+
+GREAT-IGEV Middlebury als zusätzliches festes 32-Iterationen-Modell. Native/ONNX-
+und Mischgraph-Prüfungen auf CPU bestehen; keine physische GPU-Leistungsprüfung.
+Original-TMIV/VWS mit zehn Bit interner Geometrie und YUV420 unverändert gebaut.
+Native Prüfungen bestätigen positive/negative Disparität, ungerade Bildgrößen
+und Abbruch. Temporäre Randergänzung bei ungeraden Maßen wird exakt entfernt;
+Fokal-/Hauptpunktkoordinaten bleiben auf die Originalgröße bezogen.
+56 Quelltests bestanden. Windows-Paketprüfung und Layoutprüfung stehen noch aus.
+
 # Finalisierung 1.1 — 18. Oktober 2026
 
 Freigegeben: LAS2-H als Standard (4), IGEV++ Middlebury als Alternative (16),

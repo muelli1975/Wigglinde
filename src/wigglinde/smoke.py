@@ -3,11 +3,12 @@ from pathlib import Path
 import json,hashlib,subprocess,sys,threading,time
 import numpy as np
 from PIL import Image
-from . import theme as T
+from . import theme as T,SETTINGS_FILENAME
 from .processor import Processor
 from .las2 import LiteAnyStereo
 from .igev import IGEVMiddlebury
-from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family,model_suffix
+from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family,model_suffix,estimator_class
+from .renderers import RENDERER_LABELS
 from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
@@ -143,9 +144,23 @@ def run(app_dir,report_path):
             assert repeated['model']==label and id(alternate.model.session)==alternate_session
             model_checks.append(dict(model=label,status='passed',iterations=result['iterations'],depth_seconds=result['depth_seconds'],session_reused=True))
         finally:alternate.close()
+    # Exercise the actual VWS executable and every estimator independently of RVS.
+    vws_checks=[]
+    for label in MODELS:
+        alternate=Processor(app_dir,model_name=label,renderer_name='VWS')
+        try:
+            result=alternate.convert(source,work/'Ausgabe_Größe',WiggleOptions(format='png',cycle_seconds=.5))
+            assert result['renderer']=='TMIV VWS CPU' and 'vws' in result
+            assert result['vws']['geometry_bits']==10 and result['vws']['chroma']=='4:2:0'
+            assert Path(result['output']).name.endswith('_vws_png')
+            frames=sorted(Path(result['output']).glob('*.png'))
+            assert len(frames)==15 and frames[1].read_bytes()==frames[-1].read_bytes()
+            with Image.open(frames[7]) as image:assert image.size==(320,160)
+            vws_checks.append(dict(model=label,status='passed',renderer=result['renderer'],metrics=result['vws']))
+        finally:alternate.close()
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
-    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
+    (Path(app_dir)/SETTINGS_FILENAME).write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
     assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
     assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
@@ -157,8 +172,9 @@ def run(app_dir,report_path):
     assert not hasattr(gui,'layout') and 'layout' not in gui.settings
     assert not hasattr(gui,'swap')
     assert gui.model_name.get()==DEFAULT_MODEL and gui.model_menu.cget('values')==list(MODELS)
-    assert not hasattr(gui,'iterations') and not hasattr(gui,'renderer')
-    assert 'iterations' not in gui.settings and 'renderer' not in gui.settings
+    assert not hasattr(gui,'iterations')
+    assert 'iterations' not in gui.settings and gui._renderer()=='RVS'
+    assert gui.renderer_menu.cget('values')==list(RENDERER_LABELS.values())
     assert gui.diagnose_button.cget('state')=='disabled'
     gui.input_file.set(str(source));gui.update()
     assert gui.diagnose_button.cget('state')=='normal'
@@ -194,10 +210,11 @@ def run(app_dir,report_path):
     gui.kind.set('AVIF');gui._format_changed();gui.size.set('1080');gui.fps.set('60')
     gui.kind.set('MP4');gui._format_changed()
     assert (gui.size.get(),gui.fps.get(),gui.cycles.get())==('1080','60','1')
-    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui._save();gui.destroy()
+    gui.size.set('2160');gui.fps.set('60');gui.duration.set('3');gui.model_name.set('IGEV++ Middlebury');gui.renderer_name.set(RENDERER_LABELS['VWS']);gui._save();gui.destroy()
     gui=WigglindeApp(app_dir);gui.update()
     assert gui.save_depth.get() and gui._wiggle_options().save_depth
     assert gui.model_name.get()=='IGEV++ Middlebury'
+    assert gui._renderer()=='VWS'
     assert gui._wiggle_options().video_height==2160 and gui._wiggle_options().video_fps==60
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     assert gui._wiggle_options().video_cycles==1
@@ -227,6 +244,9 @@ def run(app_dir,report_path):
             gui.device.set(device_before)
         for label in MODELS:
             gui.model_name.set(label);gui.update()
+            assert geometry_snapshot()==baseline
+        for renderer in RENDERER_LABELS.values():
+            gui.renderer_name.set(renderer);gui.update()
             assert geometry_snapshot()==baseline
         gui.device.set(device_before)
     for scaling in (1.,1.25,1.5):
@@ -270,7 +290,7 @@ def run(app_dir,report_path):
     import onnxruntime as ort
     if 'DmlExecutionProvider' in ort.get_available_providers():
         for label in MODELS:
-            estimator=IGEVMiddlebury if model_family(label)=='igev' else LiteAnyStereo
+            estimator=estimator_class(label)
             try:
                 model=estimator(model_path(app_dir,label,device_id=0),device_id=0)
             except Exception as error:
@@ -286,4 +306,4 @@ def run(app_dir,report_path):
                 np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),mean_difference_px=float(diff.mean()),within_h_numerical_tolerance=bool(np.all(diff<=.1+.01*np.abs(cpu))),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,vws_checks=vws_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
