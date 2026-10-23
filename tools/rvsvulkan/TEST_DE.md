@@ -36,6 +36,7 @@ RVSVulkan ist eine eigene RVS-Implementierung; pixelgleiche CPU-Ergebnisse sind
 damit nicht zugesichert.
 
 Einstellungen liegen getrennt in `settings-vulkan-test.json`.
+GIF bietet zusätzlich512Pixel an der langen Seite; Standard bleibt800.
 Die Verarbeitung läuft in einem eigenen Arbeitsprozess, damit die Oberfläche
 auch beim nativen Modellstart reagiert. Bei Abbruch kann eine bereits laufende
 Modellinitialisierung noch zu Ende laufen. Die Modellsitzung wird im Stapel

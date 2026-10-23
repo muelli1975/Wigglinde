@@ -1,3 +1,26 @@
+# GIF512 und belastbare Windows-Prüfung — 23. Oktober 2026
+
+Christoph bestätigt512 zusätzlich für GIF in1.2; im erneuerten Testpaket ergänzt.
+Lange Seite512/640/800/1024, Standard800 und Encoder unverändert. Bestehende
+Paketprüfung kontrolliert nun512-Auswahl und Wiederherstellung über Neustart.
+
+Nachkontrolle von Run39965337024: Die tatsächliche Windows-EXE samt GUI-Auftrag
+in separatem Prozess hat bestanden. Der zusätzliche native Ausgabetest war aber
+nicht gelaufen: `private public` im Test verändert unter MSVC den Symbolnamen
+der Methode und verursachte LNK2019. Die PowerShell-Schritte liefen nach dem
+Fehler weiter; der letzte erfolgreiche Befehl überdeckte ihn. Das ist kein
+bestandener Windows-Nativtest. Frühere grüne Jobanzeigen allein sind hierfür
+nicht als Nachweis zu lesen. Testzugriff nutzt jetzt explizite Instantiierung
+mit Friend-Zugriff bei unveränderter Klassendeklaration; Linux-Test bestanden.
+Windows-Buildschritte brechen nun bei jedem nativen Befehlsfehler ab.
+
+Erster Windows-Versuch desselben Runs scheiterte zuvor an Schannel/TLS beim
+ULB-Quellabruf; Wiederholung gelang. Verifizierende OpenSSL-Verbindung und drei
+begrenzte Abrufversuche für diese Quelle ergänzen; keine Abschaltung von TLS-
+oder Zertifikatsprüfungen. Kleine Prüfberichte zusätzlich separat hochladen.
+Der Download des266MB-Zwischenartefakts über den Connector endete in ReadTimeout;
+kein lokales Archiv-Audit für diesen Zwischenbau behauptet. Neuer Bau folgt.
+
 # GUI und native Modellinitialisierung — 23. Oktober 2026
 
 Christoph meldet sporadische kurze Hänger vor der Berechnung; er ist nicht sicher,

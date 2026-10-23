@@ -1,18 +1,25 @@
 // MIT. Development-only command-recording regression; no Vulkan driver or GPU.
 // Exercise the actual adapter's window and the compiled upstream drawing code.
-// Only this test exposes the private recording method after its dependencies
-// have been included, so no production API or shader needs a test-only change.
+// Test access uses an explicit-instantiation friend, preserving the original
+// class declaration and MSVC's access-dependent member-name mangling.
 #include "SourcesVulkan/commonVulkan.h"
 #include "SourcesVulkan/InputProvider.h"
 #include <optional>
-#define private public
 #include "SourcesVulkan/VulkanDrawing.h"
-#undef private
 #include "SourcesVulkan/VulkanRenderPassAbstract.h"
 #define WIGGLINDE_OUTPUT_CHECK
 #include "stream.cpp"
 
 namespace {
+struct RecordingMethod {
+  using Pointer=void (VulkanDrawing::*)(vk::CommandBuffer&,int,int,std::span<InputProvider::StreamFrameInfo>);
+  friend Pointer recordingMethod(RecordingMethod);
+};
+template<class Tag,typename Tag::Pointer method> struct TestAccess {
+  friend typename Tag::Pointer recordingMethod(Tag){return method;}
+};
+// C++ explicitly permits private names as explicit-instantiation arguments.
+template struct TestAccess<RecordingMethod,&VulkanDrawing::recordCommandBuffers>;
 int began=0,ended=0,copied=0,recorded=0;
 VkImage copiedImage=VK_NULL_HANDLE;
 VkBuffer copiedBuffer=VK_NULL_HANDLE;
@@ -48,7 +55,7 @@ int main() {
       require(wrapper.getAttachmentSize()==1,"Offline rendering must retain one render slot");
       // The pre-fix drawing code throws the user's exact 'No display image'
       // exception here, before any output-copy command can be recorded.
-      drawing.recordCommandBuffers(command,0,0,{});
+      (drawing.*recordingMethod(RecordingMethod{}))(command,0,0,{});
       require(copiedImage==static_cast<VkImage>(pass.getImageToBlit(0)),"Wrong render-result image");
       require(copiedBuffer==static_cast<VkBuffer>(window.getRenderingDestination()),"Wrong export buffer");
       require(copiedLayout==VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,"Wrong source layout");

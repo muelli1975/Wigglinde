@@ -153,7 +153,7 @@ def run(app_dir,report_path):
     processor.close()
     assert hashlib.sha256(source.read_bytes()).hexdigest()==before
     for height in (720,1080,2160):assert WiggleOptions(video_height=height).output_size(3840,2160)==(round(height*16/9),height)
-    for side in (640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
+    for side in (512,640,800,1024):assert max(WiggleOptions(format='gif',gif_long_side=side).output_size(3840,2160))==side
     # Every additional estimator runs through the actual packaged CPU/RVS path.
     png_result=next(r for r in results if "depth_export" in r)
     model_checks=[]
@@ -229,7 +229,7 @@ def run(app_dir,report_path):
     gui.cycles.set('1')
     assert gui.cycles_entry.cget('state')=='normal'
     gui.size.set('1080');gui.fps.set('60')
-    gui.kind.set('GIF');gui._format_changed();gui.size.set('640');gui.fps.set('25')
+    gui.kind.set('GIF');gui._format_changed();assert gui._sizes()==['512','640','800','1024'];gui.size.set('512');gui.fps.set('25')
     gui.kind.set('AVIF');gui._format_changed();gui.size.set('1080');gui.fps.set('60')
     gui.kind.set('MP4');gui._format_changed()
     assert (gui.size.get(),gui.fps.get(),gui.cycles.get())==('1080','60','1')
@@ -243,7 +243,7 @@ def run(app_dir,report_path):
     assert gui._wiggle_options().cycle_seconds==3 and gui.input_folder.get()==str(work)
     assert gui._wiggle_options().video_cycles==1
     gui.kind.set('GIF');gui._format_changed()
-    assert (gui.size.get(),gui.fps.get())==('640','25')
+    assert (gui.size.get(),gui.fps.get())==('512','25')
     assert gui.cycles_entry.cget('state')=='disabled'
     gui.kind.set('AVIF');gui._format_changed()
     assert (gui.size.get(),gui.fps.get())==('1080','60')

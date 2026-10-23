@@ -164,7 +164,7 @@ class WigglindeApp(ctk.CTk):
         )
 
     def _kind(self):return self.kind.get() if self.kind.get() in ('MP4','GIF','AVIF') else 'PNG'
-    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
+    def _sizes(self):return {'MP4':['720','1080','2160'],'GIF':['512','640','800','1024'],'PNG':['1080','2160'],'AVIF':['720','1080','2160']}[self._kind()]
     def _rates(self):return ['10','15','20','25'] if self._kind()=='GIF' else ['30','60']
     def _format_changed(self,*_):
         # The menu variable already holds the new format; capture the old one first.

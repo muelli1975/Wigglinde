@@ -88,18 +88,31 @@ jobs:
       - name: Install application dependencies
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
           python -m pip install -e . pyinstaller
       - name: Fetch pinned native prerequisites
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
           git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
           git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
           git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
           git clone https://github.com/gangweiX/IGEV-plusplus.git igev-reference
           git -C igev-reference checkout 099dec97989780d151700459c682df1cc2c18e88
-          git clone https://gitlab.ulb.be/hovitron/hovitron-pipeline.git hovitron-reference
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            try {
+              git -c http.sslBackend=openssl clone https://gitlab.ulb.be/hovitron/hovitron-pipeline.git "hovitron-fetch-$attempt"
+              Move-Item "hovitron-fetch-$attempt" hovitron-reference
+              break
+            } catch {
+              if ($attempt -eq 3) { throw }
+              Start-Sleep -Seconds 3
+            }
+          }
           git -C hovitron-reference checkout e0f00f9c67dfd868d2b1489051e9118158b6de03
           git clone --depth 1 --branch v1.3.275 https://github.com/KhronosGroup/Vulkan-Headers.git vulkan-headers
           git clone --depth 1 --branch v3.11.3 https://github.com/nlohmann/json.git json-reference
@@ -114,6 +127,8 @@ jobs:
       - name: Build both native renderers
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR="$pwd/rvs-reference" -DOpenCV_DIR="$pwd/opencv-sdk/opencv/build/x64/vc16/lib"
           cmake --build build/rvs --config Release --parallel 4
           cmake -S tools/rvsvulkan/runtime -B build/vulkan -DHOVITRON_SOURCE_DIR="$pwd/hovitron-reference" -DVULKAN_INCLUDE_DIR="$pwd/vulkan-headers/include" -DJSON_INCLUDE_DIR="$pwd/json-reference/single_include"
@@ -124,6 +139,8 @@ jobs:
       - name: Application checks and unchanged CPU reference
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           python -m unittest discover -s tests -v
           $env:PATH = "$pwd/opencv-sdk/opencv/build/x64/vc16/bin;$env:PATH"
           Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll' | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName build/rvs/Release/ }
@@ -136,6 +153,17 @@ jobs:
           name: Wigglinde-Vulkan-Test-Windows_x64
           path: |
             dist/Wigglinde_1.2_Vulkan_Test_Windows_x64.zip
+            output/package-verification.json
+            output/windows-smoke.json
+            output/gui-build-check.png
+            output/rvs-parallel.json
+          if-no-files-found: warn
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-Vulkan-Test-Reports
+          path: |
             output/package-verification.json
             output/windows-smoke.json
             output/gui-build-check.png

@@ -1,3 +1,10 @@
+# Zusätzliche GIF-Größe für 1.2 — 23. Oktober 2026
+
+Christoph bestätigt512Pixel an der langen Seite als zusätzliche GIF-Größe für1.2.
+Auswahl512/640/800/1024, Standard weiterhin800. Auch in das erneuerte separate
+Testpaket übernehmen; bestehende GIF-Kodierung und gespeicherte Werte erhalten.
+WebM wurde als mögliche Ergänzung zu MP4 besprochen; noch kein Integrationsauftrag.
+
 # Reaktionsfähige Oberfläche beim Modellstart — 23. Oktober 2026
 
 Christoph meldet sporadisches kurzes Einfrieren vor der Berechnung; Middlebury
