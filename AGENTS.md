@@ -1,5 +1,21 @@
 # Repository guidance
 
+## Authorized DEFOM evaluation for 1.2 (23 October 2026)
+
+Christoph approves an internal native comparison of DEFOM-Stereo ViT-S/RVC and
+ViT-L/Middlebury against LAS2-H and IGEV++ Middlebury, using unchanged CPU RVS
+P1/RGB/Simple5 and the same source photographs. Work on `test-defom-1.2`, based
+on stable 1.1. GREAT-IGEV and VWS are not part of the next test package after
+Christoph's quality/crash reports. Preserve the previous test branch/artifact.
+Only useful quality and practical resource results justify subsequent ONNX,
+mixed-precision/DirectML verification and a separate Windows Actions test build.
+No public release or change to main/v1.1. No PyTorch/timm/CUDA product runtime,
+fallback or automatic quality reduction. Native comparison alone is not an
+ONNX/DirectML compatibility claim. ViT-L's underlying Depth Anything V2 Large
+weights are explicitly authorized under CC-BY-NC-4.0: retain attribution, license
+and conversion notices; any future model selector must show `(CC-BY-NC-4.0)`.
+Keep private photographs and derived comparisons out of the public repository/CI.
+
 Read `DESIGN_STANDARD_STEREOTOOLS.txt` before GUI, labels, interaction, output-path,
 or asset changes. The file is an unchanged reference from SplatTricia; its explicit
 rules for other projects do not become Wigglinde features. Read `docs/PROJECT.md`

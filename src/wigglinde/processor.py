@@ -57,7 +57,9 @@ class Processor:
         self.app_dir=Path(app_dir);self.event=cancel_event or threading.Event();self.model=None;self.renderer=None
         self.logs=LocalLogs(app_dir);self.last_diagnostics=None
 
-    def close(self):self.logs.close()
+    def close(self):
+        if self.model and hasattr(self.model,'close'):self.model.close()
+        self.logs.close()
     def cancel(self):
         self.event.set()
         if self.model:self.model.cancel()
@@ -85,10 +87,17 @@ class Processor:
             if self.model is None:
                 progress(self.model_name+' laden',0.)
                 estimator=IGEVMiddlebury if model_family(self.model_name)=='igev' else LiteAnyStereo
-                with trace.stage('model_load'):self.model=estimator(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id)
+                kwargs={}
+                if model_family(self.model_name)=='defom':
+                    from .defom import DEFOMStereo
+                    estimator=DEFOMStereo;kwargs['cancel']=self.event.is_set
+                with trace.stage('model_load'):self.model=estimator(model_path(self.app_dir,self.model_name,self.device_id),device_id=self.device_id,**kwargs)
             if self.model.model_name!=self.model_name:raise ValueError('Falsche Modelldatei / incorrect model file: '+str(self.model.model_name))
             trace.data['depth_provider']=self.model.session.get_providers()
             dl,dr=self.model.predict_pair(left,right,offset,self.event.is_set,progress,stage=trace.stage)
+            if hasattr(self.model,'worker_lifetime_memory'):
+                trace.data['stereo_worker_lifetime_memory']=self.model.worker_lifetime_memory
+                trace.data['stereo_worker_pid']=self.model.process.pid
             trace.data['depth_seconds']=trace.timings['depth_left']+trace.timings['depth_right']
             if output_root is not None:
                 output_root.mkdir(parents=True,exist_ok=True);temp_root=output_root/'_temp'

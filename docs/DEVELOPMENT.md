@@ -1,3 +1,13 @@
+# Separater DEFOM-Vergleich für 1.2 Test 2 — 23. Oktober 2026
+
+Branch `test-defom-1.2`, auf Basis der stabilen 1.1. H bleibt Standard,
+IGEV++ Middlebury bleibt. GREAT-IGEV und VWS werden nach Christophs praktischem
+Qualitätsvergleich aus dem nächsten Testpaket weggelassen. DEFOM-S/RVC und
+DEFOM-L/Middlebury (CC-BY-NC-4.0) nativ und als ONNX mit unverändertem CPU-RVS
+verglichen. Messwerte, Grenzen und Exportanpassungen: [DEFOM_STUDY.md](DEFOM_STUDY.md).
+Modellprozess für DEFOM begrenzt native Abstürze und blockierende Initialisierung.
+Windows-Paketprüfung steht noch aus; keine Veröffentlichung oder Änderung an 1.1.
+
 # Finalisierung 1.1 — 18. Oktober 2026
 
 Freigegeben: LAS2-H als Standard (4), IGEV++ Middlebury als Alternative (16),

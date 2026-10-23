@@ -1,3 +1,10 @@
+# 1.2 Test 2: DEFOM-Modellvergleich
+
+Dieser Zweig enthält eine getrennte Windows-Testversion mit LAS2-H, IGEV++
+Middlebury, DEFOM-S/RVC und DEFOM-L (CC-BY-NC-4.0), mit dem bisherigen RVS.
+[Testhinweise und Modelllizenzen](TESTVERSION.md).
+Die stabile 1.1 bleibt unverändert; die folgende Dokumentation beschreibt ihre Basis.
+
 # Wigglinde 1.1
 
 [Downloads und SHA-256](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1) · [English](README.md)

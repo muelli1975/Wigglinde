@@ -4,7 +4,7 @@ from dataclasses import replace
 import json,queue,sys,threading,time
 from tkinter import filedialog,messagebox
 import customtkinter as ctk
-from . import __version__,theme as T
+from . import __version__,SETTINGS_FILENAME,theme as T
 from .devices import graphics_adapters
 from .models import DEFAULT_MODEL,MODELS
 from .diagnostics import error_message,memory_failure
@@ -34,7 +34,7 @@ def screen_work_area(window):
 class WigglindeApp(ctk.CTk):
     def __init__(self,app_dir=None):
         ctk.set_appearance_mode('dark');super().__init__()
-        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
+        self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/SETTINGS_FILENAME
         icon=self.app_dir/'assets/wigglinde.ico'
         if sys.platform=='win32' and icon.is_file():self.iconbitmap(default=str(icon))
         elif icon.is_file():
@@ -130,12 +130,12 @@ class WigglindeApp(ctk.CTk):
             entry.bind('<FocusOut>',self._save_quietly);entry.bind('<Return>',self._save_quietly)
         bar=ctk.CTkFrame(f,fg_color='transparent');bar.grid(row=2,column=0,sticky='ew',padx=12,pady=(0,9));bar.grid_columnconfigure(3,weight=1)
         self._label(bar,'model').grid(row=0,column=0,padx=(0,8))
-        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=180);self.model_menu.grid(row=0,column=1,sticky='w')
+        self.model_menu=self._menu(bar,self.model_name,list(MODELS),self._save_quietly,width=250);self.model_menu.grid(row=0,column=1,sticky='w')
         self._label(bar,'device').grid(row=0,column=2,padx=(16,8))
-        self._menu(bar,self.device,list(self.adapters),width=245).grid(row=0,column=3,sticky='w')
-        self._label(bar,'renderer').grid(row=0,column=4,padx=(12,0))
+        self._menu(bar,self.device,list(self.adapters),width=200).grid(row=0,column=3,sticky='w')
         self.depth_check=self._check(f,'save_depth',self.save_depth,self._save_quietly)
         self.depth_check.grid(row=3,column=0,sticky='w',padx=12,pady=(0,9))
+        self._label(f,'renderer').grid(row=3,column=0,sticky='e',padx=12,pady=(0,9))
         f=self._panel(4);f.grid(sticky='nsew');f.grid_rowconfigure(0,weight=1)
         self.status=self._label(f,'',anchor='w');self.status.grid(row=0,column=0,sticky='ew',padx=12,pady=(6,0))
         self.current=self._label(f,self.last_file,anchor='w');self.current.grid(row=1,column=0,sticky='ew',padx=12)
@@ -337,6 +337,8 @@ class WigglindeApp(ctk.CTk):
                     if errors:messagebox.showerror('Wigglinde','\n\n'.join(errors[:4])+'\n\n'+self.tr('details'),parent=self)
                     elif diagnosis:
                         peaks=[s['peak'] for s in diagnosis['memory']['stages'].values()]
+                        if 'stereo_worker_lifetime_memory' in diagnosis:
+                            peaks.extend(s['peak'] for s in diagnosis['stereo_worker_lifetime_memory']['stages'].values())
                         def peak(name):
                             values=[p[name] for p in peaks if name in p]
                             return f'{max(values)/1024**2:.0f} MiB' if values else '—'

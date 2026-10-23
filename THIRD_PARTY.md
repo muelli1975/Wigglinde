@@ -1,3 +1,13 @@
+# Additional components in 1.2 Test 2
+
+DEFOM-Stereo code/project: MIT, Insta360 Research Team. Official Small/RVC and
+Large/Middlebury checkpoints include Depth Anything V2 weights with separate
+terms: Small Apache-2.0; Large **CC-BY-NC-4.0 (noncommercial)**. Large is visibly
+marked in the model selector. DINOv2 retains Apache-2.0 attribution. Exact source,
+authors, checkpoint hashes, conversion notices and complete license texts are in
+[DEFOM notices](tools/defom/NOTICE.md), distributed under `licenses/DEFOM`.
+No DEFOM PyTorch/timm/xFormers/CUDA runtime is bundled.
+
 # Third-party components
 
 Wigglinde's own source is MIT. Bundled components retain their own licenses.

@@ -1,0 +1,151 @@
+name: DEFOM 1.2 Test 2 Windows build
+on:
+  push:
+    branches: [test-defom-1.2]
+    paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'README_DE.md', 'THIRD_PARTY.md', 'TESTVERSION.md', '.github/workflows/defom-test-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  ORT_DISABLE_TELEMETRY: '1'
+concurrency:
+  group: wigglinde-defom-test
+  cancel-in-progress: true
+jobs:
+  models:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        id: model-cache
+        with:
+          path: |
+            models/defom
+            output/defom-*.json
+          key: defom-v1-${{ hashFiles('tools/defom/*.py', 'tools/convert_las2_mixed.py') }}
+      - name: Build-only dependencies
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e . onnx==1.17.0 timm==0.5.4 scipy opt_einsum==3.4.0 gdown==6.4.2 opencv-python-headless==4.11.0.86
+      - name: Pinned original source and official checkpoints
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        shell: python
+        run: |
+          from pathlib import Path
+          import subprocess,gdown,hashlib
+          subprocess.run(['git','clone','https://github.com/antigravity-tech/DEFOM-Stereo.git','defom-reference'],check=True)
+          subprocess.run(['git','-C','defom-reference','checkout','5b27591d83956e5d329ff66704271a9e68b1c75f'],check=True)
+          for file_id,name,expected in [
+              ('1xEPS7gceJSFn_IHdzebBCgQaRNGwf1aG','defomstereo_vits_rvc.pth','aeb52a008f9c689ed23eaea562126ac1307d563fb8687002a657f06a6bf49da4'),
+              ('1Dy1eGDdtkp2GQYQRTvMwR-3eAzaRCe_k','defomstereo_vitl_middlebury.pth','e8f17e18e8eb4455ddaf6130c6067b40063444acf7558c66d57963e60b539e25')]:
+              if not gdown.download(id=file_id,output=name,quiet=True):raise RuntimeError('Checkpoint download failed')
+              with Path(name).open('rb') as stream:assert hashlib.file_digest(stream,'sha256').hexdigest()==expected
+      - name: Export and verify original 32-update models and mixed graphs
+        if: steps.model-cache.outputs.cache-hit != 'true'
+        run: |
+          python tools/defom/export.py --source defom-reference --weights defomstereo_vits_rvc.pth --encoder vits --output models/defom/DEFOM_S_dynamic.onnx
+          python tools/defom/verify.py --model models/defom/DEFOM_S_dynamic.onnx --report output/defom-s-native-onnx.json
+          python tools/defom/convert_mixed.py --source models/defom/DEFOM_S_dynamic.onnx --output models/defom/DEFOM_S_mixed.onnx
+          python tools/defom/verify.py --model models/defom/DEFOM_S_mixed.onnx --references models/defom/DEFOM_S_dynamic.validation.npz --report output/defom-s-mixed.json
+          python tools/defom/export.py --source defom-reference --weights defomstereo_vitl_middlebury.pth --encoder vitl --output models/defom/DEFOM_L_dynamic.onnx
+          python tools/defom/verify.py --model models/defom/DEFOM_L_dynamic.onnx --report output/defom-l-native-onnx.json
+          python tools/defom/convert_mixed.py --source models/defom/DEFOM_L_dynamic.onnx --output models/defom/DEFOM_L_mixed.onnx
+          python tools/defom/verify.py --model models/defom/DEFOM_L_mixed.onnx --references models/defom/DEFOM_L_dynamic.validation.npz --report output/defom-l-mixed.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: defom-onnx
+          compression-level: 0
+          path: |
+            models/defom/*.onnx
+            models/defom/*.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: defom-conversion-verification
+          path: output/defom-*.json
+          if-no-files-found: warn
+          retention-days: 30
+  windows:
+    needs: models
+    runs-on: windows-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: las2-h-onnx
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/las2
+      - uses: actions/download-artifact@v4
+        with:
+          name: directml-no-telemetry
+          run-id: 39041230523
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: runtime-wheel
+      - uses: actions/download-artifact@v4
+        with:
+          name: igev-middlebury-onnx
+          run-id: 39124980286
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: models/igev
+      - uses: actions/download-artifact@v4
+        with:
+          name: defom-onnx
+          path: models/defom
+      - name: Install application and packaging dependencies
+        shell: pwsh
+        run: |
+          python -m pip install (Get-ChildItem runtime-wheel/*.whl).FullName
+          python -m pip install -e . pyinstaller
+      - name: Get unchanged RVS and pinned build prerequisites
+        shell: pwsh
+        run: |
+          git clone https://gitlab.com/mpeg-i-visual/rvs.git rvs-reference
+          git -C rvs-reference checkout d757a353c7f84d228ac30c179d6ff9de356c6101
+          git clone https://github.com/TomTomTommi/LiteAnyStereo.git las2-reference
+          git -C las2-reference checkout 8c97bd4c4da3712c2ac60003a23201dfdb5935f4
+          git clone https://github.com/gangweiX/IGEV-plusplus.git igev-reference
+          git -C igev-reference checkout 099dec97989780d151700459c682df1cc2c18e88
+          curl.exe -fL --retry 3 -o opencv.exe https://github.com/opencv/opencv/releases/download/4.10.0/opencv-4.10.0-windows.exe
+          if ((Get-FileHash opencv.exe -Algorithm SHA256).Hash.ToLower() -ne 'bff38466091c313dac21a0b73eea8278316a89c1d434c6f0b10697e087670168') { throw 'OpenCV checksum mismatch' }
+          7z x opencv.exe -oopencv-sdk -y | Out-Null
+      - name: Build unchanged RVS CPU backend
+        shell: pwsh
+        run: |
+          cmake -S tools/rvs/runtime -B build/rvs -DRVS_SOURCE_DIR="$pwd/rvs-reference" -DOpenCV_DIR="$pwd/opencv-sdk/opencv/build/x64/vc16/lib"
+          cmake --build build/rvs --config Release --parallel 4
+      - name: Source and real worker checks
+        run: python -m unittest discover -s tests -v
+      - name: Verify serial and parallel native RVS output
+        shell: pwsh
+        run: |
+          $env:PATH = "$pwd/opencv-sdk/opencv/build/x64/vc16/bin;$env:PATH"
+          Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll' | Select-Object -First 1 | ForEach-Object { Copy-Item $_.FullName build/rvs/Release/ }
+          python tools/rvs/check_parallel.py --renderer build/rvs/Release/wigglinde_rvs.exe --output output/rvs-parallel.json
+      - name: Package and test actual Windows EXE, all models and responsive GUI
+        run: python tools/package_windows.py --opencv opencv-sdk/opencv --rvs rvs-reference --las2 las2-reference --igev igev-reference
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-1.2-Test2-Windows_x64
+          compression-level: 0
+          path: |
+            dist/Wigglinde_1.2_Test2_Windows_x64.zip
+            output/package-verification.json
+            output/windows-smoke.json
+            output/gui-build-check.png
+            output/rvs-parallel.json
+          if-no-files-found: warn
+          retention-days: 30

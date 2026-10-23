@@ -230,6 +230,7 @@ output/
 _temp/
 backend/
 settings.json
+settings-test-*.json
 *.zip
 
 !tools/rvs/runtime/app.manifest

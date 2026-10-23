@@ -1,3 +1,10 @@
+# 1.2 Test 2: DEFOM model comparison
+
+This branch builds a separate Windows test with LAS2-H, IGEV++ Middlebury,
+DEFOM-S/RVC and DEFOM-L (CC-BY-NC-4.0), using the existing RVS renderer.
+[Test instructions and model licenses](TESTVERSION.md).
+Stable 1.1 releases remain unchanged; the documentation below describes that base.
+
 # Wigglinde 1.1
 
 [Downloads and SHA-256](https://github.com/muelli1975/Wigglinde/releases/tag/v1.1) · [Deutsch](README_DE.md)

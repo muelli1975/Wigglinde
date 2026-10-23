@@ -3,11 +3,12 @@ from pathlib import Path
 import json,hashlib,subprocess,sys,threading,time
 import numpy as np
 from PIL import Image
-from . import theme as T
+from . import theme as T,SETTINGS_FILENAME
 from .processor import Processor
 from .las2 import LiteAnyStereo
 from .igev import IGEVMiddlebury
-from .models import MODELS,DEFAULT_MODEL,model_path,model_iterations,model_family,model_suffix
+from .defom import DEFOMStereo
+from .models import MODELS,DEFAULT_MODEL,DEFOM_LARGE,model_path,model_iterations,model_family,model_suffix
 from .memory import MemorySampler
 from .export_options import WiggleOptions
 from .wiggle_export import ffmpeg_path
@@ -145,7 +146,7 @@ def run(app_dir,report_path):
         finally:alternate.close()
     # GUI startup and selected controls, on the actual packaged Tk runtime.
     from .app import WigglindeApp,screen_work_area
-    (Path(app_dir)/'settings.json').write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
+    (Path(app_dir)/SETTINGS_FILENAME).write_text(json.dumps(dict(model='obsolete',layout='Half-SBS',iterations=8,renderer='opengl')),encoding='utf-8')
     gui=WigglindeApp(app_dir);gui.update()
     assert gui._wiggle_options().video_height==720 and gui.device.get()=='CPU'
     assert not gui.save_depth.get() and gui.depth_check.cget('text')==gui.tr('save_depth')
@@ -231,12 +232,33 @@ def run(app_dir,report_path):
         gui.device.set(device_before)
     for scaling in (1.,1.25,1.5):
         ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling);gui.update()
+        gui.geometry('780x600');gui.update()
         for control in gui.controls+[gui.stop]:
             assert control.winfo_rootx()>=gui.winfo_rootx()
             assert control.winfo_rootx()+control.winfo_width()<=gui.winfo_rootx()+gui.winfo_width()
             assert control.winfo_rooty()+control.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
+        from tkinter.font import Font
+        gui.model_name.set(DEFOM_LARGE);gui.update()
+        label=gui.model_menu._text_label
+        assert Font(font=label.cget('font')).measure(DEFOM_LARGE)<=label.winfo_width()
     ctk.set_widget_scaling(1.);ctk.set_window_scaling(1.)
     gui.update()
+    # Run real packaged DEFOM initialization/inference while the Tk event loop
+    # continues to service timers. Message boxes are suppressed only in this test.
+    from unittest.mock import patch
+    heartbeat=[]
+    def beat():
+        heartbeat.append(time.monotonic())
+        if gui.running:gui.after(25,beat)
+    gui.model_name.set(DEFOM_LARGE);gui.duration.set('.5');gui.size.set('720')
+    gui.input_file.set(str(source));gui.update()
+    with patch('wigglinde.app.messagebox.showinfo'),patch('wigglinde.app.messagebox.showerror') as errors:
+        gui._start(True);gui.after(25,beat);deadline=time.monotonic()+240
+        while gui.running and time.monotonic()<deadline:
+            gui.update();time.sleep(.01)
+        assert not gui.running and not errors.called
+    assert len(heartbeat)>4 and max(b-a for a,b in zip(heartbeat,heartbeat[1:]))<1.5
+    gui_responsiveness=dict(model=DEFOM_LARGE,timer_samples=len(heartbeat),max_timer_gap_seconds=max(b-a for a,b in zip(heartbeat,heartbeat[1:])))
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=gui.winfo_rooty()+gui.winfo_height()
     assert gui.stop.winfo_rooty()+gui.stop.winfo_height()<=screen_work_area(gui)[3]
     try:
@@ -255,7 +277,7 @@ def run(app_dir,report_path):
             path=model_path(app_dir,label,device)
             meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
             assert meta['model']==label and meta['iterations']==model_iterations(label)
-            assert hashlib.sha256(path.read_bytes()).hexdigest()==meta['onnx_sha256']
+            with path.open('rb') as stream:assert hashlib.file_digest(stream,'sha256').hexdigest()==meta['onnx_sha256']
             model_metadata.append(dict(model=label,device=device,sha256=meta['onnx_sha256']))
     assert not list((Path(app_dir)/'models/las2').glob('*iter8*'))
     assert not list((Path(app_dir)/'backend').glob('*_gl*'))
@@ -270,7 +292,7 @@ def run(app_dir,report_path):
     import onnxruntime as ort
     if 'DmlExecutionProvider' in ort.get_available_providers():
         for label in MODELS:
-            estimator=IGEVMiddlebury if model_family(label)=='igev' else LiteAnyStereo
+            estimator=DEFOMStereo if model_family(label)=='defom' else IGEVMiddlebury if model_family(label)=='igev' else LiteAnyStereo
             try:
                 model=estimator(model_path(app_dir,label,device_id=0),device_id=0)
             except Exception as error:
@@ -285,5 +307,6 @@ def run(app_dir,report_path):
                 assert np.isfinite(gpu).all()
                 np.testing.assert_allclose(gpu,cpu,rtol=.01,atol=.1)
                 directml.append(dict(model=label,status='passed',precision=model.precision,providers=model.session.get_providers(),max_difference_px=float(diff.max()),mean_difference_px=float(diff.mean()),within_h_numerical_tolerance=bool(np.all(diff<=.1+.01*np.abs(cpu))),seconds=time.monotonic()-begin,hardware_speed_not_validated=True))
+                if hasattr(model,'close'):model.close();reference.close()
                 del model,reference
-    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')
+    report_path.write_text(json.dumps(dict(status='passed',model_names_separate=True,depth_model_metadata=True,formats=results,model_checks=model_checks,model_metadata=model_metadata,depth_diagnosis=diagnosis,native_memory_probe=memory_probe,model_session_reused=True,source_unchanged=True,gui_started=True,bilingual_gui=True,defom_gui_responsiveness=gui_responsiveness,stable_control_geometry=True,button_colors=True,adapters=adapters,original_sound=True,original_icon=True,mixed_model_bundled=mixed_meta is not None,mixed_model_sha256=mixed_meta['onnx_sha256'] if mixed_meta else None,directml=directml),indent=2,ensure_ascii=False),encoding='utf-8')

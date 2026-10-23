@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2 Test 2 · separate Windows test
+
+- Added DEFOM-S/RVC and DEFOM-L/Middlebury model comparisons.
+- Marked the Large model's CC-BY-NC-4.0 license in the model selector and notices.
+- Isolated DEFOM model loading/inference to keep the window responsive and contain native failures.
+- Retained LAS2-H, IGEV++ Middlebury and the existing RVS renderer; omitted GREAT-IGEV and VWS.
+
 ## 1.1 — 2026-10-23
 
 - Add animated AVIF export.

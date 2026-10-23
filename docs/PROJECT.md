@@ -1,3 +1,14 @@
+# Freigegebener DEFOM-Test 1.2 Test 2 — 23. Oktober 2026
+
+Nach dem praktischen GREAT-/VWS-Vergleich beide aus dem nächsten separaten
+Windows-Testpaket nehmen. LAS2-H als Standard, IGEV++ Middlebury und unveränderten
+CPU-RVS behalten. Zuerst DEFOM-S/RVC und DEFOM-L/Middlebury intern mit denselben
+Fotos vergleichen; nur bei nutzbaren Ergebnissen Export/Mischpräzision/DirectML
+und einen getrennten Testbuild prüfen. Large mit sichtbarem `(CC-BY-NC-4.0)`
+ausdrücklich autorisiert; Attributions- und Lizenztexte erhalten. Keine stabile
+Veröffentlichung ersetzen. Weitere Entscheidungen nach persönlichem Bildvergleich,
+Lentikular bleibt nachgeordnet.
+
 # Freigegebenes Export-Update 1.1 — 23. Oktober 2026
 
 Animationsausgabe als MP4, GIF, AVIF oder PNG-Bildfolge. AVIF bleibt bei Qualität 60,

@@ -1,5 +1,7 @@
-from wigglinde.app import main
 if __name__=='__main__':
+    import multiprocessing
+    multiprocessing.freeze_support()
+    from wigglinde.app import main
     import sys
     if len(sys.argv)>1 and sys.argv[1]=='--self-test':
         try:main()

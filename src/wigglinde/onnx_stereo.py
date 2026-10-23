@@ -14,7 +14,8 @@ class OnnxStereo:
         path=Path(model_path)
         if not path.is_file():raise FileNotFoundError(f"Die Modelldatei fehlt: {path}")
         meta=json.loads(path.with_suffix('.json').read_text(encoding='utf-8'))
-        if hashlib.sha256(path.read_bytes()).hexdigest()!=meta['onnx_sha256']:
+        with path.open('rb') as stream:digest=hashlib.file_digest(stream,'sha256').hexdigest()
+        if digest!=meta['onnx_sha256']:
             raise ValueError('Die Modelldatei ist beschädigt. Bitte das Programmpaket erneut entpacken.')
         if self.family is not None and model_family(meta.get('model'))!=self.family:
             raise ValueError('Falsche Modellfamilie / incorrect model family')

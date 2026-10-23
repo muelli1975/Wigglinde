@@ -29,6 +29,8 @@ def exception_details(error):
             item.update(bytes_base64=base64.b64encode(part).decode('ascii'),byte_length=len(raw),bytes_truncated=len(part)!=len(raw),
                         failed_encoding=error.encoding,start=error.start,end=error.end,
                         candidate_encoding=encoding,candidate_text=part.decode(encoding,errors='backslashreplace'))
+        if hasattr(error,'remote_details'):
+            item.update(worker_exceptions=error.remote_details,worker_traceback=error.remote_traceback)
         chain.append(item);error=error.__cause__ or error.__context__
     return chain
 

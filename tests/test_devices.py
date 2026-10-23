@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 import hashlib,json,types,unittest
 from wigglinde.las2 import LiteAnyStereo
-from wigglinde.models import model_path,DEFAULT_MODEL,MODELS,IGEV_MODEL
+from wigglinde.models import model_path,DEFAULT_MODEL,MODELS,IGEV_MODEL,DEFOM_SMALL,DEFOM_LARGE
 
 class DeviceSelectionTests(unittest.TestCase):
     def runtime(self,providers):
@@ -56,6 +56,6 @@ class DeviceSelectionTests(unittest.TestCase):
     def test_all_selected_models_have_separate_cpu_and_gpu_graphs(self):
         for label in MODELS:
             with self.subTest(model=label):
-                stem='IGEV_Middlebury' if label==IGEV_MODEL else label.replace('-','_')
+                stem={IGEV_MODEL:'IGEV_Middlebury',DEFOM_SMALL:'DEFOM_S',DEFOM_LARGE:'DEFOM_L'}.get(label,label.replace('-','_'))
                 self.assertEqual(model_path('/app',label).name,stem+'_dynamic.onnx')
                 self.assertEqual(model_path('/app',label,0).name,stem+'_mixed.onnx')

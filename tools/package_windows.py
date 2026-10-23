@@ -19,7 +19,7 @@ def main():
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     shutil.copytree('assets',target/'assets')
     from wigglinde.models import MODELS,DEFAULT_MODEL,model_path
-    from wigglinde import __version__
+    from wigglinde import __version__,SETTINGS_FILENAME
     for label in MODELS:
         for device in (None,0):
             source_model=model_path('.',label,device)
@@ -34,6 +34,9 @@ def main():
             dest=notices/'Python-Tcl-Tk'/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,dest)
     shutil.copy2(a.rvs/'LICENSE',notices/'RVS-LICENSE.txt');shutil.copy2(a.las2/'LICENSE',notices/'LAS2-LICENSE.txt');shutil.copy2(a.igev/'LICENSE',notices/'IGEV-LICENSE.txt')
     shutil.copy2('tools/igev/licenses/timm-LICENSE.txt',notices/'IGEV-timm-Apache-2.0.txt')
+    shutil.copytree('tools/defom/licenses',notices/'DEFOM')
+    shutil.copy2('tools/defom/UPSTREAM_LICENSE.txt',notices/'DEFOM/DEFOM-MIT.txt')
+    shutil.copy2('tools/defom/NOTICE.md',notices/'DEFOM/NOTICE.md')
     for name in ['LICENSE','LICENSE.txt','LICENSE-3RD-PARTY.txt','LICENSE_FFMPEG.txt']:
         for f in a.opencv.rglob(name):
             if f.is_file() and f.stat().st_size<2_000_000:
@@ -49,7 +52,7 @@ def main():
         text=Path(name).read_text(encoding='utf-8')
         text=text.replace('](docs/','](source/docs/').replace('](.github/','](source/.github/')
         (target/name).write_text(text,encoding='utf-8')
-    for name in ['LICENSE','THIRD_PARTY.md','CHANGELOG.md']:
+    for name in ['LICENSE','THIRD_PARTY.md','CHANGELOG.md','TESTVERSION.md']:
         shutil.copy2(name,target/name)
     shutil.copy2('THIRD_PARTY.md',notices/'THIRD_PARTY.md')
     from imageio_ffmpeg import get_ffmpeg_exe
@@ -66,12 +69,13 @@ def main():
     (target/'build-info.json').write_text(json.dumps(dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),version=__version__,renderer='RVS CPU Precision 1 Simple 5',models=list(MODELS),default_model=DEFAULT_MODEL,model_precision={'CPU':'float32','GPU':'mixed_float16_float32'},devices='CPU / DirectML (stereo), CPU (RVS)',packages={n:metadata.version(n) for n in ['numpy','pillow','onnxruntime-directml','customtkinter','imageio-ffmpeg']}),indent=2))
     # Explicit development smoke test, not an application startup operation.
     subprocess.run([str((target/'Wigglinde.exe').resolve()),'--self-test',str(Path('output/windows-smoke.json').resolve())],check=True,timeout=600)
-    archive=Path(f'dist/Wigglinde_{__version__}_Windows_x64.zip')
+    archive=Path('dist/Wigglinde_1.2_Test2_Windows_x64.zip')
     with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,6) as z:
         for f in target.rglob('*'):
-            if f.is_file() and '_temp' not in f.parts and f.relative_to(target).parts[0]!='logs' and f.name!='settings.json':z.write(f,f.relative_to(target.parent))
+            if f.is_file() and '_temp' not in f.parts and f.relative_to(target).parts[0]!='logs' and f.name not in ('settings.json',SETTINGS_FILENAME):z.write(f,f.relative_to(target.parent))
     import hashlib
-    verification=dict(status='passed',version=__version__,models=list(MODELS),platform='Windows_x64',commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),filename=archive.name,bytes=archive.stat().st_size,sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),actual_packaged_application_tested=True,renderer='RVS CPU Precision 1 Simple 5')
+    with archive.open('rb') as stream:archive_sha=hashlib.file_digest(stream,'sha256').hexdigest()
+    verification=dict(status='passed',version=__version__,models=list(MODELS),platform='Windows_x64',commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),filename=archive.name,bytes=archive.stat().st_size,sha256=archive_sha,actual_packaged_application_tested=True,renderer='RVS CPU Precision 1 Simple 5')
     Path('output/package-verification.json').write_text(json.dumps(verification,indent=2),encoding='utf-8')
     print(json.dumps(verification))
 if __name__=='__main__':main()
