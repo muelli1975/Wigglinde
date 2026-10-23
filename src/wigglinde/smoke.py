@@ -223,6 +223,8 @@ def run(app_dir,report_path):
             for device_label in [device_before,'GPU 0: '+('Long adapter name '*6)]:
                 gui.device.set(device_label);gui.update()
                 assert geometry_snapshot()==baseline
+            # Restore the real selection before format changes persist settings.
+            gui.device.set(device_before)
         for label in MODELS:
             gui.model_name.set(label);gui.update()
             assert geometry_snapshot()==baseline
