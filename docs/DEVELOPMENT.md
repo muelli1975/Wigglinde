@@ -3,12 +3,17 @@
 Original-TMIV-Aufrufe über unabhängige Ansichten parallelisiert, mit dokumentiertem
 -j-Threadlimit und eigenem konservativen RAM-Budget. Native Positiv-/Negativ-
 Disparität, ungerade Maße, seriell/parallel pixelgleiche Bilder und Abbruch aller
-Prozesse geprüft. Erstes Problemfoto: fünf Ansichten ca.4,0 s seriell und2,4 s
-parallel; aktueller CPU-RVS im vorherigen Lauf ca.1,6 s einschließlich PNG-Speicherung.
+Prozesse geprüft. Problemfoto mit 31 Ansichten: VWS 26,63 s seriell und 10,07 s
+mit acht Prozessen; CPU-RVS mit acht Prozessen 4,52 s. Rendering und Rohbild-
+Konvertierung ohne Tiefenberechnung, PNG-Speicherung oder Animationskompression.
+Alle 31 VWS-Ansichten seriell/parallel pixelgleich.
 Einzelmessungen auf diesem Rechner, keine allgemeine Geschwindigkeitsgarantie.
 Originalcode, 10-Bit-Geometrie, 4:2:0 und Standard-VWS-Parameter unverändert.
 58 Quelltests bestanden. Die lokalen GREAT-Prozessorläufe erzeugen MP4, GIF,
 AVIF und PNG erfolgreich; die Windows-Paketprüfung läuft.
+Der erste Windows-Nativbau scheiterte am erzwungenen C++17-Modus (MSVC:
+constexpr-std::vector). Der Builder überlässt die Standardwahl jetzt wieder dem
+unveränderten TMIV-CMake-Projekt; keine Änderung an dessen Quellcode.
 
 # 1.2 Test 1 — laufender Build, 23. Oktober 2026
 

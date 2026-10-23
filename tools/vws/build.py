@@ -50,8 +50,10 @@ def main():
     run('cmake', '--build', args.build / 'fmt', '--config', 'Release', '--parallel', args.jobs)
     run('cmake', '--install', args.build / 'fmt', '--config', 'Release')
     native = args.build / 'native'
+    # Let upstream select its supported C++ standard; forcing C++17 breaks
+    # constexpr std::vector code on MSVC. No upstream source changes are needed.
     run('cmake', '-S', args.source, '-B', native, '-DBUILD_TESTING=OFF',
-        '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_CXX_STANDARD=17',
+        '-DCMAKE_BUILD_TYPE=Release',
         '-DTMIV_BUILD_APP_LIST=Renderer', '-DTMIV_BUILD_LIB_LIST=' + ';'.join(LIBRARIES),
         '-DCMAKE_PREFIX_PATH=' + str(fmt_install))
     run('cmake', '--build', native, '--config', 'Release', '--target', 'TmivRenderer',
