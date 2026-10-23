@@ -33,6 +33,7 @@ jobs:
           python tools/rvsvulkan/prepare_shaders.py --source hovitron-reference --output vulkan-runtime/shaders
           cmake -S tools/rvsvulkan/runtime -B build/vulkan -G Ninja -DCMAKE_BUILD_TYPE=Release -DHOVITRON_SOURCE_DIR="$PWD/hovitron-reference"
           cmake --build build/vulkan --parallel 2
+          ctest --test-dir build/vulkan --output-on-failure
           cp build/vulkan/wigglinde_rvsvulkan vulkan-runtime/
           vulkan-runtime/wigglinde_rvsvulkan --identity
       - name: Probe hosted Vulkan adapter without a CPU fallback
@@ -117,6 +118,7 @@ jobs:
           cmake --build build/rvs --config Release --parallel 4
           cmake -S tools/rvsvulkan/runtime -B build/vulkan -DHOVITRON_SOURCE_DIR="$pwd/hovitron-reference" -DVULKAN_INCLUDE_DIR="$pwd/vulkan-headers/include" -DJSON_INCLUDE_DIR="$pwd/json-reference/single_include"
           cmake --build build/vulkan --config Release --parallel 4
+          ctest --test-dir build/vulkan -C Release --output-on-failure
           Copy-Item build/vulkan/Release/wigglinde_rvsvulkan.exe vulkan-runtime/
           vulkan-runtime/wigglinde_rvsvulkan.exe --identity
       - name: Application checks and unchanged CPU reference

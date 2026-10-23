@@ -1,3 +1,29 @@
+# Vulkan-Ausgabekorrektur und Menüzeile — 23. Oktober 2026
+
+Christophs erster GPU-Test bricht nach erfolgreicher Middlebury-Tiefenberechnung
+bei720p auf RTX3060 mit `No display image` ab. Kein Beleg für Speicher- oder
+Modellfehler. Ursache: Die ursprüngliche Verzweigung in VulkanDrawing benutzt
+`getAttachmentSize()` als Bildschirmindikator. WindowAbstract liefert dort immer
+mindestens1 für die internen Renderplätze; der vorhandene Headless-Kopierpfad
+ist dadurch unerreichbar. Eine beim Build erzeugte Kopie ändert ausschließlich
+diese Bedingung auf `window->isSwapChainNeeded()`; Checkout und alle14 Shader,
+Rasterung, Blending und Hardwareanforderungen bleiben erhalten.
+
+Gezielter nativer Regressionstest zeichnet mit tatsächlichem FileWindow und
+kompiliertem VulkanDrawing die Ausgabekommandos auf, ohne GPU. Vor Korrektur
+reproduziert er exakt `No display image`; danach genau eine Image-to-Buffer-Kopie
+mit unveränderten Maßen bei1080×720 und1619×1080. Kein GPU-Bildtest und kein
+Qualitäts-/Geschwindigkeitsnachweis. 53 Anwendungstests lokal bestanden.
+
+Modell, Berechnung und Renderer stehen nun mit Beschriftungen darüber auf einer
+Zeile; flexibler Gerätebereich. Tiefenkarten-Checkbox bleibt darunter allein.
+Zyklusdauer und MP4-Wiederholungen behalten feste Positionen, gespeicherte Werte
+und bestehende Abhängigkeiten. Presets/Automatisch weiterhin nur Planung.
+Lokales Optionslayout bei780×600, Deutsch/Englisch und100/125/150% sowie langen
+GPU-Namen geprüft; Formatwechsel und gespeicherte Zykluswerte über Neustart
+erhalten. Zykluszeile weiterhin direkt unter Format und über Modell/Berechnung/
+Renderer. Windows-Neubau und erneute Paketprüfung folgen für diesen Korrekturstand.
+
 # Separater RVSVulkan-Test — 23. Oktober 2026
 
 DEFOM nach Christophs Fernbereichsvergleich verworfen. Stabile 1.1 bleibt Basis;
@@ -6,8 +32,8 @@ GREAT-IGEV und VWS werden nicht übernommen. Frühere RVSVulkan-Quellprüfung vo
 Kein neuer Fund. Die damalige Multispectral-Referenz ist historisch; der heutige
 Vergleichsmaßstab ist der veröffentlichte CPU-RVS P1/Simple5.
 
-Testadapter in `tools/rvsvulkan`: originale C++-Renderklassen und alle 14 Shader
-unverändert; feste Dateien statt Kamera-DLL, eine feste virtuelle Kamera statt
+Erstes Testpaket in `tools/rvsvulkan`: originale C++-Renderklassen und alle14 Shader
+unverändert (Ausgabekorrektur siehe oben); feste Dateien statt Kamera-DLL, eine feste virtuelle Kamera statt
 Headset, vorhandener GPU-zu-Buffer-Pfad als Ausgabe. Sampler entsprechen dem
 ursprünglichen RGB-Pfad. Gleiche Szenendateien/Kameraparameter wie CPU-RVS,
 einschließlich des bisherigen Disparitäts-Bias und seiner Hauptpunktkompensation.

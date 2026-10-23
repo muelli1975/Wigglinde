@@ -4,7 +4,8 @@ Diese Testversion ergänzt die unveränderte 1.1-Basis um die Auswahl zwischen
 RVS (CPU) und RVSVulkan (GPU). LAS2-H bleibt Standard, IGEV++ Middlebury bleibt
 für schwierige Motive verfügbar. Die veröffentlichte 1.1 wird nicht ersetzt.
 
-Der Renderer wird unten in den Optionen gewählt. Das bisherige Verarbeitungsgerät
+Modell, Berechnung und Renderer stehen gemeinsam in einer Auswahlzeile.
+Das unter Berechnung gewählte Gerät
 CPU/GPU steuert weiterhin die Tiefenschätzung. RVSVulkan rendert unabhängig davon
 auf einer von seiner ursprünglichen Geräteauswahl bestimmten Vulkan-GPU.
 Die tatsächliche GPU steht anschließend im lokalen Laufprotokoll.
@@ -28,7 +29,9 @@ Blending-Faktor 5, Dreiecksschwelle 30, linearen Tiefen und unveränderten Shade
 Die Anbindung ergänzt feste Bildeingaben, passende Kameraparameter und das
 Auslesen der fertigen Bilder. Der gemeinsame Tiefenbereich wird aus den tatsächlich
 übergebenen Float-Tiefenkarten ermittelt; deren Werte werden nicht verändert.
-Sie fügt keine Filter oder Lückenfüllung hinzu.
+Eine fehlerhafte Verzweigung im ursprünglichen Ausgabe-Code ist korrigiert:
+Ohne Bildschirm wird direkt in den Exportpuffer kopiert. Rasterung, Blending und
+Shader bleiben erhalten. Die Anbindung fügt keine Filter oder Lückenfüllung hinzu.
 RVSVulkan ist eine eigene RVS-Implementierung; pixelgleiche CPU-Ergebnisse sind
 damit nicht zugesichert.
 

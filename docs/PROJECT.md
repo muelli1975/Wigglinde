@@ -1,3 +1,14 @@
+# Korrektur des Vulkan-Tests und Optionslayout — 23. Oktober 2026
+
+Christoph meldet den Abbruch mit `No display image` auf RTX3060, Middlebury/720p.
+Tiefenberechnung erfolgreich, Fehler erst in der Vulkan-Ausgabe. Fehler gezielt
+beheben und separates Testpaket erneuern, stabile1.1 erhalten. Modell, Berechnung
+und Renderer mit Beschriftungen über den Feldern in einer gemeinsamen Zeile;
+Berechnung genügt als Bezeichnung. Zyklusdauer gemeinsam, Standard2s;
+Wiederholungen nur für MP4 aktiv, Standard5, bei anderen Formaten an gleicher
+Position ausgegraut und Wert erhalten. Keine Änderung an Zyklus-/Exportlogik.
+Presets und automatische Gerätewahl bleiben vorgemerkt.
+
 # Vorgemerkt: Presets und automatische Gerätewahl — 23. Oktober 2026
 
 Christoph sammelt diese Idee ausdrücklich zunächst; noch kein Implementierungsauftrag

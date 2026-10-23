@@ -236,7 +236,15 @@ def run(app_dir,report_path):
             assert geometry_snapshot()==baseline
         gui.device.set(device_before)
     for scaling in (1.,1.25,1.5):
-        ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling);gui.update()
+        ctk.set_widget_scaling(scaling);ctk.set_window_scaling(scaling)
+        # CTk otherwise locks the previous dimensions for one second after DPI
+        # changes. Apply its normal min/max restoration before testing minimum size.
+        gui._set_scaled_min_max();gui.geometry('780x600');gui.update()
+        selectors=[gui.model_menu,gui.device_menu,gui.renderer_menu]
+        assert len({w.winfo_rooty() for w in selectors})==1
+        assert gui.format_menu.winfo_rooty()<gui.cycles_entry.winfo_rooty()<gui.model_menu.winfo_rooty()<gui.depth_check.winfo_rooty()
+        for left,right in zip(selectors,selectors[1:]):
+            assert left.winfo_rootx()+left.winfo_width()<right.winfo_rootx()
         for control in gui.controls+[gui.stop]:
             assert control.winfo_rootx()>=gui.winfo_rootx()
             assert control.winfo_rootx()+control.winfo_width()<=gui.winfo_rootx()+gui.winfo_width()

@@ -1,5 +1,6 @@
 // Offline file/stream adapter: MIT. Rasterization, visibility and blending use
-// the pinned, unmodified HoviTron RVSVulkan sources and shaders (Apache-2.0).
+// pinned HoviTron RVSVulkan sources and shaders (Apache-2.0). The build corrects
+// one headless-output branch; rasterization and all shaders remain unchanged.
 #include "WindowAbstract.h"
 #include "SourcesVulkan/VulkanWrapper.h"
 #include "SourcesVulkan/VulkanDrawing.h"
@@ -211,6 +212,7 @@ int run(int argc,char** argv) {
     wrapper.context.cleanUp();return 0;
   }catch(const std::exception& e){std::cerr<<"RVSVulkan: "<<e.what()<<std::endl;return 1;}
 }
+#ifndef WIGGLINDE_OUTPUT_CHECK
 #ifdef _WIN32
 int wmain(int argc,wchar_t** argv) {
   std::vector<std::string> encoded;std::vector<char*> args;
@@ -220,4 +222,5 @@ int wmain(int argc,wchar_t** argv) {
 }
 #else
 int main(int argc,char** argv){return run(argc,argv);}
+#endif
 #endif

@@ -30,7 +30,10 @@ Politécnica de Madrid (UPM), CREAL, Deutsches Zentrum für Luft- und Raumfahrt
 (DLR). The separate test uses revision
 `e0f00f9c67dfd868d2b1489051e9118158b6de03`. Its Apache-2.0 license and the
 dependency notices accompany the package. The offline file adapter is Wigglinde
-code; upstream raster shaders are unchanged. The installed graphics driver's
+code. One generated build copy of `VulkanDrawing.cpp` corrects its headless-output
+condition to use `isSwapChainNeeded()` instead of the internal render-slot count;
+the original checkout, rasterization, blending and all shaders remain unchanged.
+The installed graphics driver's
 Vulkan runtime is used and is not redistributed in the package.
 
 The Windows package uses ONNX Runtime DirectML 1.24.4 from official source on Windows
