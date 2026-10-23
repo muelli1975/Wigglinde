@@ -1,0 +1,19 @@
+{
+  "repository": "muelli1975/Wigglinde",
+  "release_id": 416460128,
+  "tag": "v1.1",
+  "branch": "main",
+  "previous_tag": "9449c3359cc339ecd8c1978bab82eaca4c1cb9d8",
+  "assets": {
+    "Wigglinde_1.1_Linux_x64.tar.gz": "sha256:707ce03d7fd2dfddede43fe169973f383eb60e211f437dbf7c4e02ea1107eb6a",
+    "Wigglinde_1.1_macOS_AppleSilicon.zip": "sha256:bf7d4e2d2d1253f1d580a0c17b0daad72a57d61a87c5e582af598f410fd84a24",
+    "Wigglinde_1.1_macOS_Intel.zip": "sha256:122c48c482e4038fe1e0e214f82ea3eeeac22b40c8eae3a368c785f4577ffa70",
+    "Wigglinde_1.1_Windows_x64.zip": "sha256:0c0159d38a5c8dc350b11db1e54935d425bf1bed81d6caa58d19e001ecd8aed0"
+  },
+  "replace": [
+    "Wigglinde_1.1_Linux_x64.tar.gz",
+    "Wigglinde_1.1_macOS_AppleSilicon.zip",
+    "Wigglinde_1.1_macOS_Intel.zip",
+    "Wigglinde_1.1_Windows_x64.zip"
+  ]
+}
