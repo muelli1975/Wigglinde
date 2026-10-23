@@ -3,15 +3,30 @@ from pathlib import Path
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
 from wigglinde.stereo import StereoScene
 from wigglinde.vws import VWSRenderer, rgb_to_yuv420, yuv420_to_rgb
 from wigglinde.models import GREAT_MODEL, model_iterations, model_path, model_suffix
+from wigglinde.memory import MemorySampler
+from wigglinde.resources import plan_views,GIB
 
 
 class VWSTransportTests(unittest.TestCase):
+    def test_parallel_process_memory_is_aggregated(self):
+        sampler=MemorySampler(child=lambda:[11,12],child_label='vws')
+        with patch('wigglinde.memory.process_memory',side_effect=[{'rss_bytes':100,'private_commit_bytes':70},{'rss_bytes':150,'private_commit_bytes':90}]):
+            self.assertEqual(sampler._child_memory(),{'vws_rss_bytes':250,'vws_private_commit_bytes':160})
+
+    def test_vws_parallel_budget_limits_processes_without_changing_images(self):
+        plan=plan_views(1920,1080,31,8,16*GIB,4*GIB,bytes_per_pixel=384,overhead=96*1024**2,policy='vws_memory_bounded_v1')
+        self.assertGreaterEqual(plan['workers'],1)
+        self.assertLess(plan['workers'],8)
+        self.assertLessEqual(plan['workers']*plan['estimated_bytes_per_view'],plan['memory_budget_bytes'])
+        self.assertLessEqual(plan['workers']*plan['threads_per_view'],8)
+
     def test_standard_transport_preserves_uniform_chroma_blocks(self):
         rgb = np.random.default_rng(82).integers(0, 256, (18, 49, 3), dtype=np.uint8).repeat(2, 0).repeat(2, 1)
         result = yuv420_to_rgb(rgb_to_yuv420(rgb).tobytes(), 36, 98)

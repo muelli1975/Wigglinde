@@ -1,5 +1,6 @@
 """Unchanged TMIV/VWS CPU: native 10-bit geometry and YUV420 transport."""
 from pathlib import Path
+from contextlib import ExitStack
 import json
 import subprocess
 import time
@@ -7,6 +8,7 @@ import time
 import numpy as np
 
 from .wiggle_export import check_cancelled
+from .resources import vws_render_plan
 
 
 # MPEG TMIV best-reference VWS parameters at the pinned revision. No tuning.
@@ -43,17 +45,21 @@ def yuv420_to_rgb(data, height, width):
 
 
 class VWSRenderer:
-    def __init__(self, executable, scene, positions, work, matching_offset=64):
+    def __init__(self, executable, scene, positions, work, matching_offset=64, *, worker_count=None):
         self.executable = Path(executable)
         self.scene, self.positions, self.work = scene, positions, Path(work).resolve()
-        self.process, self.metrics = None, {}
-        self.schedule = dict(view_workers=1, threading='TMIV upstream defaults')
+        self.process, self.metrics, self.processes = None, {}, []
         if not self.executable.is_file():
             raise FileNotFoundError('Der VWS-Renderer fehlt / The VWS renderer is missing: ' + str(self.executable))
         self.work.mkdir(parents=True, exist_ok=True)
         height, width = scene.left.shape[:2]
         padded_height, padded_width = height + height % 2, width + width % 2
         self.storage_size = (padded_width, padded_height)
+        self.schedule = vws_render_plan(padded_width, padded_height, len(positions))
+        if worker_count is not None:
+            if worker_count < 1:raise ValueError('Worker count must be positive.')
+            self.schedule['workers'] = min(worker_count, len(positions))
+            self.schedule['threads_per_view'] = max(1, self.schedule['cpu_capacity'] // self.schedule['workers'])
         self.bias = max(float(matching_offset),
                         1 - float(min(scene.left_disparity.min(), scene.right_disparity.min())))
         maps = (scene.left_disparity, scene.right_disparity)
@@ -110,29 +116,35 @@ class VWSRenderer:
         (self.work / 'config.json').write_text(json.dumps(config, ensure_ascii=False), encoding='utf-8')
 
     def cancel(self):
-        if self.process is not None and self.process.poll() is None:
-            try:
-                self.process.kill()
-            except OSError:
-                pass
+        for process in list(self.processes):
+            if process.poll() is None:
+                try:process.kill()
+                except OSError:pass
 
     def frames(self, cancel):
         height, width = self.scene.left.shape[:2]
         padded_width, padded_height = self.storage_size
         expected = padded_height * padded_width * 3
-        command = [str(self.executable.resolve()), '-c', 'config.json',
-                   '-n', '1', '-N', '1', '-s', 'Wigglinde', '-r', 'RP0', '-f', '0']
-        for index in range(len(self.positions)):
-            command += ['-v', f'view{index}']
+        base_command = [str(self.executable.resolve()), '-c', 'config.json',
+                        '-n', '1', '-N', '1', '-s', 'Wigglinde', '-r', 'RP0', '-f', '0',
+                        '-j', str(self.schedule['threads_per_view'])]
         started = time.monotonic()
-        log_path = self.work / 'vws.log'
-        with log_path.open('wb') as log:
-            self.process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,cwd=self.work,
-                                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-            process = self.process
+        workers = self.schedule['workers']
+        log_paths = [self.work / f'vws-{i}.log' for i in range(workers)]
+        with ExitStack() as stack:
             try:
+                for worker in range(workers):
+                    check_cancelled(cancel)
+                    command = base_command.copy()
+                    for index in range(worker, len(self.positions), workers):
+                        command += ['-v', f'view{index}']
+                    log = stack.enter_context(log_paths[worker].open('wb'))
+                    self.processes.append(subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,cwd=self.work,
+                                          creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0)))
+                    self.process = self.processes[0]
                 for index in range(len(self.positions)):
                     path = self.work / f'view{index}.yuv'
+                    process = self.processes[index % workers]
                     while True:
                         check_cancelled(cancel)
                         try:
@@ -143,24 +155,27 @@ class VWSRenderer:
                         except (FileNotFoundError, PermissionError):
                             pass
                         if process.poll() is not None:
-                            raise RuntimeError('VWS: ' + log_path.read_text(errors='replace')[-1800:])
+                            raise RuntimeError('VWS: ' + log_paths[index % workers].read_text(errors='replace')[-1800:])
                         time.sleep(.02)
                     yield yuv420_to_rgb(data, padded_height, padded_width)[:height, :width].copy()
                     try:
                         path.unlink()
                     except PermissionError:
                         pass
-                while process.poll() is None:
+                while any(p.poll() is None for p in self.processes):
                     check_cancelled(cancel)
                     time.sleep(.02)
-                if process.returncode:
-                    raise RuntimeError('VWS: ' + log_path.read_text(errors='replace')[-1800:])
+                for worker,process in enumerate(self.processes):
+                    if process.returncode:
+                        raise RuntimeError('VWS: ' + log_paths[worker].read_text(errors='replace')[-1800:])
             finally:
                 self.cancel()
-                process.wait()
+                for process in self.processes:process.wait()
+                self.processes = []
                 self.process = None
                 self.metrics = dict(backend='TMIV VWS', views=len(self.positions),
                                     wall_seconds=time.monotonic() - started,
+                                    parallel_workers=workers,threads_per_view=self.schedule['threads_per_view'],
                                     geometry_bits=10, input_geometry_bits=16, texture_bits=10,
                                     chroma='4:2:0', color='BT.709 full-range YUV',
                                     temporary_edge_padding=[padded_width - width, padded_height - height],

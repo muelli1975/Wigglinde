@@ -41,10 +41,21 @@ def main():
                 assert error.max() <= 2 and error.mean() < 1, cases[-1]
             for original, array in zip(originals, (left, right, scene.left_disparity, scene.right_disparity)):
                 np.testing.assert_array_equal(original, array)
+            serial = VWSRenderer(args.renderer.resolve(), scene, [.25, .5, .75],
+                                 Path(folder) / f'{index}-serial', 24, worker_count=1)
+            parallel = VWSRenderer(args.renderer.resolve(), scene, [.25, .5, .75],
+                                   Path(folder) / f'{index}-parallel', 24, worker_count=3)
+            reference = list(serial.frames(lambda: False))
+            actual = list(parallel.frames(lambda: False))
+            for a, b in zip(reference, actual):np.testing.assert_array_equal(a, b)
             rows.append(dict(size=[width, height], disparity=disparity, cases=cases,
-                             metrics=renderer.metrics, originals_unchanged=True))
-        renderer = VWSRenderer(args.renderer.resolve(), scene, [.5], Path(folder) / 'cancel', 24)
-        iterator = renderer.frames(lambda: True)
+                             metrics=renderer.metrics, originals_unchanged=True,serial_parallel_bit_equal=True))
+        renderer = VWSRenderer(args.renderer.resolve(), scene, [.5]*12, Path(folder) / 'cancel', 24,worker_count=3)
+        cancelled=False
+        iterator = renderer.frames(lambda: cancelled)
+        next(iterator)
+        processes=list(renderer.processes)
+        cancelled=True
         try:
             next(iterator)
         except ExportCancelled:
@@ -52,6 +63,7 @@ def main():
         else:
             raise AssertionError('Cancellation was not honored.')
         assert renderer.process is None
+        assert not renderer.processes and all(p.poll() is not None for p in processes)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(dict(status='passed', checks=rows, cancellation=True), indent=2))
     print(args.output.read_text())

@@ -115,7 +115,7 @@ class MemorySampler:
             if phase is not None:self.phase=phase
             values={}
             for key,reader in [('main',lambda:{'main_'+k:v for k,v in process_memory().items()}),('system',system_memory),
-                               (self.child_label,lambda:{self.child_label+'_'+k:v for k,v in process_memory(self.child()).items()} if self.child() else {}),
+                               (self.child_label,self._child_memory),
                                ('gpu',lambda:self.gpu.snapshot() if self.gpu else {})]:
                 try:values.update(reader())
                 except Exception as error:self.notes[key+'_counter_unavailable']=str(error)
@@ -124,6 +124,19 @@ class MemorySampler:
             for key,value in values.items():
                 item['peak'][key]=max(item['peak'].get(key,value),value)
                 item['minimum'][key]=min(item['minimum'].get(key,value),value)
+
+    def _child_memory(self):
+        children=self.child()
+        if not children:return {}
+        pids=children if isinstance(children,(list,tuple)) else [children]
+        totals={}
+        for pid in pids:
+            try:values=process_memory(pid)
+            except OSError as error:
+                self.notes[self.child_label+'_process_counter_unavailable']=str(error)
+                continue
+            for key,value in values.items():totals[key]=totals.get(key,0)+value
+        return {self.child_label+'_'+key:value for key,value in totals.items()}
 
     def __exit__(self,*_):
         self.stop_event.set();self.thread.join();self.sample()

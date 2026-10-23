@@ -62,6 +62,12 @@ class Processor:
         self.logs=LocalLogs(app_dir);self.last_diagnostics=None
 
     def close(self):self.logs.close()
+    def _renderer_pids(self):
+        renderer=self.renderer
+        if renderer is None:return []
+        processes=getattr(renderer,'processes',None)
+        if processes is None:processes=[renderer.process] if renderer.process else []
+        return [p.pid for p in list(processes) if p.poll() is None]
     def cancel(self):
         self.event.set()
         if self.model:self.model.cancel()
@@ -77,7 +83,7 @@ class Processor:
         options.validate();check_cancelled(self.event.is_set)
         context=dict(source=str(Path(path).resolve()),model=self.model_name,iterations=model_iterations(self.model_name),precision=model_precision(self.model_name,self.device_id),layout='Full-SBS',input_order='left_then_right',
             device=self.device_name,depth_device_id=self.device_id,renderer_choice=self.renderer_name,mode='depth_only' if output_root is None else 'wiggle',options=options.to_settings())
-        trace=RunTrace(self.logs,context,self.device_id,child=lambda:self.renderer.process.pid if self.renderer and self.renderer.process else None)
+        trace=RunTrace(self.logs,context,self.device_id,child=self._renderer_pids)
         self.last_diagnostics=trace.data
         with trace:
             progress('Bild vorbereiten',0.)

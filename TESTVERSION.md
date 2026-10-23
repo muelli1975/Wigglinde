@@ -6,6 +6,8 @@ This is an experiment for a possible 1.2. The published 1.1 stays unchanged.
 - Models: LAS2-H (default, 4 iterations), IGEV++ Middlebury (16), and
   GREAT-IGEV Middlebury (32).
 - Renderers: RVS (CPU, default) and TMIV/VWS (CPU), selected independently.
+- Independent views run in parallel within CPU/RAM limits. VWS uses separate
+  original renderer processes and its documented `-j` thread-count argument.
 - CPU stereo uses Float32; Windows GPU uses DirectML mixed Float16/Float32.
 - VWS uses unchanged official TMIV code and MPEG best-reference parameters,
   including the original 10-bit internal geometry and YUV 4:2:0 transport.

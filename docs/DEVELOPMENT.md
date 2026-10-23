@@ -1,3 +1,13 @@
+# 1.2 Test 1: parallele VWS-Ansichten — 23. Oktober 2026
+
+Original-TMIV-Aufrufe über unabhängige Ansichten parallelisiert, mit dokumentiertem
+-j-Threadlimit und eigenem konservativen RAM-Budget. Native Positiv-/Negativ-
+Disparität, ungerade Maße, seriell/parallel pixelgleiche Bilder und Abbruch aller
+Prozesse geprüft. Erstes Problemfoto: fünf Ansichten ca.4,0 s seriell und2,4 s
+parallel; aktueller CPU-RVS im vorherigen Lauf ca.1,6 s einschließlich PNG-Speicherung.
+Einzelmessungen auf diesem Rechner, keine allgemeine Geschwindigkeitsgarantie.
+Originalcode, 10-Bit-Geometrie, 4:2:0 und Standard-VWS-Parameter unverändert.
+
 # 1.2 Test 1 — laufender Build, 23. Oktober 2026
 
 GREAT-IGEV Middlebury als zusätzliches festes 32-Iterationen-Modell. Native/ONNX-

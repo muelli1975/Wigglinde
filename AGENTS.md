@@ -101,3 +101,7 @@ archive and settings file; renderer suffix on animation outputs to compare witho
 overwriting. Bilingual restrained GUI; inspect 100/125/150% and minimum size.
 Build an Actions artifact, not a public prerelease or stable replacement.
 Evaluate quality before a possible 1.2; lenticular work follows afterwards.
+
+Christoph additionally requests parallel VWS views. Use separate unchanged TMIV
+processes with the documented -j thread limit, bounded by CPU and RAM. Verify
+serial/parallel image equality and cancellation of every child process.

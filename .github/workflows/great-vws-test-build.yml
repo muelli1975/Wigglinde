@@ -31,7 +31,7 @@ jobs:
         if: steps.great-cache.outputs.cache-hit != 'true'
         run: |
           python -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install -e . onnx==1.17.0 timm==0.5.4 scipy einops opencv-python-headless gdown==6.4.2
+          python -m pip install -e . onnx==1.17.0 timm==0.5.4 scipy einops opencv-python-headless gdown==6.4.2 matplotlib
       - name: Get exact official GREAT source and checkpoint
         if: steps.great-cache.outputs.cache-hit != 'true'
         shell: python
