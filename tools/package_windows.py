@@ -17,6 +17,7 @@ def main():
         for dll in Path(folder).glob('*.dll'):
             shutil.copy2(dll,backend)
             shutil.copy2(dll,target/'_internal')
+            if a.vulkan:shutil.copy2(dll,backend/'vulkan')
     omps=glob.glob('C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC*.OpenMP/vcomp140.dll')
     if omps:shutil.copy2(sorted(omps)[-1],backend)
     shutil.copytree('assets',target/'assets')
