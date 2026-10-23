@@ -26,12 +26,33 @@ die tatsächlichen Bounds werden im GPU-Laufprotokoll erfasst.
 Linux-Kompilierung und Shaderübersetzung gelungen. 53 Anwendungstests bestanden.
 Der örtliche Mesa-Softwareadapter erfüllt die unveränderten Geräteanforderungen
 nicht; Start endet mit klarer Fehlermeldung. Noch kein erfolgreiches GPU-Rendering
-oder Geschwindigkeits-/Fotoqualitätsnachweis. Zwischenstand43b475d erfolgreich
-unter Windows gebaut, EXE/Modelle/Exporte und zweisprachige GUI geprüft; Screenshot
-mit Rendererwahl visuell kontrolliert. Dateipfad- und Tiefenbereichsanbindung
-anschließend vervollständigt; abschließende Paketprüfung steht aus.
+oder Geschwindigkeits-/Fotoqualitätsnachweis. Windows-Paketprüfung abgeschlossen:
+Run39954179722, Paketquellstand `dc059786ac21385222cb131313a8357df7069389`.
+53 Quelltests auf Windows/Linux, beide nativen Builds, serieller/paralleler
+CPU-RVS-Vergleich und tatsächliche gepackte EXE bestanden. Beide Modelle, alle
+vier Exportarten, Sitzungswiederverwendung, Zweisprachigkeit, gespeicherte
+Rendererwahl sowie Geometrie bei100/125/150% geprüft. Screenshot mit Rendererwahl
+visuell kontrolliert. Vulkan-Helferidentität im Paket geprüft; daraus folgt kein
+erfolgreicher GPU-Bildtest. Die tatsächlichen Linux-GPU-Proben melden unavailable.
 GUI: Rendererwahl in vorhandener Tiefenkarten-Zeile, getrennte Test-Einstellungen,
 zusätzliches `_rvsvulkan` nur an Vulkan-Animationen/-Bildfolgen.
+
+`Wigglinde_1.2_Vulkan_Test_Windows_x64.zip`:266803703Byte,
+SHA-256 `7dbcebd07bbb2694ba51be0f71a5e6adaec180dc0cd4d92a37a6171a1587b8f3`.
+Actions-Artefakt12502002477, verfügbar bis22.November2026:
+<https://github.com/muelli1975/Wigglinde/actions/runs/39954179722/artifacts/12502002477>.
+Heruntergeladenes äußeres/inneres Archiv CRC-/hashgeprüft. Alle100 eingebetteten
+Projektdateien stimmen mit dem Paketquellstand überein (Text-Zeilenenden
+berücksichtigt); alle14 Shader-Quellen unverändert und SPIR-V-Hashes passend,
+vier ONNX-Graphen und Lizenzen bestätigt. C++-Laufzeit beim Vulkan-Helfer vorhanden.
+Keine gespeicherten Nutzereinstellungen, Laufzeitlogs oder mitgelieferter
+Vulkan-Grafiktreiber. Dieser Abschlussvermerk entstand nach dem Paketbau.
+Main und veröffentlichte1.1 bleiben unverändert.
+
+Christoph bestätigt anschließend Middlebury-Vorteile bei vielen, wenn auch nicht
+allen Bildern. Das stützt den vorgeschlagenen Presetnamen Qualität. Presets und
+automatische Tiefengerätewahl sind ausdrücklich nur gesammelt, nicht implementiert;
+Details in PROJECT.md. Rendererwahl wird im Test bereits separat gespeichert.
 
 Zusätzlicher Nutzervergleich `bild026_DxO_cs`: beide bereitgestellten AVIFs
 1619×1080, 60Frames. Bei LAS2-H sind in Zwischenansichten vordere senkrechte

@@ -18,6 +18,8 @@ Eigene benannte Presets derzeit nicht nötig, weil die letzten Einstellungen
 bereits gespeichert werden. Letzte Auswahl/manuelle Einstellungen einschließlich
 Renderer und formatbezogener Werte über Neustarts erhalten.
 
+Christoph bestätigt Middlebury-Vorteile bei vielen, wenn auch nicht allen Bildern;
+der Name Qualität passt damit zu seiner breiteren Praxiserfahrung.
 720/1080p passen direkt zu MP4/AVIF. GIF verwendet eine lange Seite und PNG
 bisher1080/2160p; die Zuordnung ist noch offen. Der Name Qualität bezeichnet
 eine Zielrichtung, keinen belegten universellen Modellvorsprung. Umfang eines
