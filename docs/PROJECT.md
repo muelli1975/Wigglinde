@@ -1,3 +1,28 @@
+# Vorgemerkt: Presets und automatische Gerätewahl — 23. Oktober 2026
+
+Christoph sammelt diese Idee ausdrücklich zunächst; noch kein Implementierungsauftrag
+und kein Bestandteil des laufenden Vulkan-Testpakets. Preset-Auswahl in der
+Kopfzeile nach dem Vorbild DepthTricia erwägen:
+
+| Vorgeschlagener Name | Tiefengerät | Modell | Bildhöhe |
+| --- | --- | --- | --- |
+| Standard | Automatisch | LAS2-H | 720p |
+| Qualität | Automatisch | IGEV++ Middlebury | 1080p |
+
+Automatisch wäre technisch möglich: nutzbare GPU bevorzugen, sonst CPU.
+Die genaue Auswahl-/Fehlerstrategie bleibt vor Umsetzung zu vereinbaren.
+Rendererwahl getrennt betrachten und ebenfalls speichern; Festlegung nach
+praktischem RVSVulkan-Vergleich. Zusätzlicher CPU-Preset noch offen; zunächst
+scheint die manuelle CPU-Auswahl bei beiden Profilen ausreichend.
+Eigene benannte Presets derzeit nicht nötig, weil die letzten Einstellungen
+bereits gespeichert werden. Letzte Auswahl/manuelle Einstellungen einschließlich
+Renderer und formatbezogener Werte über Neustarts erhalten.
+
+720/1080p passen direkt zu MP4/AVIF. GIF verwendet eine lange Seite und PNG
+bisher1080/2160p; die Zuordnung ist noch offen. Der Name Qualität bezeichnet
+eine Zielrichtung, keinen belegten universellen Modellvorsprung. Umfang eines
+Preset-Wechsels und Anzeige manueller Abweichungen vor Umsetzung abstimmen.
+
 # Separater RVSVulkan-Test — 23. Oktober 2026
 
 Christoph verwirft DEFOM nach dem Fernbereichsvergleich. GREAT-IGEV und VWS bleiben

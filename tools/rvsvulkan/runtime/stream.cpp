@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <chrono>
+#include <limits>
 #ifdef _WIN32
 #include <fcntl.h>
 #include <io.h>
@@ -123,16 +124,27 @@ class StaticInputs final:public InputProvider {
 public:
   StaticInputs(VulkanWrapper& wrapper,const json& cfg,const json& real):context(wrapper.context) {
     pool=context.device.createCommandPool(vk::CommandPoolCreateInfo({},context.queueFamilyIndex));
+    // The CPU adapter's .01/999 metadata are unused by its float-depth loader.
+    // RVSVulkan normalizes quality by farDepth: supply the actual common bounds
+    // of the metric float maps, as required by its streaming API. Depth samples,
+    // projection and shaders are unchanged. Do not normalize the depth images.
+    std::vector<std::vector<float>> depthData;float zMin=FLT_MAX,zMax=0;
+    for(size_t i=0;i<real.size();++i) {
+      size_t pixels=size_t(real[i]["Resolution"][0].get<uint32_t>())*real[i]["Resolution"][1].get<uint32_t>();
+      depthData.push_back(readRaw<float>(fs::u8path(cfg["DepthMapNames"][i].get<std::string>()),pixels));
+      for(float z:depthData.back()){zMin=std::min(zMin,z);zMax=std::max(zMax,z);}
+    }
+    float nearDepth=std::nextafter(zMin,0.f),farDepth=std::nextafter(zMax,std::numeric_limits<float>::infinity());
     for(size_t i=0;i<real.size();++i) {
       auto cam=real[i];uint32_t w=cam["Resolution"][0],h=cam["Resolution"][1];size_t pixels=size_t(w)*h;
       auto color=readRaw<float>(fs::u8path(cfg["ViewImageNames"][i].get<std::string>()),pixels*3);
       std::vector<uint8_t> rgba(pixels*4,255);
       for(size_t p=0;p<pixels;++p)for(int ch=0;ch<3;++ch)rgba[4*p+ch]=uint8_t(std::lround(std::clamp(color[3*p+ch],0.f,1.f)*255.f));
-      auto depth=readRaw<float>(fs::u8path(cfg["DepthMapNames"][i].get<std::string>()),pixels);
+      const auto& depth=depthData[i];
       colors.push_back(upload(rgba.data(),rgba.size(),w,h,vk::Format::eR8G8B8A8Unorm));
       depths.push_back(upload(depth.data(),depth.size()*sizeof(float),w,h,vk::Format::eR32Sfloat));
       StreamParameters param;param.streamName=cam["Name"];param.colorResolution=param.depthResolution=glm::ivec2(w,h);
-      param.nearDepth=cam["Depth_range"][0];param.farDepth=cam["Depth_range"][1];
+      param.nearDepth=nearDepth;param.farDepth=farDepth;
       param.colorFormat=vk::Format::eR8G8B8A8Unorm;param.depthFormat=vk::Format::eR32Sfloat;
       param.projectionType=ProjectionType::PROJECTION_PERSPECTIVE;
       auto sampler=[](vk::Filter filter){return vk::SamplerCreateInfo({},filter,filter,vk::SamplerMipmapMode::eNearest,vk::SamplerAddressMode::eClampToEdge,vk::SamplerAddressMode::eClampToEdge,vk::SamplerAddressMode::eClampToEdge).setBorderColor(vk::BorderColor::eFloatOpaqueBlack);};
@@ -191,6 +203,8 @@ int run(int argc,char** argv) {
       StaticInputs inputs(wrapper,cfg,real);wrapper.endInit(&inputs,StartingPosition::Zero);
       double inputTime=elapsed(inputStart);wrapper.start();wrapper.waitIdle();
       window.metrics["input_seconds"]=inputTime;
+      auto streams=inputs.enumerateStreamsParameters();
+      window.metrics["input_depth_range"]={streams[0].nearDepth,streams[0].farDepth};
       std::ofstream output(metricsPath);output<<window.metrics.dump(2);output.close();
       wrapper.cleanUp();
     }

@@ -26,7 +26,9 @@ Verwendet wird HoviTron RVSVulkan, Commit
 `e0f00f9c67dfd868d2b1489051e9118158b6de03`, mit ursprünglicher Rasterpipeline,
 Blending-Faktor 5, Dreiecksschwelle 30, linearen Tiefen und unveränderten Shadern.
 Die Anbindung ergänzt feste Bildeingaben, passende Kameraparameter und das
-Auslesen der fertigen Bilder. Sie fügt keine Filter oder Lückenfüllung hinzu.
+Auslesen der fertigen Bilder. Der gemeinsame Tiefenbereich wird aus den tatsächlich
+übergebenen Float-Tiefenkarten ermittelt; deren Werte werden nicht verändert.
+Sie fügt keine Filter oder Lückenfüllung hinzu.
 RVSVulkan ist eine eigene RVS-Implementierung; pixelgleiche CPU-Ergebnisse sind
 damit nicht zugesichert.
 

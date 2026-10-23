@@ -14,10 +14,22 @@ einschließlich des bisherigen Disparitäts-Bias und seiner Hauptpunktkompensati
 Rastermodus, Faktor5, Dreiecksschwelle30 und RGBA8-Zwischenformat unverändert.
 Kein Compute-Modus, Zusatzfilter, zusätzliche Lückenfüllung oder CPU-Fallback.
 
+Der Provider übergibt den tatsächlichen gemeinsamen Float-Tiefenbereich statt
+der vom CPU-Floatloader ungenutzten Platzhalter .01/999. Dortige Metadaten können
+nicht unverändert für die GPU-Qualitätsnormalisierung übernommen werden:
+Die originale Float32-Gewichtsformel ergibt beim synthetischen Test z=1.88235
+mit far=999 am Kameraendpunkt Inf/NaN, mit tatsächlicher Obergrenze endliche Werte.
+Beim vorhandenen Gittermotiv liegt der tatsächliche Bereich je Modell ungefähr
+bei13.10–45.59 bzw.8.00–40.78. Werte, Bias, Positionen und Shader bleiben erhalten;
+die tatsächlichen Bounds werden im GPU-Laufprotokoll erfasst.
+
 Linux-Kompilierung und Shaderübersetzung gelungen. 53 Anwendungstests bestanden.
 Der örtliche Mesa-Softwareadapter erfüllt die unveränderten Geräteanforderungen
 nicht; Start endet mit klarer Fehlermeldung. Noch kein erfolgreiches GPU-Rendering
-oder Geschwindigkeits-/Fotoqualitätsnachweis. Windows-Paketprüfung steht aus.
+oder Geschwindigkeits-/Fotoqualitätsnachweis. Zwischenstand43b475d erfolgreich
+unter Windows gebaut, EXE/Modelle/Exporte und zweisprachige GUI geprüft; Screenshot
+mit Rendererwahl visuell kontrolliert. Dateipfad- und Tiefenbereichsanbindung
+anschließend vervollständigt; abschließende Paketprüfung steht aus.
 GUI: Rendererwahl in vorhandener Tiefenkarten-Zeile, getrennte Test-Einstellungen,
 zusätzliches `_rvsvulkan` nur an Vulkan-Animationen/-Bildfolgen.
 
