@@ -1,3 +1,11 @@
+# Presets gestrichen — 23. Oktober 2026
+
+Christoph verfolgt die beiden Preset-Ideen nicht weiter: Die Modelle zeigen je
+nach Motiv unterschiedliche Stärken, keinen durchgängigen Qualitätsvorsprung.
+LAS2-H und IGEV++ Middlebury bleiben direkt und manuell wählbar. Für das aktuelle
+1.1-Korrekturupdate bleiben ausschließlich GIF512 und die Korrektur der GUI-Hänger;
+das bisherige Layout bleibt erhalten.
+
 # Freigegebenes Korrekturupdate 1.1 — 23. Oktober 2026
 
 Christoph beauftragt GIF512 und die Korrektur sporadischer GUI-Hänger beim nativen
