@@ -1,5 +1,11 @@
 # Freigegebener DEFOM-Test 1.2 Test 2 — 23. Oktober 2026
 
+**Abgeschlossen und verworfen:** Christoph sieht nach dem Fernbereichsvergleich
+auch bei DEFOM-S/RVC keinen ausreichenden Vorteil. Stabilen 1.1-Stand unverändert
+behalten; keine weiteren Modelltests oder Übernahme dieses Zweigs. Alternative
+Renderer dürfen unabhängig auf Verfügbarkeit, Geschwindigkeit und mindestens
+gleiche Qualität geprüft werden. Die folgenden Abschnitte sind Testhistorie.
+
 Nach dem praktischen GREAT-/VWS-Vergleich beide aus dem nächsten separaten
 Windows-Testpaket nehmen. LAS2-H als Standard, IGEV++ Middlebury und unveränderten
 CPU-RVS behalten. Zuerst DEFOM-S/RVC und DEFOM-L/Middlebury intern mit denselben

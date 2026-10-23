@@ -1,5 +1,25 @@
 # DEFOM comparison for 1.2 Test 2 — 23 October 2026
 
+## Practical assessment after Christoph's comparison
+
+**Final decision:** after inspecting the far field, Christoph rejects DEFOM
+Small/RVC as well. Retain the stable 1.1 LAS2-H / IGEV++ Middlebury / CPU RVS
+configuration. Close the DEFOM experiment; do not merge or continue precision or
+model tuning. GREAT-IGEV and VWS are also deferred. The completed Actions test
+artifact is historical, not a recommended update. An alternative renderer may
+be researched independently, with equal or better quality as the requirement.
+
+The intermediate assessment below is superseded by that final decision.
+
+Christoph initially sees no DEFOM improvement over IGEV++ Middlebury on the
+problem photograph, then distinguishes the variants: Small/RVC is quite usable,
+slightly better here than DEFOM Large/Middlebury, and may remain an alternative.
+Keep Small/RVC as a candidate for further photographs; no established general
+advantage over IGEV++. Large has not justified its much larger package/memory
+cost. Do not optimize model parameters to manufacture a positive comparison.
+The existing H/IGEV++/RVS baseline remains the reference. The already built Test2
+contains both DEFOM variants for comparison and does not decide a final 1.2 menu.
+
 Christoph authorizes Small/RVC and Large/Middlebury research, including the
 Large model's CC-BY-NC-4.0 restriction. Separate branch `test-defom-1.2`, based on
 stable main/v1.1 `9449c3359cc339ecd8c1978bab82eaca4c1cb9d8`. Previous GREAT/VWS
@@ -72,6 +92,16 @@ Its complete decoder path, transport and fusion convolution through normalizatio
 are therefore a fixed FP32 island in the corrected mixed graph. No runtime
 fallback or clipping of those activations. Mixed checks execute on CPU and do
 not establish physical DirectML behavior or GPU memory savings.
+
+ORT's node-block converter inserted intermediate FP32→FP16→FP32 casts even
+between protected decoder nodes. Those edges still overflowed. The final Large
+policy bypasses 99 such internal half roundtrips while retaining casts to actual
+FP16 consumers. This corrects the export's precision boundary, not the original
+model. Both small cases and both full-photo eyes then run with finite results.
+Small's mixed graph has no such decoder override. Photo differences against
+the respective FP32 ONNX graph: Small mean 0.10–0.11 px, 99% 1.52–1.67 px;
+Large mean 0.078–0.083 px, 99% 0.90–0.95 px. Local outliers remain (up to35.34px).
+Rendered railing crops from native, FP32 ONNX and mixed ONNX were compared.
 
 ## Runtime and scope
 

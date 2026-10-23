@@ -1,12 +1,31 @@
 # Separater DEFOM-Vergleich für 1.2 Test 2 — 23. Oktober 2026
 
+**Versuch beendet:** Nach zusätzlichem Fernbereichsvergleich verwirft Christoph
+auch Small/RVC. Stabilen 1.1-Stand mit LAS2-H, IGEV++ Middlebury und CPU-RVS
+beibehalten. Keine Übernahme dieses Testzweigs, keine weiteren Modell- oder
+Präzisionsoptimierungen. GREAT-IGEV und VWS bleiben ebenfalls zurückgestellt.
+Das fertige Actions-Paket ist nur historische Testdokumentation. Eine spätere
+Renderer-Alternative muss mindestens gleiche Bildqualität liefern.
+
 Branch `test-defom-1.2`, auf Basis der stabilen 1.1. H bleibt Standard,
 IGEV++ Middlebury bleibt. GREAT-IGEV und VWS werden nach Christophs praktischem
 Qualitätsvergleich aus dem nächsten Testpaket weggelassen. DEFOM-S/RVC und
 DEFOM-L/Middlebury (CC-BY-NC-4.0) nativ und als ONNX mit unverändertem CPU-RVS
 verglichen. Messwerte, Grenzen und Exportanpassungen: [DEFOM_STUDY.md](DEFOM_STUDY.md).
 Modellprozess für DEFOM begrenzt native Abstürze und blockierende Initialisierung.
-Windows-Paketprüfung steht noch aus; keine Veröffentlichung oder Änderung an 1.1.
+Windows-Paketprüfung erfolgreich: Run39944898044, Quellstand
+`33f084c24370430b92525784af396561d424fb70`. 58 Quellprüfungen auf Windows/Linux,
+native RVS-Gleichheit und tatsächlich gepackte EXE mit vier Modellen, Exporten,
+Sitzungswiederverwendung, Zweisprachigkeit und 100/125/150%-Geometrie bestanden.
+Zusätzlicher Tk-Timertest während tatsächlichem DEFOM-L-Start und Berechnung
+bestanden. Keine physische GPU-Prüfung. Die abschließende lokale Archivkontrolle
+wurde nach Christophs Verwerfen des Experiments nicht fortgesetzt.
+Keine Veröffentlichung oder Änderung an 1.1.
+
+Christophs Bildvergleich: DEFOM bietet keinen klaren Vorsprung vor IGEV++;
+Small/RVC wirkt bei diesem Motiv besser als Large/Middlebury und bleibt als
+mögliche Ergänzung interessant. Large rechtfertigt den Mehraufwand derzeit
+nicht. Beide bleiben im bereits gebauten Vergleichspaket, keine Festlegung für 1.2.
 
 # Finalisierung 1.1 — 18. Oktober 2026
 
