@@ -1,7 +1,7 @@
 name: Portable 1.0 release builds
 on:
   push:
-    branches: [main]
+    branches: [maintenance/sdr-1.0]
     paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'README_DE.md', 'THIRD_PARTY.md', 'BUILD.md', 'LICENSE', 'assets/**', '.github/workflows/windows-test-build.yml', '.github/workflows/unix-release-build.yml', '.github/workflows/publish-1.0.yml']
   workflow_dispatch:
 permissions:

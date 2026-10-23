@@ -1,0 +1,19 @@
+{
+  "repository": "muelli1975/Wigglinde",
+  "release_id": 415843127,
+  "tag": "v1.0",
+  "branch": "maintenance/sdr-1.0",
+  "previous_tag": "db215d8460eb798b4f4b4e914cab0ef6e3a2194f",
+  "assets": {
+    "Wigglinde_1.0_Linux_x64.tar.gz": "sha256:810e1eade79f50e2596445fc7b91806cd771b8c2bae6e26e565ac14bea704e98",
+    "Wigglinde_1.0_macOS_AppleSilicon.zip": "sha256:ba1d0874422e1ddb5db620bd2816e64af99028197526d872a9a9aa04dcdfdac5",
+    "Wigglinde_1.0_macOS_Intel.zip": "sha256:9d3376767e46bf44ff1f8f5276ffb63929090ce000af0580dfdfe6461b6dbdaf",
+    "Wigglinde_1.0_Windows_x64.zip": "sha256:13cd863e25fa1890641a602490b0b6d05460ed730976a0f68e4790c40d3ab446"
+  },
+  "replace": [
+    "Wigglinde_1.0_Linux_x64.tar.gz",
+    "Wigglinde_1.0_macOS_AppleSilicon.zip",
+    "Wigglinde_1.0_macOS_Intel.zip",
+    "Wigglinde_1.0_Windows_x64.zip"
+  ]
+}
