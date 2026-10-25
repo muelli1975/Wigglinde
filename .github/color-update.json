@@ -3,12 +3,12 @@
   "release_id": 416460128,
   "tag": "v1.1",
   "branch": "main",
-  "previous_tag": "cb57f87128264336b6ad2c5ab9641f0180b5274a",
+  "previous_tag": "628780b02dfdeb4b419e5930e59d32b8e774bcf5",
   "assets": {
-    "Wigglinde_1.1_Linux_x64.tar.gz": "sha256:10a07ed9122e4e034060fdc1d35e7bf3559cc77d76be1a61339cdc4e22783f0e",
-    "Wigglinde_1.1_macOS_AppleSilicon.zip": "sha256:9ba828e2c1cd5fae47d73d37dda807bcbf850b72ba89346cac1f045fb0f2d6f4",
-    "Wigglinde_1.1_macOS_Intel.zip": "sha256:4ecc06d4a9e18052543687dfe271538d02e4b5c40b4c535275fa25154a66bc32",
-    "Wigglinde_1.1_Windows_x64.zip": "sha256:1e19b8b432e2210fe0b76d2783f503083e95e01faa1c4278319012780257ff8c"
+    "Wigglinde_1.1_Linux_x64.tar.gz": "sha256:73082f028b472bcd23aebc10389e7232d604f7fcec0e06c06a5cc91471811a0f",
+    "Wigglinde_1.1_macOS_AppleSilicon.zip": "sha256:d8f6bd6198f08ff7d91e984b2bd9e6e5b8fd2d8fafb4cea45f437dc91c6403b1",
+    "Wigglinde_1.1_macOS_Intel.zip": "sha256:bc8f9a3d5e28f663bac8839bd5fff9423e55dd7f693a337da6c1a7d392ced898",
+    "Wigglinde_1.1_Windows_x64.zip": "sha256:7cf5089ee2879bacaa774cc829fa2cae3f100f1d9439679afbd3733f79d62536"
   },
   "replace": [
     "Wigglinde_1.1_Linux_x64.tar.gz",

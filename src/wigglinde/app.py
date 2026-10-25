@@ -331,7 +331,7 @@ class WigglindeApp(ctk.CTk):
                     completed,errors,cancelled,diagnosis=payload;self.running=False;self.error_count=len(errors);self._set_busy(False)
                     self._set_status('cancelled' if cancelled else 'diagnosed' if diagnosis else 'finished',count=completed)
                     if not cancelled:self.progress.set(1)
-                    if completed and not cancelled:self._play_ready_sound()
+                    if completed and not cancelled and not self.diagnosing:self._play_ready_sound()
                     if errors:messagebox.showerror('Wigglinde','\n\n'.join(errors[:4])+'\n\n'+self.tr('details'),parent=self)
                     elif diagnosis:
                         peaks=[s['peak'] for s in diagnosis['memory']['stages'].values()]
