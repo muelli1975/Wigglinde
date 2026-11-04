@@ -1,0 +1,11 @@
+{
+  "repository": "muelli1975/Wigglinde",
+  "releases": [
+    {
+      "id": 416460128,
+      "tag": "v1.1",
+      "body": "# Wigglinde 1.1\n\n- Add IGEV++ Middlebury as an alternative depth model for difficult image structures. LAS2-H remains the default.\n- Add animated AVIF export alongside MP4, GIF and PNG frame sequences.\n\n## Installation\n\nExtract the complete package for your system and keep the application folder together. Models and runtimes are included; processing works offline.\n\n- Windows 10/11 x64: start `Wigglinde.exe`. Compatible DirectX 12 graphics cards can accelerate depth estimation through DirectML.\n- Linux x64: Ubuntu 22.04 or newer; start `Wigglinde`. Processing uses the CPU.\n- macOS 15 or newer: choose Apple Silicon or Intel and open `Wigglinde.app`. Processing uses the CPU. The apps are ad-hoc signed and not Apple-notarized.\n\nKeep `settings.json` when updating. Difficult structures, occlusions and reflections can still produce artifacts; large images need more memory.\n\n## Downloads and SHA-256\n\n| File | SHA-256 |\n| --- | --- |\n| [Wigglinde_1.1_Linux_x64.tar.gz](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Linux_x64.tar.gz) | `2fe379fad6259943921c9edcfb22c37b2369a82cde8f242f4be438c304bb5a42` |\n| [Wigglinde_1.1_macOS_AppleSilicon.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_AppleSilicon.zip) | `444e901c555c54616a7407e6d90b671587132d0a76b2120afd8d2a3c4b6e623e` |\n| [Wigglinde_1.1_macOS_Intel.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_macOS_Intel.zip) | `48a8f001d39e3acc766d33b3df491882dae916ddbd55d1c6888a0943e94e3530` |\n| [Wigglinde_1.1_Windows_x64.zip](https://github.com/muelli1975/Wigglinde/releases/download/v1.1/Wigglinde_1.1_Windows_x64.zip) | `8606657ca8c211e9624d1ce9358a55d292c48f806650ab57d9768d7b3b47b848` |\n",
+      "expected_body_sha256": "ecaa1b22c23ad8b27ac76b31b0d5ee60380d618234b3706059e930eb085cab6e"
+    }
+  ]
+}
