@@ -1,0 +1,86 @@
+name: Refresh Wigglinde 1.1 title bars
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/title-bar-release.yml'
+      - '.github/title-bar-update.json'
+      - 'tools/prepare_title_bar_release.py'
+      - 'TitleBarRelease.spec'
+
+permissions:
+  contents: read
+concurrency:
+  group: wigglinde-release-1.1
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.head_commit.message == 'Refresh Wigglinde 1.1 title bars'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            label: Windows_x64
+          - runner: macos-15
+            label: macOS_AppleSilicon
+          - runner: macos-15-intel
+            label: macOS_Intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.10'
+      - name: Verify and extract the current release archive
+        id: runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/prepare_title_bar_release.py prepare ${{ matrix.label }}
+      - name: Rebuild the application with the released dependencies
+        run: |
+          python -m pip install "pyinstaller==${{ steps.runtime.outputs.pyinstaller }}"
+          python -m PyInstaller --noconfirm --clean --distpath frozen --workpath build/title-bar TitleBarRelease.spec
+      - name: Exercise the rebuilt extracted package
+        run: python tools/prepare_title_bar_release.py package ${{ matrix.label }}
+      - name: Play packaged AVIF in the installed browser
+        if: runner.os == 'Windows'
+        run: |
+          python -m pip install playwright
+          python tools/check_browser_animations.py output --output output/browser-animations.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Wigglinde-title-bar-${{ matrix.label }}
+          path: title-bar-release/Wigglinde_1.1_*.zip
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Wigglinde-title-bar-check-${{ matrix.label }}
+          path: output/*smoke.json
+          if-no-files-found: ignore
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Wigglinde-title-bar-*
+          path: release-files
+          merge-multiple: true
+      - name: Publish checked Windows and macOS packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/publish_title_bar_update.py --root release-files --config .github/title-bar-update.json
