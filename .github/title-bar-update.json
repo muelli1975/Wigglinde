@@ -1,0 +1,19 @@
+{
+  "repository": "muelli1975/Wigglinde",
+  "tag": "v1.1",
+  "branch": "main",
+  "previous_tag": "cde82efe996a85c989ae7de3e4e799da1539435c",
+  "release_id": 416460128,
+  "assets": {
+    "Wigglinde_1.1_Linux_x64.tar.gz": "sha256:2fe379fad6259943921c9edcfb22c37b2369a82cde8f242f4be438c304bb5a42",
+    "Wigglinde_1.1_macOS_AppleSilicon.zip": "sha256:444e901c555c54616a7407e6d90b671587132d0a76b2120afd8d2a3c4b6e623e",
+    "Wigglinde_1.1_macOS_Intel.zip": "sha256:48a8f001d39e3acc766d33b3df491882dae916ddbd55d1c6888a0943e94e3530",
+    "Wigglinde_1.1_Windows_x64.zip": "sha256:8606657ca8c211e9624d1ce9358a55d292c48f806650ab57d9768d7b3b47b848"
+  },
+  "replace": [
+    "Wigglinde_1.1_macOS_AppleSilicon.zip",
+    "Wigglinde_1.1_macOS_Intel.zip",
+    "Wigglinde_1.1_Windows_x64.zip"
+  ],
+  "release_note": "### Title bar maintenance update\n\n- Use a fixed dark title bar on Windows 11 and the native Dark Aqua appearance on macOS."
+}

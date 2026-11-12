@@ -1,7 +1,7 @@
 name: Build and publish Wigglinde 1.1
 on:
   push:
-    branches: [release-1.1]
+    branches: [release-1.1, main]
     paths: ['src/**', 'tools/**', 'tests/**', 'launch.py', 'pyproject.toml', 'README.md', 'README_DE.md', 'THIRD_PARTY.md', 'BUILD.md', 'CHANGELOG.md', 'LICENSE', 'assets/**', '.github/workflows/**']
   workflow_dispatch:
 permissions:
@@ -14,6 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   windows:
+    if: github.ref_name != 'main' || github.event.head_commit.message == 'Refresh Wigglinde 1.1 title bars'
     runs-on: windows-latest
     timeout-minutes: 50
     steps:
@@ -90,6 +91,7 @@ jobs:
           retention-days: 30
 
   native:
+    if: github.ref_name != 'main' || github.event.head_commit.message == 'Refresh Wigglinde 1.1 title bars'
     uses: ./.github/workflows/unix-release-build.yml
   publish:
     needs: [windows, native]
