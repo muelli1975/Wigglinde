@@ -5,6 +5,7 @@ import json,queue,sys,threading,time
 from tkinter import filedialog,messagebox
 import customtkinter as ctk
 from . import __version__,theme as T
+from .titlebar import install_tk_titlebars
 from .devices import graphics_adapters
 from .models import DEFAULT_MODEL,MODELS
 from .diagnostics import error_message
@@ -34,6 +35,7 @@ def screen_work_area(window):
 class WigglindeApp(ctk.CTk):
     def __init__(self,app_dir=None):
         ctk.set_appearance_mode('dark');super().__init__()
+        install_tk_titlebars(self)
         self.app_dir=Path(app_dir or app_directory());self.settings_path=self.app_dir/'settings.json'
         icon=self.app_dir/'assets/wigglinde.ico'
         if sys.platform=='win32' and icon.is_file():self.iconbitmap(default=str(icon))
